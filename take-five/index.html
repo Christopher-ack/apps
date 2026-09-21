@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en" data-mode="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Take Five</title>
+<meta name="description" content="Five questions, played whenever you get to it.">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0F1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Take Five">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<div id="boot">
+  <div>
+    <div class="brandmark">Take<em>Five</em></div>
+    <div class="msg" id="boot-msg"><span class="spin"></span></div>
+  </div>
+</div>
+
+<div id="app">
+  <!-- SIGN IN -->
+  <section class="screen" id="s-signin" hidden>
+    <div class="signin">
+      <div>
+        <div class="brandmark">Take<em>Five</em></div>
+        <p class="note" style="margin-top:10px;max-width:30ch">Five questions played whenever you get to it. Challenge friends and see who is winning.</p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <input type="text" id="in-name" placeholder="Your name" autocomplete="off" maxlength="18">
+        <input type="password" id="in-pin" placeholder="4-digit PIN" inputmode="numeric" maxlength="4" autocomplete="off">
+        <div id="signin-err" class="note" style="color:var(--bad)"></div>
+        <button class="btn" id="btn-signin">Continue</button>
+      </div>
+      <p class="note" id="signin-note">Prototype: accounts live in this browser only. Pick any name and PIN.</p>
+    </div>
+  </section>
+
+  <!-- HOME -->
+  <section class="screen" id="s-home" hidden>
+    <div class="pad">
+      <div class="hhead">
+        <div class="wordmark">Take<em>Five</em></div>
+        <div class="whoami" id="home-user"></div>
+      </div>
+      <div class="metrics" id="home-metrics"></div>
+      <div class="seclabel">Recent games</div>
+      <div class="feed" id="home-feed"></div>
+    </div>
+  </section>
+
+  <!-- PLAY -->
+  <section class="screen" id="s-play" hidden>
+    <div class="pad">
+      <div class="phead"><h1>Play</h1></div>
+      <div class="tiles">
+        <button class="tile primary" id="tile-online">
+          <h3>Online</h3>
+          <p>Pick a category, invite your people, play your five. They answer whenever.</p>
+        </button>
+        <button class="tile daily" id="tile-daily"></button>
+        <button class="tile soon" disabled><span class="tag">Soon</span><h3>Pass &amp; Play</h3><p>One phone, take turns in the same room.</p></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- NEW GAME -->
+  <section class="screen" id="s-new" hidden>
+    <div class="pad">
+      <div class="phead"><h1>New game</h1><button class="eyebrow" id="new-cancel">Cancel</button></div>
+      <div class="seclabel" style="margin-top:0">Category</div>
+      <div class="catgrid" id="cat-grid"></div>
+      <div class="catgrid" id="cat-more" hidden style="margin-top:10px"></div>
+      <button class="morebtn" id="cat-toggle" aria-expanded="false">
+        <span id="cat-toggle-label">More categories</span>
+        <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="seclabel">Invite</div>
+      <div class="people" id="invite-list"></div>
+      <div class="stickybar"><button class="btn" id="btn-start" disabled>Start</button></div>
+    </div>
+  </section>
+
+  <!-- FRIENDS -->
+  <section class="screen" id="s-friends" hidden>
+    <div class="pad">
+      <div class="phead"><h1>Friends</h1></div>
+      <div class="people" id="friends-list"></div>
+    </div>
+  </section>
+
+  <!-- ME -->
+  <section class="screen" id="s-me" hidden>
+    <div class="pad">
+      <div class="phead"><h1>Me</h1></div>
+      <div class="card" style="padding:16px;display:flex;align-items:center;gap:14px">
+        <button class="photobtn" id="me-photo" aria-label="Change profile picture">
+          <span id="me-av"></span>
+          <span class="edge"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
+        </button>
+        <div style="min-width:0">
+          <div style="font-family:var(--display);font-weight:700;font-size:19px" id="me-name"></div>
+          <div class="note" id="me-stats"></div>
+        </div>
+      </div>
+      <input type="file" id="photo-input" accept="image/*" hidden>
+      <div class="note" id="photo-err" style="color:var(--bad);margin-top:8px"></div>
+
+      <div class="seclabel">Appearance</div>
+      <div class="seg" id="theme-seg">
+        <button data-mode="dark">Dark</button>
+        <button data-mode="light">Light</button>
+        <button data-mode="system">System</button>
+      </div>
+
+      <div class="seclabel">Account</div>
+      <div class="arows">
+        <button class="arow" id="row-name"><span class="k">Display name</span><span class="v" id="row-name-v"></span><svg viewBox="0 0 24 24" class="chev"><path d="M9 5l7 7-7 7"/></svg></button>
+        <button class="arow" id="row-pin"><span class="k">PIN</span><span class="v">••••</span><svg viewBox="0 0 24 24" class="chev"><path d="M9 5l7 7-7 7"/></svg></button>
+        <button class="arow" id="row-removephoto" hidden><span class="k">Remove profile picture</span></button>
+        <button class="arow" id="row-admin"><span class="k">Admin</span><svg viewBox="0 0 24 24" class="chev"><path d="M9 5l7 7-7 7"/></svg></button>
+      </div>
+
+      <div class="devbar" style="margin-top:26px"><button class="devbtn" id="dev-signout">Sign out</button></div>
+    </div>
+  </section>
+
+  <!-- GAME -->
+  <section id="game" hidden>
+    <div id="gtop">
+      <div id="tbarwrap"><div id="tbar"></div></div>
+      <div id="tnum">15.0</div>
+      <div id="gmeta"><span id="gcat"></span><span id="gprog"></span></div>
+    </div>
+    <div id="qstage"></div>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="results" hidden>
+    <button class="rclose" id="r-close" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
+    <div class="rhero">
+      <div class="eyebrow" id="r-cat"></div>
+      <div class="total num" id="r-total">0</div>
+      <div><button class="outofbtn" id="r-outof"><span id="r-outof-t"></span><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button></div>
+    </div>
+    <div class="bdown">
+      <div class="brow"><span class="lbl">Correctly answered</span><span class="v" id="r-correct"></span></div>
+      <div class="brow"><span class="lbl">Time bonus</span><span class="v" id="r-bonus"></span></div>
+      <div class="brow tot"><span class="lbl">Total</span><span class="v" id="r-sum"></span></div>
+    </div>
+    <div class="lbwrap">
+      <div class="eyebrow">Leaderboard</div>
+      <div class="lb" id="r-lb"></div>
+      <div id="nudge-wrap" hidden style="margin-top:22px">
+        <button class="btn ghost" id="btn-nudge"></button>
+      </div>
+      <button class="btn ghost" id="daily-share" hidden style="margin-top:22px">Share your result</button>
+      <div class="note" id="nudge-status" style="margin-top:10px;text-align:center"></div>
+    </div>
+  </section>
+
+  <!-- FRIEND DETAIL -->
+  <section class="sheet" id="friendsheet" hidden>
+    <div class="sheethead">
+      <button class="iconbtn" id="fs-close" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <h2>Head to head</h2>
+    </div>
+    <div class="sheetbody">
+      <div class="fprofile"><div id="fs-av"></div><div class="nm" id="fs-name"></div><div class="note" id="fs-sub"></div></div>
+      <div class="h2h">
+        <div class="win"><div class="v" id="fs-w">0</div><div class="k">You win</div></div>
+        <div class="loss"><div class="v" id="fs-l">0</div><div class="k">They win</div></div>
+        <div><div class="v" id="fs-t">0</div><div class="k">Played together</div></div>
+      </div>
+      <p class="note" id="fs-avg" style="text-align:center;margin:14px 0 24px"></p>
+      <button class="btn" id="fs-challenge">Challenge</button>
+      <button class="btn ghost" id="fs-remove" style="margin-top:10px">Remove friend</button>
+    </div>
+  </section>
+
+  <!-- USER PICKER -->
+  <section class="sheet" id="picker" hidden>
+    <div class="sheethead">
+      <button class="iconbtn" id="pk-close" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <h2 id="pk-title">Add</h2>
+    </div>
+    <div style="padding:12px 16px 0"><input type="search" id="pk-search" placeholder="Search by name" autocomplete="off"></div>
+    <div class="sheetbody"><div class="people" id="pk-list"></div><div class="empty" id="pk-empty" hidden>No one by that name.</div></div>
+  </section>
+
+  <!-- ADMIN -->
+  <section class="sheet" id="adminsheet" hidden>
+    <div class="sheethead">
+      <button class="iconbtn" id="ad-close" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <h2>Admin</h2>
+    </div>
+    <div class="sheetbody">
+      <div class="seclabel" style="margin-top:0">Daily Five draws from</div>
+      <p class="note" style="margin-bottom:10px">Takes effect from tomorrow's round. Today's five are already locked in.</p>
+      <div class="chips" id="ad-cats"></div>
+
+      <div class="seclabel">Accounts</div>
+      <p class="note" style="margin-bottom:10px">Tap someone to reset their PIN, make them an admin, or delete the account.</p>
+      <div class="people" id="ad-users"></div>
+
+      <div class="seclabel">Question bank</div>
+      <div class="note" id="ad-bank"></div>
+
+    </div>
+  </section>
+
+  <!-- MANAGE ONE ACCOUNT (admin) -->
+  <section class="sheet" id="usersheet" hidden>
+    <div class="sheethead">
+      <button class="iconbtn" id="us-close" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <h2 id="us-title">Account</h2>
+    </div>
+    <div class="sheetbody">
+      <div class="fprofile" style="padding:14px 0 20px">
+        <div id="us-av"></div>
+        <div class="nm" id="us-name"></div>
+        <div class="note" id="us-meta"></div>
+      </div>
+
+      <div class="seclabel" style="margin-top:0">Role</div>
+      <div class="switchrow">
+        <span class="k">Admin</span>
+        <button class="switch" id="us-admin" role="switch" aria-pressed="false" aria-label="Admin"><span class="knob"></span></button>
+      </div>
+      <p class="note" id="us-adminnote" style="margin-top:8px"></p>
+
+      <div class="seclabel">Reset PIN</div>
+      <div class="field"><label for="us-p1">New PIN</label><input type="password" id="us-p1" inputmode="numeric" maxlength="4" autocomplete="off"></div>
+      <div class="field"><label for="us-p2">Confirm new PIN</label><input type="password" id="us-p2" inputmode="numeric" maxlength="4" autocomplete="off"></div>
+      <div class="note" id="us-pinmsg" style="margin-bottom:12px"></div>
+      <button class="btn" id="us-savepin">Set new PIN</button>
+
+      <div class="seclabel">Delete account</div>
+      <p class="note" id="us-delnote" style="margin-bottom:10px"></p>
+      <button class="btn ghost danger" id="us-delete">Delete account</button>
+    </div>
+  </section>
+
+  <!-- EDIT SHEET -->
+  <section class="sheet" id="editsheet" hidden>
+    <div class="sheethead">
+      <button class="iconbtn" id="ed-close" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <h2 id="ed-title">Edit</h2>
+    </div>
+    <div class="sheetbody">
+      <div class="field" id="ed-f1"><label id="ed-l1"></label><input type="text" id="ed-i1" autocomplete="off"></div>
+      <div class="field" id="ed-f2" hidden><label id="ed-l2"></label><input type="password" id="ed-i2" inputmode="numeric" maxlength="4" autocomplete="off"></div>
+      <div class="field" id="ed-f3" hidden><label id="ed-l3"></label><input type="password" id="ed-i3" inputmode="numeric" maxlength="4" autocomplete="off"></div>
+      <div class="note" id="ed-err" style="color:var(--bad);margin-bottom:12px"></div>
+      <button class="btn" id="ed-save">Save</button>
+    </div>
+  </section>
+
+  <!-- ANSWER REVIEW -->
+  <section class="sheet" id="reviewsheet" hidden>
+    <div class="sheethead">
+      <button class="iconbtn" id="rv-close" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <h2>Your answers</h2>
+    </div>
+    <div class="sheetbody"><div id="rv-list"></div></div>
+  </section>
+
+  <!-- REPORT A QUESTION -->
+  <section class="sheet" id="reportsheet" hidden>
+    <div class="sheethead">
+      <button class="iconbtn" id="rp-close" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <h2>Report a question</h2>
+    </div>
+    <div class="sheetbody">
+      <div class="card rpcard">
+        <div class="qid" id="rp-id"></div>
+        <div class="q" id="rp-q"></div>
+      </div>
+      <div class="field">
+        <label for="rp-note">What's wrong with it?</label>
+        <textarea id="rp-note" rows="4" placeholder="Wrong answer marked correct, confusing wording, duplicate…"></textarea>
+      </div>
+      <div class="rpbtns">
+        <button class="btn" id="rp-text" hidden>Send as text</button>
+        <button class="btn ghost" id="rp-mail" hidden>Send as email</button>
+        <button class="btn ghost" id="rp-copy">Copy report</button>
+      </div>
+      <div class="note" id="rp-status" style="margin-top:12px"></div>
+    </div>
+  </section>
+
+  <div class="ovl" id="countdown" hidden><div class="big" id="cd-text"></div></div>
+  <div class="ovl" id="r-ovl" hidden><div class="big">Let's see<br>how you did</div></div>
+
+  <nav id="nav" hidden>
+    <button data-tab="home" aria-current="true"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/></svg><span>Home</span></button>
+    <button data-tab="play"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 8.5v7l6-3.5z"/></svg><span>Play</span></button>
+    <button data-tab="friends"><svg viewBox="0 0 24 24"><circle cx="9.5" cy="8.6" r="3.3"/><path d="M3.2 19.4c.5-3.2 3-4.9 6.3-4.9s5.8 1.7 6.3 4.9"/><path d="M16.2 5.7a3.2 3.2 0 0 1 0 6"/><path d="M17.6 14.8c2.1.5 3.4 1.9 3.8 4"/></svg><span>Friends</span></button>
+    <button data-tab="me"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.6"/><path d="M5 20c.6-3.7 3.4-5.6 7-5.6s6.4 1.9 7 5.6"/></svg><span>Me</span></button>
+  </nav>
+</div>
+<div id="banner" hidden></div>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

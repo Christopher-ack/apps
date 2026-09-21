@@ -1,0 +1,1738 @@
+{
+ "version": "2026-09-21",
+ "note": "Answers array: the FIRST answer is always the correct one. The app shuffles them at play time.",
+ "categories": [
+  {
+   "id": "general",
+   "name": "General",
+   "desc": "A bit of everything",
+   "primary": true,
+   "color": "#E28C4A",
+   "colorLight": "#B36723"
+  },
+  {
+   "id": "f1",
+   "name": "Formula 1",
+   "desc": "Grands Prix and paddock",
+   "primary": true,
+   "color": "#E5453F",
+   "colorLight": "#C13029"
+  },
+  {
+   "id": "movies",
+   "name": "Movies",
+   "desc": "A century of the big screen",
+   "primary": true,
+   "color": "#C94F8C",
+   "colorLight": "#A33B6F"
+  },
+  {
+   "id": "starwars",
+   "name": "Star Wars",
+   "desc": "A galaxy far, far away",
+   "primary": true,
+   "color": "#6E7B8F",
+   "colorLight": "#4F5B6D"
+  },
+  {
+   "id": "animals",
+   "name": "Animals",
+   "desc": "Land, sea and air",
+   "primary": false,
+   "color": "#79BF57",
+   "colorLight": "#4E8E30"
+  },
+  {
+   "id": "disney",
+   "name": "Disney World",
+   "desc": "Four parks in Florida",
+   "primary": false,
+   "color": "#8A7BE8",
+   "colorLight": "#6250CF"
+  },
+  {
+   "id": "food",
+   "name": "Food and Drink",
+   "desc": "Kitchens, bars and menus",
+   "primary": false,
+   "color": "#D9A520",
+   "colorLight": "#A67A12"
+  },
+  {
+   "id": "geography",
+   "name": "Geography",
+   "desc": "Borders, peaks and capitals",
+   "primary": false,
+   "color": "#4E8C6A",
+   "colorLight": "#3A6B50"
+  },
+  {
+   "id": "office",
+   "name": "The Office",
+   "desc": "Dunder Mifflin, Scranton",
+   "primary": false,
+   "color": "#B9A25E",
+   "colorLight": "#8A7434"
+  },
+  {
+   "id": "parksrec",
+   "name": "Parks and Rec",
+   "desc": "Pawnee, Indiana",
+   "primary": false,
+   "color": "#C2803F",
+   "colorLight": "#96602B"
+  }
+ ],
+ "questions": [
+  {
+   "id": "general-001",
+   "category": "general",
+   "q": "How many continents are there?",
+   "answers": [
+    "Seven",
+    "Five",
+    "Six",
+    "Eight"
+   ]
+  },
+  {
+   "id": "general-002",
+   "category": "general",
+   "q": "What is the chemical symbol for gold?",
+   "answers": [
+    "Au",
+    "Go",
+    "Gd",
+    "Ag"
+   ]
+  },
+  {
+   "id": "general-003",
+   "category": "general",
+   "q": "Which planet is closest to the sun?",
+   "answers": [
+    "Mercury",
+    "Venus",
+    "Mars",
+    "Earth"
+   ]
+  },
+  {
+   "id": "general-004",
+   "category": "general",
+   "q": "How many strings does a standard guitar have?",
+   "answers": [
+    "Six",
+    "Four",
+    "Twelve",
+    "Eight"
+   ]
+  },
+  {
+   "id": "general-005",
+   "category": "general",
+   "q": "What is the largest ocean on Earth?",
+   "answers": [
+    "Pacific",
+    "Atlantic",
+    "Indian",
+    "Arctic"
+   ]
+  },
+  {
+   "id": "general-006",
+   "category": "general",
+   "q": "In what year did the Titanic sink?",
+   "answers": [
+    "1912",
+    "1898",
+    "1921",
+    "1905"
+   ]
+  },
+  {
+   "id": "general-007",
+   "category": "general",
+   "q": "What is the capital of Australia?",
+   "answers": [
+    "Canberra",
+    "Sydney",
+    "Melbourne",
+    "Perth"
+   ]
+  },
+  {
+   "id": "general-008",
+   "category": "general",
+   "q": "How many minutes are in a full day?",
+   "answers": [
+    "1,440",
+    "720",
+    "2,400",
+    "960"
+   ]
+  },
+  {
+   "id": "general-009",
+   "category": "general",
+   "q": "Which element has atomic number 1?",
+   "answers": [
+    "Hydrogen",
+    "Helium",
+    "Carbon",
+    "Oxygen"
+   ]
+  },
+  {
+   "id": "general-010",
+   "category": "general",
+   "q": "Which river flows through Egypt?",
+   "answers": [
+    "The Nile",
+    "The Congo",
+    "The Euphrates",
+    "The Amazon"
+   ]
+  },
+  {
+   "id": "general-011",
+   "category": "general",
+   "q": "How many sides does a hexagon have?",
+   "answers": [
+    "Six",
+    "Five",
+    "Seven",
+    "Eight"
+   ]
+  },
+  {
+   "id": "general-012",
+   "category": "general",
+   "q": "Which language has the most native speakers?",
+   "answers": [
+    "Mandarin Chinese",
+    "English",
+    "Spanish",
+    "Hindi"
+   ]
+  },
+  {
+   "id": "general-013",
+   "category": "general",
+   "q": "Who painted the Mona Lisa?",
+   "answers": [
+    "Leonardo da Vinci",
+    "Michelangelo",
+    "Raphael",
+    "Caravaggio"
+   ]
+  },
+  {
+   "id": "general-014",
+   "category": "general",
+   "q": "What is the hardest naturally occurring substance?",
+   "answers": [
+    "Diamond",
+    "Quartz",
+    "Titanium",
+    "Granite"
+   ]
+  },
+  {
+   "id": "general-015",
+   "category": "general",
+   "q": "How many players from one soccer team are on the field?",
+   "answers": [
+    "Eleven",
+    "Nine",
+    "Ten",
+    "Twelve"
+   ]
+  },
+  {
+   "id": "f1-001",
+   "category": "f1",
+   "q": "How many points does a race winner score?",
+   "answers": [
+    "25",
+    "20",
+    "30",
+    "10"
+   ]
+  },
+  {
+   "id": "f1-002",
+   "category": "f1",
+   "q": "How many World Championships has Lewis Hamilton won?",
+   "answers": [
+    "Seven",
+    "Five",
+    "Six",
+    "Eight"
+   ]
+  },
+  {
+   "id": "f1-003",
+   "category": "f1",
+   "q": "What does DRS stand for?",
+   "answers": [
+    "Drag Reduction System",
+    "Direct Response Steering",
+    "Dynamic Ride Setup",
+    "Downforce Release Switch"
+   ]
+  },
+  {
+   "id": "f1-004",
+   "category": "f1",
+   "q": "Which team has the most Constructors' Championships?",
+   "answers": [
+    "Ferrari",
+    "McLaren",
+    "Williams",
+    "Mercedes"
+   ]
+  },
+  {
+   "id": "f1-005",
+   "category": "f1",
+   "q": "What flag is waved at the end of a race?",
+   "answers": [
+    "Chequered",
+    "Yellow",
+    "Blue",
+    "Red"
+   ]
+  },
+  {
+   "id": "f1-006",
+   "category": "f1",
+   "q": "Which country hosts the Suzuka circuit?",
+   "answers": [
+    "Japan",
+    "South Korea",
+    "China",
+    "Malaysia"
+   ]
+  },
+  {
+   "id": "f1-007",
+   "category": "f1",
+   "q": "Who won the 2021 championship at the Abu Dhabi finale?",
+   "answers": [
+    "Max Verstappen",
+    "Lewis Hamilton",
+    "Valtteri Bottas",
+    "Sergio Perez"
+   ]
+  },
+  {
+   "id": "f1-008",
+   "category": "f1",
+   "q": "Which circuit is nicknamed the Temple of Speed?",
+   "answers": [
+    "Monza",
+    "Spa-Francorchamps",
+    "Silverstone",
+    "Interlagos"
+   ]
+  },
+  {
+   "id": "f1-009",
+   "category": "f1",
+   "q": "How many finishers score points in a Grand Prix?",
+   "answers": [
+    "Top ten",
+    "Top eight",
+    "Top twelve",
+    "Top six"
+   ]
+  },
+  {
+   "id": "f1-010",
+   "category": "f1",
+   "q": "What is a blue flag telling a driver?",
+   "answers": [
+    "Let a faster car lap you",
+    "Slippery track ahead",
+    "Race is suspended",
+    "You have a penalty"
+   ]
+  },
+  {
+   "id": "f1-011",
+   "category": "f1",
+   "q": "Which team is based in Maranello, Italy?",
+   "answers": [
+    "Ferrari",
+    "AlphaTauri",
+    "Alfa Romeo",
+    "Lamborghini"
+   ]
+  },
+  {
+   "id": "f1-012",
+   "category": "f1",
+   "q": "What colour marks the softest tyre compound of a weekend?",
+   "answers": [
+    "Red",
+    "Yellow",
+    "White",
+    "Green"
+   ]
+  },
+  {
+   "id": "f1-013",
+   "category": "f1",
+   "q": "Which Grand Prix was F1's first night race, from 2008?",
+   "answers": [
+    "Singapore",
+    "Bahrain",
+    "Abu Dhabi",
+    "Las Vegas"
+   ]
+  },
+  {
+   "id": "f1-014",
+   "category": "f1",
+   "q": "What is deployed instead of a physical car to neutralise a race?",
+   "answers": [
+    "Virtual Safety Car",
+    "Pace Delta",
+    "Yellow Protocol",
+    "Race Freeze"
+   ]
+  },
+  {
+   "id": "f1-015",
+   "category": "f1",
+   "q": "Which circuit hosts the Monaco Grand Prix?",
+   "answers": [
+    "Circuit de Monaco",
+    "Circuit Paul Ricard",
+    "Circuit de Nice",
+    "Grand Prix de la Riviera"
+   ]
+  },
+  {
+   "id": "movies-001",
+   "category": "movies",
+   "q": "Who directed Jaws?",
+   "answers": [
+    "Steven Spielberg",
+    "George Lucas",
+    "Ridley Scott",
+    "Francis Ford Coppola"
+   ]
+  },
+  {
+   "id": "movies-002",
+   "category": "movies",
+   "q": "Which film contains the line \"Here's looking at you, kid\"?",
+   "answers": [
+    "Casablanca",
+    "Gone with the Wind",
+    "Citizen Kane",
+    "The Maltese Falcon"
+   ]
+  },
+  {
+   "id": "movies-003",
+   "category": "movies",
+   "q": "Who played Forrest Gump?",
+   "answers": [
+    "Tom Hanks",
+    "Kevin Costner",
+    "Tom Cruise",
+    "Robin Williams"
+   ]
+  },
+  {
+   "id": "movies-004",
+   "category": "movies",
+   "q": "Who directed Pulp Fiction?",
+   "answers": [
+    "Quentin Tarantino",
+    "Martin Scorsese",
+    "Guy Ritchie",
+    "Robert Rodriguez"
+   ]
+  },
+  {
+   "id": "movies-005",
+   "category": "movies",
+   "q": "Which colour pill does Neo take in The Matrix?",
+   "answers": [
+    "Red",
+    "Blue",
+    "Green",
+    "White"
+   ]
+  },
+  {
+   "id": "movies-006",
+   "category": "movies",
+   "q": "Which animated film follows a clownfish searching for his son?",
+   "answers": [
+    "Finding Nemo",
+    "Shark Tale",
+    "A Bug's Life",
+    "Moana"
+   ]
+  },
+  {
+   "id": "movies-007",
+   "category": "movies",
+   "q": "What is the hotel called in The Shining?",
+   "answers": [
+    "The Overlook",
+    "The Bates",
+    "The Continental",
+    "The Grand Budapest"
+   ]
+  },
+  {
+   "id": "movies-008",
+   "category": "movies",
+   "q": "Who played Vito Corleone in The Godfather?",
+   "answers": [
+    "Marlon Brando",
+    "Al Pacino",
+    "Robert De Niro",
+    "James Caan"
+   ]
+  },
+  {
+   "id": "movies-009",
+   "category": "movies",
+   "q": "What is Indiana Jones's real first name?",
+   "answers": [
+    "Henry",
+    "Jones",
+    "Abner",
+    "Walter"
+   ]
+  },
+  {
+   "id": "movies-010",
+   "category": "movies",
+   "q": "Which director made Psycho and The Birds?",
+   "answers": [
+    "Alfred Hitchcock",
+    "Orson Welles",
+    "Billy Wilder",
+    "John Huston"
+   ]
+  },
+  {
+   "id": "movies-011",
+   "category": "movies",
+   "q": "Which car becomes the time machine in Back to the Future?",
+   "answers": [
+    "A DeLorean",
+    "A Corvette",
+    "A Mustang",
+    "A Camaro"
+   ]
+  },
+  {
+   "id": "movies-012",
+   "category": "movies",
+   "q": "Who composed the scores for Star Wars, Jaws and Jurassic Park?",
+   "answers": [
+    "John Williams",
+    "Hans Zimmer",
+    "Ennio Morricone",
+    "Danny Elfman"
+   ]
+  },
+  {
+   "id": "movies-013",
+   "category": "movies",
+   "q": "What is Tony Stark's AI assistant called in Iron Man?",
+   "answers": [
+    "J.A.R.V.I.S.",
+    "F.R.I.D.A.Y.",
+    "H.A.L.",
+    "K.I.T.T."
+   ]
+  },
+  {
+   "id": "movies-014",
+   "category": "movies",
+   "q": "Which prison gives The Shawshank Redemption its name?",
+   "answers": [
+    "Shawshank",
+    "Alcatraz",
+    "Sing Sing",
+    "Folsom"
+   ]
+  },
+  {
+   "id": "movies-015",
+   "category": "movies",
+   "q": "What does Dorothy click together in The Wizard of Oz?",
+   "answers": [
+    "Her ruby slippers",
+    "Her fingers",
+    "Two stones",
+    "A pair of spoons"
+   ]
+  },
+  {
+   "id": "starwars-001",
+   "category": "starwars",
+   "q": "What is Luke Skywalker's home planet?",
+   "answers": [
+    "Tatooine",
+    "Naboo",
+    "Jakku",
+    "Alderaan"
+   ]
+  },
+  {
+   "id": "starwars-002",
+   "category": "starwars",
+   "q": "What species is Chewbacca?",
+   "answers": [
+    "Wookiee",
+    "Ewok",
+    "Trandoshan",
+    "Gungan"
+   ]
+  },
+  {
+   "id": "starwars-003",
+   "category": "starwars",
+   "q": "What is Han Solo's ship called?",
+   "answers": [
+    "Millennium Falcon",
+    "Ghost",
+    "Razor Crest",
+    "Tantive IV"
+   ]
+  },
+  {
+   "id": "starwars-004",
+   "category": "starwars",
+   "q": "What colour is Mace Windu's lightsaber?",
+   "answers": [
+    "Purple",
+    "Green",
+    "Blue",
+    "Yellow"
+   ]
+  },
+  {
+   "id": "starwars-005",
+   "category": "starwars",
+   "q": "Who trains Luke on Dagobah?",
+   "answers": [
+    "Yoda",
+    "Obi-Wan Kenobi",
+    "Qui-Gon Jinn",
+    "Ahsoka Tano"
+   ]
+  },
+  {
+   "id": "starwars-006",
+   "category": "starwars",
+   "q": "On which desert planet does Rey live in The Force Awakens?",
+   "answers": [
+    "Jakku",
+    "Tatooine",
+    "Geonosis",
+    "Jedha"
+   ]
+  },
+  {
+   "id": "starwars-007",
+   "category": "starwars",
+   "q": "What is the Emperor's full name?",
+   "answers": [
+    "Sheev Palpatine",
+    "Dooku Serenno",
+    "Kylo Snoke",
+    "Darth Plagueis"
+   ]
+  },
+  {
+   "id": "starwars-008",
+   "category": "starwars",
+   "q": "Which Star Wars film was released first?",
+   "answers": [
+    "A New Hope",
+    "The Phantom Menace",
+    "The Empire Strikes Back",
+    "Rogue One"
+   ]
+  },
+  {
+   "id": "starwars-009",
+   "category": "starwars",
+   "q": "What are the small furry natives of Endor called?",
+   "answers": [
+    "Ewoks",
+    "Jawas",
+    "Wookiees",
+    "Porgs"
+   ]
+  },
+  {
+   "id": "starwars-010",
+   "category": "starwars",
+   "q": "Which droid is a golden protocol droid?",
+   "answers": [
+    "C-3PO",
+    "R2-D2",
+    "BB-8",
+    "K-2SO"
+   ]
+  },
+  {
+   "id": "starwars-011",
+   "category": "starwars",
+   "q": "What weapon destroys Alderaan?",
+   "answers": [
+    "The Death Star",
+    "Starkiller Base",
+    "The Executor",
+    "An ion cannon"
+   ]
+  },
+  {
+   "id": "starwars-012",
+   "category": "starwars",
+   "q": "What is the real name of the Mandalorian?",
+   "answers": [
+    "Din Djarin",
+    "Boba Fett",
+    "Jango Fett",
+    "Cad Bane"
+   ]
+  },
+  {
+   "id": "starwars-013",
+   "category": "starwars",
+   "q": "What is the Jedi Order's ruling body called?",
+   "answers": [
+    "The Jedi Council",
+    "The Senate",
+    "The High Table",
+    "The Council of Masters"
+   ]
+  },
+  {
+   "id": "starwars-014",
+   "category": "starwars",
+   "q": "Which planet is the Wookiee homeworld?",
+   "answers": [
+    "Kashyyyk",
+    "Mustafar",
+    "Hoth",
+    "Dathomir"
+   ]
+  },
+  {
+   "id": "starwars-015",
+   "category": "starwars",
+   "q": "What does Han famously say before being frozen in carbonite?",
+   "answers": [
+    "I know",
+    "May the Force be with you",
+    "I love you too",
+    "Never tell me the odds"
+   ]
+  },
+  {
+   "id": "animals-001",
+   "category": "animals",
+   "q": "What is the largest animal on Earth?",
+   "answers": [
+    "Blue whale",
+    "African elephant",
+    "Sperm whale",
+    "Giraffe"
+   ]
+  },
+  {
+   "id": "animals-002",
+   "category": "animals",
+   "q": "How many hearts does an octopus have?",
+   "answers": [
+    "Three",
+    "One",
+    "Two",
+    "Four"
+   ]
+  },
+  {
+   "id": "animals-003",
+   "category": "animals",
+   "q": "What is a group of crows called?",
+   "answers": [
+    "A murder",
+    "A parliament",
+    "A gaggle",
+    "A murmuration"
+   ]
+  },
+  {
+   "id": "animals-004",
+   "category": "animals",
+   "q": "Which is the only mammal capable of true flight?",
+   "answers": [
+    "Bat",
+    "Flying squirrel",
+    "Colugo",
+    "Sugar glider"
+   ]
+  },
+  {
+   "id": "animals-005",
+   "category": "animals",
+   "q": "Which animal's fingerprints are nearly identical to a human's?",
+   "answers": [
+    "Koala",
+    "Chimpanzee",
+    "Gorilla",
+    "Raccoon"
+   ]
+  },
+  {
+   "id": "animals-006",
+   "category": "animals",
+   "q": "What is the tallest land animal?",
+   "answers": [
+    "Giraffe",
+    "African elephant",
+    "Moose",
+    "Ostrich"
+   ]
+  },
+  {
+   "id": "animals-007",
+   "category": "animals",
+   "q": "Which mammal lays eggs?",
+   "answers": [
+    "Platypus",
+    "Armadillo",
+    "Opossum",
+    "Pangolin"
+   ]
+  },
+  {
+   "id": "animals-008",
+   "category": "animals",
+   "q": "What colour is a polar bear's skin under its fur?",
+   "answers": [
+    "Black",
+    "White",
+    "Pink",
+    "Grey"
+   ]
+  },
+  {
+   "id": "animals-009",
+   "category": "animals",
+   "q": "What is a baby kangaroo called?",
+   "answers": [
+    "A joey",
+    "A kit",
+    "A cub",
+    "A pup"
+   ]
+  },
+  {
+   "id": "animals-010",
+   "category": "animals",
+   "q": "Which big cat cannot roar?",
+   "answers": [
+    "Cheetah",
+    "Lion",
+    "Tiger",
+    "Leopard"
+   ]
+  },
+  {
+   "id": "animals-011",
+   "category": "animals",
+   "q": "How many chambers does a cow's stomach have?",
+   "answers": [
+    "Four",
+    "Two",
+    "Three",
+    "One"
+   ]
+  },
+  {
+   "id": "animals-012",
+   "category": "animals",
+   "q": "What is the fastest land animal?",
+   "answers": [
+    "Cheetah",
+    "Pronghorn",
+    "Lion",
+    "Greyhound"
+   ]
+  },
+  {
+   "id": "animals-013",
+   "category": "animals",
+   "q": "Which sea creature can regrow lost arms?",
+   "answers": [
+    "Starfish",
+    "Jellyfish",
+    "Seahorse",
+    "Clam"
+   ]
+  },
+  {
+   "id": "animals-014",
+   "category": "animals",
+   "q": "Which mammal has the longest known lifespan?",
+   "answers": [
+    "Bowhead whale",
+    "Elephant",
+    "Human",
+    "Orca"
+   ]
+  },
+  {
+   "id": "animals-015",
+   "category": "animals",
+   "q": "How many legs does a lobster have?",
+   "answers": [
+    "Ten",
+    "Six",
+    "Eight",
+    "Twelve"
+   ]
+  },
+  {
+   "id": "disney-001",
+   "category": "disney",
+   "q": "Which US state is Walt Disney World in?",
+   "answers": [
+    "Florida",
+    "California",
+    "Texas",
+    "Georgia"
+   ]
+  },
+  {
+   "id": "disney-002",
+   "category": "disney",
+   "q": "How many theme parks are at Walt Disney World?",
+   "answers": [
+    "Four",
+    "Three",
+    "Five",
+    "Six"
+   ]
+  },
+  {
+   "id": "disney-003",
+   "category": "disney",
+   "q": "Which park has Cinderella Castle?",
+   "answers": [
+    "Magic Kingdom",
+    "EPCOT",
+    "Animal Kingdom",
+    "Hollywood Studios"
+   ]
+  },
+  {
+   "id": "disney-004",
+   "category": "disney",
+   "q": "What is the giant geodesic sphere at EPCOT called?",
+   "answers": [
+    "Spaceship Earth",
+    "The Orb",
+    "Horizons",
+    "Future World Dome"
+   ]
+  },
+  {
+   "id": "disney-005",
+   "category": "disney",
+   "q": "What was Hollywood Studios originally named?",
+   "answers": [
+    "Disney-MGM Studios",
+    "Disney Backlot",
+    "Studio Park",
+    "Disney Cinema Park"
+   ]
+  },
+  {
+   "id": "disney-006",
+   "category": "disney",
+   "q": "What year did Magic Kingdom open?",
+   "answers": [
+    "1971",
+    "1965",
+    "1982",
+    "1955"
+   ]
+  },
+  {
+   "id": "disney-007",
+   "category": "disney",
+   "q": "What is the icon at the center of Animal Kingdom?",
+   "answers": [
+    "The Tree of Life",
+    "Expedition Everest",
+    "The Baobab",
+    "Discovery Rock"
+   ]
+  },
+  {
+   "id": "disney-008",
+   "category": "disney",
+   "q": "Which attraction replaced Splash Mountain?",
+   "answers": [
+    "Tiana's Bayou Adventure",
+    "Frozen Ever After",
+    "Journey of Water",
+    "Rainbow Falls"
+   ]
+  },
+  {
+   "id": "disney-009",
+   "category": "disney",
+   "q": "Which park is Expedition Everest in?",
+   "answers": [
+    "Animal Kingdom",
+    "Magic Kingdom",
+    "EPCOT",
+    "Hollywood Studios"
+   ]
+  },
+  {
+   "id": "disney-010",
+   "category": "disney",
+   "q": "Which land at Hollywood Studios is themed to the planet Batuu?",
+   "answers": [
+    "Star Wars: Galaxy's Edge",
+    "Toy Story Land",
+    "Pandora",
+    "Echo Lake"
+   ]
+  },
+  {
+   "id": "disney-011",
+   "category": "disney",
+   "q": "Which EPCOT pavilion houses Soarin'?",
+   "answers": [
+    "The Land",
+    "The Seas",
+    "Imagination",
+    "Energy"
+   ]
+  },
+  {
+   "id": "disney-012",
+   "category": "disney",
+   "q": "Which Magic Kingdom ride is an indoor coaster in near-total darkness?",
+   "answers": [
+    "Space Mountain",
+    "Big Thunder Mountain",
+    "Tron Lightcycle Run",
+    "Barnstormer"
+   ]
+  },
+  {
+   "id": "disney-013",
+   "category": "disney",
+   "q": "Which Magic Kingdom attraction is a show about US presidents?",
+   "answers": [
+    "The Hall of Presidents",
+    "Carousel of Progress",
+    "The American Adventure",
+    "Liberty Belle"
+   ]
+  },
+  {
+   "id": "disney-014",
+   "category": "disney",
+   "q": "Which water park has a melted ski-resort theme?",
+   "answers": [
+    "Blizzard Beach",
+    "Typhoon Lagoon",
+    "River Country",
+    "Wave Bay"
+   ]
+  },
+  {
+   "id": "disney-015",
+   "category": "disney",
+   "q": "Which monorail resort is South Seas themed?",
+   "answers": [
+    "Disney's Polynesian Village",
+    "The Contemporary",
+    "The Grand Floridian",
+    "Wilderness Lodge"
+   ]
+  },
+  {
+   "id": "food-001",
+   "category": "food",
+   "q": "What is the main ingredient in guacamole?",
+   "answers": [
+    "Avocado",
+    "Cucumber",
+    "Tomatillo",
+    "Pea"
+   ]
+  },
+  {
+   "id": "food-002",
+   "category": "food",
+   "q": "Which country does sushi come from?",
+   "answers": [
+    "Japan",
+    "China",
+    "Korea",
+    "Thailand"
+   ]
+  },
+  {
+   "id": "food-003",
+   "category": "food",
+   "q": "Which pastry is used to make profiteroles?",
+   "answers": [
+    "Choux",
+    "Puff",
+    "Filo",
+    "Shortcrust"
+   ]
+  },
+  {
+   "id": "food-004",
+   "category": "food",
+   "q": "Which spice is the most expensive by weight?",
+   "answers": [
+    "Saffron",
+    "Vanilla",
+    "Cardamom",
+    "Cinnamon"
+   ]
+  },
+  {
+   "id": "food-005",
+   "category": "food",
+   "q": "What is hummus mostly made from?",
+   "answers": [
+    "Chickpeas",
+    "Lentils",
+    "White beans",
+    "Fava beans"
+   ]
+  },
+  {
+   "id": "food-006",
+   "category": "food",
+   "q": "Which nut is marzipan made from?",
+   "answers": [
+    "Almond",
+    "Hazelnut",
+    "Cashew",
+    "Walnut"
+   ]
+  },
+  {
+   "id": "food-007",
+   "category": "food",
+   "q": "What does \"al dente\" mean?",
+   "answers": [
+    "Firm to the bite",
+    "Boiled twice",
+    "Served cold",
+    "Lightly salted"
+   ]
+  },
+  {
+   "id": "food-008",
+   "category": "food",
+   "q": "What is tofu made from?",
+   "answers": [
+    "Soybeans",
+    "Rice",
+    "Chickpeas",
+    "Wheat"
+   ]
+  },
+  {
+   "id": "food-009",
+   "category": "food",
+   "q": "Which cheese belongs on a Margherita pizza?",
+   "answers": [
+    "Mozzarella",
+    "Cheddar",
+    "Provolone",
+    "Parmesan"
+   ]
+  },
+  {
+   "id": "food-010",
+   "category": "food",
+   "q": "What is the main herb in pesto?",
+   "answers": [
+    "Basil",
+    "Parsley",
+    "Oregano",
+    "Mint"
+   ]
+  },
+  {
+   "id": "food-011",
+   "category": "food",
+   "q": "Which fruit goes into a Bellini?",
+   "answers": [
+    "Peach",
+    "Orange",
+    "Raspberry",
+    "Apricot"
+   ]
+  },
+  {
+   "id": "food-012",
+   "category": "food",
+   "q": "Which Spanish dish is built on rice and saffron?",
+   "answers": [
+    "Paella",
+    "Gazpacho",
+    "Tortilla",
+    "Fabada"
+   ]
+  },
+  {
+   "id": "food-013",
+   "category": "food",
+   "q": "Which vegetable is the base of most kimchi?",
+   "answers": [
+    "Cabbage",
+    "Radish",
+    "Cucumber",
+    "Carrot"
+   ]
+  },
+  {
+   "id": "food-014",
+   "category": "food",
+   "q": "What does a sommelier specialise in?",
+   "answers": [
+    "Wine",
+    "Cheese",
+    "Bread",
+    "Coffee"
+   ]
+  },
+  {
+   "id": "food-015",
+   "category": "food",
+   "q": "Which drink is made from fermented honey?",
+   "answers": [
+    "Mead",
+    "Cider",
+    "Perry",
+    "Sake"
+   ]
+  },
+  {
+   "id": "geography-001",
+   "category": "geography",
+   "q": "Which country has the largest land area?",
+   "answers": [
+    "Russia",
+    "Canada",
+    "China",
+    "The United States"
+   ]
+  },
+  {
+   "id": "geography-002",
+   "category": "geography",
+   "q": "What is the largest hot desert in the world?",
+   "answers": [
+    "The Sahara",
+    "The Gobi",
+    "The Kalahari",
+    "The Mojave"
+   ]
+  },
+  {
+   "id": "geography-003",
+   "category": "geography",
+   "q": "What is the capital of Canada?",
+   "answers": [
+    "Ottawa",
+    "Toronto",
+    "Vancouver",
+    "Montreal"
+   ]
+  },
+  {
+   "id": "geography-004",
+   "category": "geography",
+   "q": "Which mountain is the highest above sea level?",
+   "answers": [
+    "Mount Everest",
+    "K2",
+    "Denali",
+    "Kilimanjaro"
+   ]
+  },
+  {
+   "id": "geography-005",
+   "category": "geography",
+   "q": "How many states are there in the United States?",
+   "answers": [
+    "Fifty",
+    "Forty-eight",
+    "Fifty-two",
+    "Forty-nine"
+   ]
+  },
+  {
+   "id": "geography-006",
+   "category": "geography",
+   "q": "Which country is home to the Great Barrier Reef?",
+   "answers": [
+    "Australia",
+    "Indonesia",
+    "The Philippines",
+    "Fiji"
+   ]
+  },
+  {
+   "id": "geography-007",
+   "category": "geography",
+   "q": "What is the smallest country in the world?",
+   "answers": [
+    "Vatican City",
+    "Monaco",
+    "San Marino",
+    "Liechtenstein"
+   ]
+  },
+  {
+   "id": "geography-008",
+   "category": "geography",
+   "q": "Which two countries share the longest international border?",
+   "answers": [
+    "The US and Canada",
+    "Russia and China",
+    "Chile and Argentina",
+    "India and China"
+   ]
+  },
+  {
+   "id": "geography-009",
+   "category": "geography",
+   "q": "What is the capital of Brazil?",
+   "answers": [
+    "Brasilia",
+    "Rio de Janeiro",
+    "Sao Paulo",
+    "Salvador"
+   ]
+  },
+  {
+   "id": "geography-010",
+   "category": "geography",
+   "q": "Which ocean lies between Africa and Australia?",
+   "answers": [
+    "The Indian",
+    "The Pacific",
+    "The Atlantic",
+    "The Southern"
+   ]
+  },
+  {
+   "id": "geography-011",
+   "category": "geography",
+   "q": "Which European country is shaped like a boot?",
+   "answers": [
+    "Italy",
+    "Greece",
+    "Portugal",
+    "Croatia"
+   ]
+  },
+  {
+   "id": "geography-012",
+   "category": "geography",
+   "q": "What is the largest island in the world?",
+   "answers": [
+    "Greenland",
+    "New Guinea",
+    "Borneo",
+    "Madagascar"
+   ]
+  },
+  {
+   "id": "geography-013",
+   "category": "geography",
+   "q": "Which line of latitude divides Earth into north and south?",
+   "answers": [
+    "The Equator",
+    "The Prime Meridian",
+    "The Tropic of Cancer",
+    "The Arctic Circle"
+   ]
+  },
+  {
+   "id": "geography-014",
+   "category": "geography",
+   "q": "Which river flows through Cairo?",
+   "answers": [
+    "The Nile",
+    "The Congo",
+    "The Niger",
+    "The Zambezi"
+   ]
+  },
+  {
+   "id": "geography-015",
+   "category": "geography",
+   "q": "What is the capital of New Zealand?",
+   "answers": [
+    "Wellington",
+    "Auckland",
+    "Christchurch",
+    "Dunedin"
+   ]
+  },
+  {
+   "id": "office-001",
+   "category": "office",
+   "q": "What paper company does the show revolve around?",
+   "answers": [
+    "Dunder Mifflin",
+    "Prince Paper",
+    "Staples",
+    "Michael Scott Paper Co."
+   ]
+  },
+  {
+   "id": "office-002",
+   "category": "office",
+   "q": "Which Pennsylvania city is the branch in?",
+   "answers": [
+    "Scranton",
+    "Pittsburgh",
+    "Allentown",
+    "Harrisburg"
+   ]
+  },
+  {
+   "id": "office-003",
+   "category": "office",
+   "q": "What is Dwight's family farm called?",
+   "answers": [
+    "Schrute Farms",
+    "Beet Ridge",
+    "Mose Acres",
+    "Hay Place"
+   ]
+  },
+  {
+   "id": "office-004",
+   "category": "office",
+   "q": "What is the title of Michael's screenplay?",
+   "answers": [
+    "Threat Level Midnight",
+    "Agent Michael Scarn",
+    "Goldenface",
+    "The Scarn Identity"
+   ]
+  },
+  {
+   "id": "office-005",
+   "category": "office",
+   "q": "What does Jim encase Dwight's stapler in?",
+   "answers": [
+    "Jell-O",
+    "Cement",
+    "Ice",
+    "Bubble wrap"
+   ]
+  },
+  {
+   "id": "office-006",
+   "category": "office",
+   "q": "What is Creed's last name?",
+   "answers": [
+    "Bratton",
+    "Halpert",
+    "Bernard",
+    "Palmer"
+   ]
+  },
+  {
+   "id": "office-007",
+   "category": "office",
+   "q": "What is the name of Andy's Cornell a cappella group?",
+   "answers": [
+    "Here Comes Treble",
+    "The Bellhops",
+    "Cayuga's Waiters",
+    "Big Red Notes"
+   ]
+  },
+  {
+   "id": "office-008",
+   "category": "office",
+   "q": "Which company buys Dunder Mifflin in season 7?",
+   "answers": [
+    "Sabre",
+    "Staples",
+    "Prince Paper",
+    "Osprey Paper"
+   ]
+  },
+  {
+   "id": "office-009",
+   "category": "office",
+   "q": "What is the name of Angela's cat that Dwight puts down?",
+   "answers": [
+    "Sprinkles",
+    "Bandit",
+    "Comstock",
+    "Princess Lady"
+   ]
+  },
+  {
+   "id": "office-010",
+   "category": "office",
+   "q": "Which CFO at corporate does Michael report to?",
+   "answers": [
+    "David Wallace",
+    "Robert California",
+    "Jo Bennett",
+    "Charles Miner"
+   ]
+  },
+  {
+   "id": "office-011",
+   "category": "office",
+   "q": "Which HR rep does Michael eventually end up with?",
+   "answers": [
+    "Holly Flax",
+    "Jan Levinson",
+    "Toby Flenderson",
+    "Karen Filippelli"
+   ]
+  },
+  {
+   "id": "office-012",
+   "category": "office",
+   "q": "What website does Ryan launch from the warehouse?",
+   "answers": [
+    "WUPHF.com",
+    "Sabre.net",
+    "Paperless.co",
+    "DunderNet"
+   ]
+  },
+  {
+   "id": "office-013",
+   "category": "office",
+   "q": "What does Kevin famously spill all over the office?",
+   "answers": [
+    "A pot of chili",
+    "A vat of coffee",
+    "Nacho cheese",
+    "A tray of cake"
+   ]
+  },
+  {
+   "id": "office-014",
+   "category": "office",
+   "q": "Who becomes regional manager in season 8?",
+   "answers": [
+    "Andy Bernard",
+    "Dwight Schrute",
+    "Jim Halpert",
+    "Darryl Philbin"
+   ]
+  },
+  {
+   "id": "office-015",
+   "category": "office",
+   "q": "What is the office's party-planning group called?",
+   "answers": [
+    "The Party Planning Committee",
+    "The Fun Squad",
+    "The Celebration Team",
+    "The Morale Corps"
+   ]
+  },
+  {
+   "id": "parksrec-001",
+   "category": "parksrec",
+   "q": "Which town is the show set in?",
+   "answers": [
+    "Pawnee",
+    "Eagleton",
+    "Partridge",
+    "Muncie"
+   ]
+  },
+  {
+   "id": "parksrec-002",
+   "category": "parksrec",
+   "q": "Which state is Pawnee in?",
+   "answers": [
+    "Indiana",
+    "Illinois",
+    "Ohio",
+    "Iowa"
+   ]
+  },
+  {
+   "id": "parksrec-003",
+   "category": "parksrec",
+   "q": "What is Leslie Knope's job at the start of the show?",
+   "answers": [
+    "Deputy Parks Director",
+    "Parks Director",
+    "City Manager",
+    "Councilwoman"
+   ]
+  },
+  {
+   "id": "parksrec-004",
+   "category": "parksrec",
+   "q": "Who does Leslie marry?",
+   "answers": [
+    "Ben Wyatt",
+    "Mark Brendanawicz",
+    "Dave Sanderson",
+    "Tom Haverford"
+   ]
+  },
+  {
+   "id": "parksrec-005",
+   "category": "parksrec",
+   "q": "What instrument does Ron Swanson play as Duke Silver?",
+   "answers": [
+    "Saxophone",
+    "Trumpet",
+    "Piano",
+    "Guitar"
+   ]
+  },
+  {
+   "id": "parksrec-006",
+   "category": "parksrec",
+   "q": "What is Andy Dwyer's band called?",
+   "answers": [
+    "Mouse Rat",
+    "Scarecrow Boat",
+    "Threeskin",
+    "Nothing Rhymes with Orange"
+   ]
+  },
+  {
+   "id": "parksrec-007",
+   "category": "parksrec",
+   "q": "What is Andy's FBI alter ego?",
+   "answers": [
+    "Burt Macklin",
+    "Jack Sparrow",
+    "Kip Hackman",
+    "Eagle One"
+   ]
+  },
+  {
+   "id": "parksrec-008",
+   "category": "parksrec",
+   "q": "Who does April Ludgate marry?",
+   "answers": [
+    "Andy Dwyer",
+    "Tom Haverford",
+    "Orin",
+    "Chris Traeger"
+   ]
+  },
+  {
+   "id": "parksrec-009",
+   "category": "parksrec",
+   "q": "What kind of animal is Li'l Sebastian?",
+   "answers": [
+    "A miniature horse",
+    "A pony",
+    "A goat",
+    "A donkey"
+   ]
+  },
+  {
+   "id": "parksrec-010",
+   "category": "parksrec",
+   "q": "What is Pawnee's rival town?",
+   "answers": [
+    "Eagleton",
+    "Partridge",
+    "Indianapolis",
+    "Bloomington"
+   ]
+  },
+  {
+   "id": "parksrec-011",
+   "category": "parksrec",
+   "q": "What board game does Ben Wyatt invent?",
+   "answers": [
+    "The Cones of Dunshire",
+    "Settlers of Pawnee",
+    "Wamapoke",
+    "Risk Reborn"
+   ]
+  },
+  {
+   "id": "parksrec-012",
+   "category": "parksrec",
+   "q": "Which failed project got teenage mayor Ben Wyatt recalled?",
+   "answers": [
+    "Ice Town",
+    "Water World",
+    "Snow Village",
+    "Fun Zone"
+   ]
+  },
+  {
+   "id": "parksrec-013",
+   "category": "parksrec",
+   "q": "What does Tom Haverford name his restaurant?",
+   "answers": [
+    "Tom's Bistro",
+    "Rent-A-Swag",
+    "Entertainment 720",
+    "Snakehole Lounge"
+   ]
+  },
+  {
+   "id": "parksrec-014",
+   "category": "parksrec",
+   "q": "What is Jerry Gergich's actual first name?",
+   "answers": [
+    "Garry",
+    "Larry",
+    "Terry",
+    "Barry"
+   ]
+  },
+  {
+   "id": "parksrec-015",
+   "category": "parksrec",
+   "q": "What is the pit that becomes a park officially called?",
+   "answers": [
+    "Lot 48",
+    "Site 12",
+    "Parcel B",
+    "Block 9"
+   ]
+  }
+ ]
+}
