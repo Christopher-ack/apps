@@ -95,7 +95,19 @@ alter table public.settings      enable row level security;
 -- No policies on public.users at all => anon cannot read or write it directly.
 -- Everything touching that table goes through the functions below.
 revoke all on public.users from anon, authenticated;
+
+-- Table-level grants. RLS sits on top of these: a grant only says "this role
+-- may attempt the query", the policies still decide which rows come back.
+-- Newer Supabase projects do not auto-grant to anon, so these must be explicit.
+grant usage on schema public to anon, authenticated;
+grant select, insert, update, delete on public.matches       to anon, authenticated;
+grant select, insert, update, delete on public.match_players to anon, authenticated;
+grant select, insert, update, delete on public.daily_rounds  to anon, authenticated;
+grant select, insert, update, delete on public.daily_players to anon, authenticated;
+grant select on public.settings     to anon, authenticated;
 grant select on public.users_public to anon, authenticated;
+alter default privileges in schema public
+  grant select, insert, update, delete on tables to anon, authenticated;
 
 do $$
 begin

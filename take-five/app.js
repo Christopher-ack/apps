@@ -1182,8 +1182,6 @@ async function boot(){
     me = byId(sessionId);
     renderHome(); show('home');
   } else {
-    if(!S.users.length) $('#signin-note').textContent = 'The first account created becomes the admin.';
-    else $('#signin-note').hidden = true;
     show('signin');
   }
 }

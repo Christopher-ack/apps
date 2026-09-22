@@ -10,12 +10,12 @@ window.TAKE_FIVE_CONFIG = {
      KEY — Project Settings -> API Keys -> "Publishable key" (sb_publishable_...).
      Older projects call this the "anon public" key (eyJ...); either works.
      NEVER paste a secret key here — it ships inside this page. */
-  SUPABASE_URL:      'https://dqzqrkuekuioqzozcfcq.supabase.co',   // e.g. 'https://abcdefghijkl.supabase.co'
-  SUPABASE_ANON_KEY: 'sb_publishable_eWFv9xr3mc3FOypfrJyHEg_33s30XvK',   // the long "anon / public" key
+  SUPABASE_URL:      '',   // e.g. 'https://abcdefghijkl.supabase.co'
+  SUPABASE_ANON_KEY: '',   // e.g. 'sb_publishable_...'  (or a legacy eyJ... anon key)
 
   /* Where the app lives once it is deployed. Gets added to nudge and share
      messages so people can tap straight through. Leave blank to omit it. */
-  APP_URL: 'https://christopher-ack.github.io/apps/take-five/',             // e.g. 'https://yourname.github.io/take-five/'
+  APP_URL: '',             // e.g. 'https://yourname.github.io/take-five/'
 
   /* Where question reports go. Fill in either, both, or neither —
      a blank one hides its button, and "Copy report" always works. */

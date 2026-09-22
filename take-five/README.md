@@ -16,6 +16,7 @@ a small group of friends.
 | `config.js` | **The only file you edit.** Keys, app URL, scoring |
 | `questions.json` | Categories and questions — the content |
 | `schema.sql` | Paste into Supabase once |
+| `fix-grants.sql` | Run if you ever see "permission denied for table …" |
 | `sw.js` | Service worker. Bump `CACHE` when you deploy app changes |
 | `manifest.webmanifest`, `icon-*.png` | Makes it installable on iOS |
 | `tools/add-questions.py` | Merges a CSV of questions into `questions.json` |

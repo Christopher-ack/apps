@@ -1,7 +1,7 @@
 /* Take Five — service worker.
    Bump CACHE whenever you deploy. Anything cached under the old name is
    deleted on activate, so a stale app can never linger. */
-const CACHE = "takefive-v2";
+const CACHE = "takefive-v3";
 
 /* The app shell. questions.json is deliberately NOT here — it is fetched
    network-first below so new questions appear as soon as you deploy them. */
