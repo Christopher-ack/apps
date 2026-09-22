@@ -5583,6 +5583,1106 @@
     "A gym",
     "A nightclub"
    ]
+  },
+  {
+   "id": "general-051",
+   "category": "general",
+   "q": "Which planet is famous for its prominent rings?",
+   "answers": [
+    "Saturn",
+    "Jupiter",
+    "Uranus",
+    "Neptune"
+   ]
+  },
+  {
+   "id": "general-052",
+   "category": "general",
+   "q": "How many planets are in our solar system?",
+   "answers": [
+    "Eight",
+    "Nine",
+    "Seven",
+    "Ten"
+   ]
+  },
+  {
+   "id": "general-053",
+   "category": "general",
+   "q": "What is the closest star to Earth?",
+   "answers": [
+    "The Sun",
+    "Proxima Centauri",
+    "Sirius",
+    "Alpha Centauri A"
+   ]
+  },
+  {
+   "id": "general-054",
+   "category": "general",
+   "q": "Which force keeps planets in orbit around the Sun?",
+   "answers": [
+    "Gravity",
+    "Magnetism",
+    "Friction",
+    "Inertia"
+   ]
+  },
+  {
+   "id": "general-055",
+   "category": "general",
+   "q": "Who was the first person to walk on the Moon?",
+   "answers": [
+    "Neil Armstrong",
+    "Buzz Aldrin",
+    "Yuri Gagarin",
+    "Michael Collins"
+   ]
+  },
+  {
+   "id": "general-056",
+   "category": "general",
+   "q": "Which planet is closest in size to Earth?",
+   "answers": [
+    "Venus",
+    "Mars",
+    "Mercury",
+    "Neptune"
+   ]
+  },
+  {
+   "id": "general-057",
+   "category": "general",
+   "q": "What is the name of our galaxy?",
+   "answers": [
+    "The Milky Way",
+    "Andromeda",
+    "The Whirlpool",
+    "Triangulum"
+   ]
+  },
+  {
+   "id": "general-058",
+   "category": "general",
+   "q": "What does NASA stand for?",
+   "answers": [
+    "National Aeronautics and Space Administration",
+    "National Astronautics and Science Agency",
+    "North American Space Association",
+    "National Air and Space Authority"
+   ]
+  },
+  {
+   "id": "general-059",
+   "category": "general",
+   "q": "Which gas makes up most of Earth's atmosphere?",
+   "answers": [
+    "Nitrogen",
+    "Oxygen",
+    "Carbon dioxide",
+    "Argon"
+   ]
+  },
+  {
+   "id": "general-060",
+   "category": "general",
+   "q": "What is the chemical symbol for sodium?",
+   "answers": [
+    "Na",
+    "So",
+    "Sd",
+    "S"
+   ]
+  },
+  {
+   "id": "general-061",
+   "category": "general",
+   "q": "What is the chemical symbol for potassium?",
+   "answers": [
+    "K",
+    "P",
+    "Po",
+    "Pt"
+   ]
+  },
+  {
+   "id": "general-062",
+   "category": "general",
+   "q": "Which part of an atom carries a negative charge?",
+   "answers": [
+    "The electron",
+    "The proton",
+    "The neutron",
+    "The nucleus"
+   ]
+  },
+  {
+   "id": "general-063",
+   "category": "general",
+   "q": "What is the centre of an atom called?",
+   "answers": [
+    "The nucleus",
+    "The core",
+    "The shell",
+    "The orbital"
+   ]
+  },
+  {
+   "id": "general-064",
+   "category": "general",
+   "q": "What is the process by which plants make food from sunlight?",
+   "answers": [
+    "Photosynthesis",
+    "Respiration",
+    "Transpiration",
+    "Germination"
+   ]
+  },
+  {
+   "id": "general-065",
+   "category": "general",
+   "q": "What is the study of living organisms called?",
+   "answers": [
+    "Biology",
+    "Geology",
+    "Ecology",
+    "Zoology"
+   ]
+  },
+  {
+   "id": "general-066",
+   "category": "general",
+   "q": "How many chromosomes does a typical human cell have?",
+   "answers": [
+    "46",
+    "23",
+    "48",
+    "44"
+   ]
+  },
+  {
+   "id": "general-067",
+   "category": "general",
+   "q": "Which blood type is known as the universal donor?",
+   "answers": [
+    "O negative",
+    "AB positive",
+    "A positive",
+    "O positive"
+   ]
+  },
+  {
+   "id": "general-068",
+   "category": "general",
+   "q": "Roughly how fast does light travel?",
+   "answers": [
+    "About 300,000 kilometres per second",
+    "About 300,000 kilometres per hour",
+    "About 30,000 kilometres per second",
+    "About 3 million kilometres per second"
+   ]
+  },
+  {
+   "id": "general-069",
+   "category": "general",
+   "q": "What is the most abundant element in the universe?",
+   "answers": [
+    "Hydrogen",
+    "Helium",
+    "Oxygen",
+    "Carbon"
+   ]
+  },
+  {
+   "id": "general-070",
+   "category": "general",
+   "q": "What instrument is used to measure atmospheric pressure?",
+   "answers": [
+    "A barometer",
+    "A thermometer",
+    "An anemometer",
+    "A hygrometer"
+   ]
+  },
+  {
+   "id": "general-071",
+   "category": "general",
+   "q": "In which year did the Second World War end?",
+   "answers": [
+    "1945",
+    "1944",
+    "1946",
+    "1943"
+   ]
+  },
+  {
+   "id": "general-072",
+   "category": "general",
+   "q": "In which year did the First World War begin?",
+   "answers": [
+    "1914",
+    "1912",
+    "1916",
+    "1918"
+   ]
+  },
+  {
+   "id": "general-073",
+   "category": "general",
+   "q": "Who was the first President of the United States?",
+   "answers": [
+    "George Washington",
+    "Thomas Jefferson",
+    "John Adams",
+    "Benjamin Franklin"
+   ]
+  },
+  {
+   "id": "general-074",
+   "category": "general",
+   "q": "Which ancient civilisation built the Pyramids of Giza?",
+   "answers": [
+    "The Egyptians",
+    "The Romans",
+    "The Greeks",
+    "The Persians"
+   ]
+  },
+  {
+   "id": "general-075",
+   "category": "general",
+   "q": "Who was the first woman to win a Nobel Prize?",
+   "answers": [
+    "Marie Curie",
+    "Rosalind Franklin",
+    "Dorothy Hodgkin",
+    "Ada Lovelace"
+   ]
+  },
+  {
+   "id": "general-076",
+   "category": "general",
+   "q": "In which year did the Berlin Wall fall?",
+   "answers": [
+    "1989",
+    "1991",
+    "1987",
+    "1985"
+   ]
+  },
+  {
+   "id": "general-077",
+   "category": "general",
+   "q": "Which ship carried the Pilgrims to America in 1620?",
+   "answers": [
+    "The Mayflower",
+    "The Santa Maria",
+    "The Endeavour",
+    "The Beagle"
+   ]
+  },
+  {
+   "id": "general-078",
+   "category": "general",
+   "q": "Who is credited with inventing the telephone?",
+   "answers": [
+    "Alexander Graham Bell",
+    "Thomas Edison",
+    "Nikola Tesla",
+    "Guglielmo Marconi"
+   ]
+  },
+  {
+   "id": "general-079",
+   "category": "general",
+   "q": "In which year did humans first land on the Moon?",
+   "answers": [
+    "1969",
+    "1967",
+    "1971",
+    "1965"
+   ]
+  },
+  {
+   "id": "general-080",
+   "category": "general",
+   "q": "Which country gifted the Statue of Liberty to the United States?",
+   "answers": [
+    "France",
+    "Britain",
+    "Spain",
+    "Italy"
+   ]
+  },
+  {
+   "id": "general-081",
+   "category": "general",
+   "q": "Who built and flew the first successful powered aeroplane?",
+   "answers": [
+    "The Wright brothers",
+    "Louis Bleriot",
+    "Samuel Langley",
+    "Otto Lilienthal"
+   ]
+  },
+  {
+   "id": "general-082",
+   "category": "general",
+   "q": "Which disease was declared eradicated worldwide in 1980?",
+   "answers": [
+    "Smallpox",
+    "Polio",
+    "Measles",
+    "Cholera"
+   ]
+  },
+  {
+   "id": "general-083",
+   "category": "general",
+   "q": "Who was British Prime Minister for most of the Second World War?",
+   "answers": [
+    "Winston Churchill",
+    "Neville Chamberlain",
+    "Clement Attlee",
+    "Anthony Eden"
+   ]
+  },
+  {
+   "id": "general-084",
+   "category": "general",
+   "q": "In which century did the Industrial Revolution begin?",
+   "answers": [
+    "The 18th century",
+    "The 16th century",
+    "The 19th century",
+    "The 17th century"
+   ]
+  },
+  {
+   "id": "general-085",
+   "category": "general",
+   "q": "Which empire was ruled from Constantinople after Rome fell?",
+   "answers": [
+    "The Byzantine Empire",
+    "The Ottoman Empire",
+    "The Holy Roman Empire",
+    "The Persian Empire"
+   ]
+  },
+  {
+   "id": "general-086",
+   "category": "general",
+   "q": "Which explorer's crew first circumnavigated the globe?",
+   "answers": [
+    "Ferdinand Magellan",
+    "Christopher Columbus",
+    "Vasco da Gama",
+    "Francis Drake"
+   ]
+  },
+  {
+   "id": "general-087",
+   "category": "general",
+   "q": "Which document did King John seal in 1215?",
+   "answers": [
+    "Magna Carta",
+    "The Bill of Rights",
+    "The Domesday Book",
+    "The Treaty of Paris"
+   ]
+  },
+  {
+   "id": "general-088",
+   "category": "general",
+   "q": "What was the ancient wonder located at Alexandria?",
+   "answers": [
+    "A lighthouse",
+    "A hanging garden",
+    "A colossus",
+    "A mausoleum"
+   ]
+  },
+  {
+   "id": "general-089",
+   "category": "general",
+   "q": "How many baseball players from one team are on the field?",
+   "answers": [
+    "Nine",
+    "Ten",
+    "Eight",
+    "Eleven"
+   ]
+  },
+  {
+   "id": "general-090",
+   "category": "general",
+   "q": "How many holes are on a full-size golf course?",
+   "answers": [
+    "18",
+    "16",
+    "20",
+    "24"
+   ]
+  },
+  {
+   "id": "general-091",
+   "category": "general",
+   "q": "Which sport is played at Wimbledon?",
+   "answers": [
+    "Tennis",
+    "Cricket",
+    "Golf",
+    "Rowing"
+   ]
+  },
+  {
+   "id": "general-092",
+   "category": "general",
+   "q": "How often are the Summer Olympics held?",
+   "answers": [
+    "Every four years",
+    "Every two years",
+    "Every three years",
+    "Every five years"
+   ]
+  },
+  {
+   "id": "general-093",
+   "category": "general",
+   "q": "How many points is a touchdown worth in American football?",
+   "answers": [
+    "Six",
+    "Seven",
+    "Three",
+    "Five"
+   ]
+  },
+  {
+   "id": "general-094",
+   "category": "general",
+   "q": "What is the maximum break in snooker?",
+   "answers": [
+    "147",
+    "155",
+    "180",
+    "100"
+   ]
+  },
+  {
+   "id": "general-095",
+   "category": "general",
+   "q": "How many rings are on the Olympic flag?",
+   "answers": [
+    "Five",
+    "Four",
+    "Six",
+    "Seven"
+   ]
+  },
+  {
+   "id": "general-096",
+   "category": "general",
+   "q": "In which sport would you perform a slam dunk?",
+   "answers": [
+    "Basketball",
+    "Volleyball",
+    "Handball",
+    "Netball"
+   ]
+  },
+  {
+   "id": "general-097",
+   "category": "general",
+   "q": "How many ice hockey players from one team are on the ice?",
+   "answers": [
+    "Six",
+    "Five",
+    "Seven",
+    "Four"
+   ]
+  },
+  {
+   "id": "general-098",
+   "category": "general",
+   "q": "What is the traditional national sport of Japan?",
+   "answers": [
+    "Sumo wrestling",
+    "Judo",
+    "Karate",
+    "Kendo"
+   ]
+  },
+  {
+   "id": "general-099",
+   "category": "general",
+   "q": "How long is a marathon?",
+   "answers": [
+    "26.2 miles",
+    "24 miles",
+    "30 miles",
+    "20.2 miles"
+   ]
+  },
+  {
+   "id": "general-100",
+   "category": "general",
+   "q": "Which sport uses the scoring terms love and deuce?",
+   "answers": [
+    "Tennis",
+    "Badminton",
+    "Squash",
+    "Table tennis"
+   ]
+  },
+  {
+   "id": "general-101",
+   "category": "general",
+   "q": "How many vowels are in the English alphabet?",
+   "answers": [
+    "Five",
+    "Six",
+    "Four",
+    "Seven"
+   ]
+  },
+  {
+   "id": "general-102",
+   "category": "general",
+   "q": "Who wrote Pride and Prejudice?",
+   "answers": [
+    "Jane Austen",
+    "Charlotte Bronte",
+    "George Eliot",
+    "Virginia Woolf"
+   ]
+  },
+  {
+   "id": "general-103",
+   "category": "general",
+   "q": "Who wrote the novel 1984?",
+   "answers": [
+    "George Orwell",
+    "Aldous Huxley",
+    "Ray Bradbury",
+    "H. G. Wells"
+   ]
+  },
+  {
+   "id": "general-104",
+   "category": "general",
+   "q": "Who wrote The Great Gatsby?",
+   "answers": [
+    "F. Scott Fitzgerald",
+    "Ernest Hemingway",
+    "John Steinbeck",
+    "William Faulkner"
+   ]
+  },
+  {
+   "id": "general-105",
+   "category": "general",
+   "q": "Who wrote Moby-Dick?",
+   "answers": [
+    "Herman Melville",
+    "Nathaniel Hawthorne",
+    "Mark Twain",
+    "Jack London"
+   ]
+  },
+  {
+   "id": "general-106",
+   "category": "general",
+   "q": "What does the phrase et cetera mean?",
+   "answers": [
+    "And the rest",
+    "For example",
+    "That is",
+    "In place of"
+   ]
+  },
+  {
+   "id": "general-107",
+   "category": "general",
+   "q": "What is the official language of Brazil?",
+   "answers": [
+    "Portuguese",
+    "Spanish",
+    "French",
+    "Italian"
+   ]
+  },
+  {
+   "id": "general-108",
+   "category": "general",
+   "q": "Who created the detective Sherlock Holmes?",
+   "answers": [
+    "Arthur Conan Doyle",
+    "Agatha Christie",
+    "Wilkie Collins",
+    "Edgar Allan Poe"
+   ]
+  },
+  {
+   "id": "general-109",
+   "category": "general",
+   "q": "What is the syllable pattern of a haiku?",
+   "answers": [
+    "5-7-5",
+    "7-5-7",
+    "5-5-5",
+    "6-8-6"
+   ]
+  },
+  {
+   "id": "general-110",
+   "category": "general",
+   "q": "Who is credited with writing The Odyssey?",
+   "answers": [
+    "Homer",
+    "Virgil",
+    "Ovid",
+    "Sophocles"
+   ]
+  },
+  {
+   "id": "general-111",
+   "category": "general",
+   "q": "What is the plural of cactus?",
+   "answers": [
+    "Cacti",
+    "Cactuses only",
+    "Cactae",
+    "Cactus"
+   ]
+  },
+  {
+   "id": "general-112",
+   "category": "general",
+   "q": "Which language is written with a Cyrillic alphabet?",
+   "answers": [
+    "Russian",
+    "Greek",
+    "Hebrew",
+    "Turkish"
+   ]
+  },
+  {
+   "id": "general-113",
+   "category": "general",
+   "q": "How many centimetres are in a metre?",
+   "answers": [
+    "100",
+    "10",
+    "1,000",
+    "50"
+   ]
+  },
+  {
+   "id": "general-114",
+   "category": "general",
+   "q": "How many ounces are in a pound?",
+   "answers": [
+    "16",
+    "12",
+    "20",
+    "14"
+   ]
+  },
+  {
+   "id": "general-115",
+   "category": "general",
+   "q": "How many feet are in a mile?",
+   "answers": [
+    "5,280",
+    "5,000",
+    "3,280",
+    "6,080"
+   ]
+  },
+  {
+   "id": "general-116",
+   "category": "general",
+   "q": "What is 10 percent of 250?",
+   "answers": [
+    "25",
+    "20",
+    "30",
+    "15"
+   ]
+  },
+  {
+   "id": "general-117",
+   "category": "general",
+   "q": "What is pi to two decimal places?",
+   "answers": [
+    "3.14",
+    "3.12",
+    "3.16",
+    "3.41"
+   ]
+  },
+  {
+   "id": "general-118",
+   "category": "general",
+   "q": "How many degrees are in a right angle?",
+   "answers": [
+    "90",
+    "45",
+    "180",
+    "60"
+   ]
+  },
+  {
+   "id": "general-119",
+   "category": "general",
+   "q": "How many millilitres are in a litre?",
+   "answers": [
+    "1,000",
+    "100",
+    "10,000",
+    "500"
+   ]
+  },
+  {
+   "id": "general-120",
+   "category": "general",
+   "q": "What is the Roman numeral for 50?",
+   "answers": [
+    "L",
+    "X",
+    "C",
+    "D"
+   ]
+  },
+  {
+   "id": "general-121",
+   "category": "general",
+   "q": "What is the Roman numeral for 1,000?",
+   "answers": [
+    "M",
+    "D",
+    "C",
+    "K"
+   ]
+  },
+  {
+   "id": "general-122",
+   "category": "general",
+   "q": "How many zeroes are in one million?",
+   "answers": [
+    "Six",
+    "Five",
+    "Seven",
+    "Nine"
+   ]
+  },
+  {
+   "id": "general-123",
+   "category": "general",
+   "q": "Which shape has four equal sides and four right angles?",
+   "answers": [
+    "A square",
+    "A rhombus",
+    "A rectangle",
+    "A trapezoid"
+   ]
+  },
+  {
+   "id": "general-124",
+   "category": "general",
+   "q": "How many inches are in a foot?",
+   "answers": [
+    "12",
+    "10",
+    "16",
+    "14"
+   ]
+  },
+  {
+   "id": "general-125",
+   "category": "general",
+   "q": "How many cards are in a standard deck without jokers?",
+   "answers": [
+    "52",
+    "54",
+    "50",
+    "48"
+   ]
+  },
+  {
+   "id": "general-126",
+   "category": "general",
+   "q": "How many squares are on a chessboard?",
+   "answers": [
+    "64",
+    "81",
+    "100",
+    "49"
+   ]
+  },
+  {
+   "id": "general-127",
+   "category": "general",
+   "q": "Which country is the birthplace of the Olympic Games?",
+   "answers": [
+    "Greece",
+    "Italy",
+    "Egypt",
+    "Turkey"
+   ]
+  },
+  {
+   "id": "general-128",
+   "category": "general",
+   "q": "How many notes are in a musical octave?",
+   "answers": [
+    "Eight",
+    "Seven",
+    "Twelve",
+    "Five"
+   ]
+  },
+  {
+   "id": "general-129",
+   "category": "general",
+   "q": "How many lines are on a musical staff?",
+   "answers": [
+    "Five",
+    "Four",
+    "Six",
+    "Three"
+   ]
+  },
+  {
+   "id": "general-130",
+   "category": "general",
+   "q": "Which instrument is played with a bow and held under the chin?",
+   "answers": [
+    "The violin",
+    "The cello",
+    "The viola da gamba",
+    "The double bass"
+   ]
+  },
+  {
+   "id": "general-131",
+   "category": "general",
+   "q": "What does CPU stand for?",
+   "answers": [
+    "Central Processing Unit",
+    "Computer Power Unit",
+    "Central Program Utility",
+    "Core Processing Unit"
+   ]
+  },
+  {
+   "id": "general-132",
+   "category": "general",
+   "q": "What does HTML stand for?",
+   "answers": [
+    "HyperText Markup Language",
+    "High Transfer Machine Language",
+    "Hyperlink Text Making Language",
+    "Home Tool Markup Language"
+   ]
+  },
+  {
+   "id": "general-133",
+   "category": "general",
+   "q": "What does GPS stand for?",
+   "answers": [
+    "Global Positioning System",
+    "General Position Sensor",
+    "Global Pathing Service",
+    "Geographic Plotting System"
+   ]
+  },
+  {
+   "id": "general-134",
+   "category": "general",
+   "q": "How many bits are in a byte?",
+   "answers": [
+    "Eight",
+    "Four",
+    "Sixteen",
+    "Ten"
+   ]
+  },
+  {
+   "id": "general-135",
+   "category": "general",
+   "q": "What does RAM stand for?",
+   "answers": [
+    "Random Access Memory",
+    "Rapid Active Memory",
+    "Read And Modify",
+    "Runtime Access Module"
+   ]
+  },
+  {
+   "id": "general-136",
+   "category": "general",
+   "q": "Which company makes the iPhone?",
+   "answers": [
+    "Apple",
+    "Samsung",
+    "Google",
+    "Sony"
+   ]
+  },
+  {
+   "id": "general-137",
+   "category": "general",
+   "q": "How many players are on a volleyball team on the court?",
+   "answers": [
+    "Six",
+    "Five",
+    "Seven",
+    "Four"
+   ]
+  },
+  {
+   "id": "general-138",
+   "category": "general",
+   "q": "What is the only letter not appearing in any US state name?",
+   "answers": [
+    "Q",
+    "Z",
+    "X",
+    "J"
+   ]
+  },
+  {
+   "id": "general-139",
+   "category": "general",
+   "q": "How many chambers does the human heart have?",
+   "answers": [
+    "Four",
+    "Two",
+    "Three",
+    "Five"
+   ]
+  },
+  {
+   "id": "general-140",
+   "category": "general",
+   "q": "What is the largest bone in the human body?",
+   "answers": [
+    "The femur",
+    "The tibia",
+    "The humerus",
+    "The pelvis"
+   ]
+  },
+  {
+   "id": "general-141",
+   "category": "general",
+   "q": "Which organ produces insulin?",
+   "answers": [
+    "The pancreas",
+    "The liver",
+    "The spleen",
+    "The gall bladder"
+   ]
+  },
+  {
+   "id": "general-142",
+   "category": "general",
+   "q": "What is the smallest bone in the human body?",
+   "answers": [
+    "The stapes",
+    "The hyoid",
+    "The coccyx",
+    "The patella"
+   ]
+  },
+  {
+   "id": "general-143",
+   "category": "general",
+   "q": "How many ribs does a typical human have?",
+   "answers": [
+    "24",
+    "20",
+    "26",
+    "22"
+   ]
+  },
+  {
+   "id": "general-144",
+   "category": "general",
+   "q": "Which organs filter blood to make urine?",
+   "answers": [
+    "The kidneys",
+    "The lungs",
+    "The liver",
+    "The intestines"
+   ]
+  },
+  {
+   "id": "general-145",
+   "category": "general",
+   "q": "What is the medical name for the kneecap?",
+   "answers": [
+    "The patella",
+    "The tibia",
+    "The meniscus",
+    "The fibula"
+   ]
+  },
+  {
+   "id": "general-146",
+   "category": "general",
+   "q": "How many senses are traditionally recognised?",
+   "answers": [
+    "Five",
+    "Six",
+    "Four",
+    "Seven"
+   ]
+  },
+  {
+   "id": "general-147",
+   "category": "general",
+   "q": "What is the hardest substance in the human body?",
+   "answers": [
+    "Tooth enamel",
+    "Bone",
+    "Cartilage",
+    "Fingernail"
+   ]
+  },
+  {
+   "id": "general-148",
+   "category": "general",
+   "q": "Which part of the eye controls how much light enters?",
+   "answers": [
+    "The iris",
+    "The cornea",
+    "The retina",
+    "The lens"
+   ]
+  },
+  {
+   "id": "general-149",
+   "category": "general",
+   "q": "Which vitamin is found in high amounts in citrus fruit?",
+   "answers": [
+    "Vitamin C",
+    "Vitamin K",
+    "Vitamin E",
+    "Vitamin B6"
+   ]
+  },
+  {
+   "id": "general-150",
+   "category": "general",
+   "q": "Roughly what percentage of the human body is water?",
+   "answers": [
+    "About 60 percent",
+    "About 30 percent",
+    "About 90 percent",
+    "About 45 percent"
+   ]
   }
  ]
 }
