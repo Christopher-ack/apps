@@ -1,7 +1,11 @@
 /* Take Five — app styles.
    Dark is the default. :root carries the complete dark palette; the light
    blocks below redefine the same tokens. */
-:root{ padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px); }
+/* Safe areas are handled per element, never on :root — padding the root as
+   well as the bars double-counts the home indicator and leaves the tab bar
+   floating above the bottom edge in an installed app. Routed through custom
+   properties so they can be overridden in tests. */
+:root{ --sat: env(safe-area-inset-top, 0px); --sab: env(safe-area-inset-bottom, 0px); }
 img{max-width:100%}
 [hidden]{display:none!important}
 /* Dark is the app's default. :root carries the complete dark palette;
@@ -57,7 +61,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 
 #app{height:100%;display:flex;flex-direction:column;max-width:560px;margin:0 auto;position:relative;overflow:hidden;background:var(--bg)}
 .screen{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
-.pad{padding:18px 18px calc(var(--navh) + 28px)}
+.pad{padding:calc(var(--sat) + 18px) 18px calc(var(--navh) + var(--sab) + 28px)}
 
 h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;letter-spacing:-.02em}
 .eyebrow{font-family:var(--body);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3)}
@@ -73,7 +77,7 @@ h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;letter-spacing:-.
   position:absolute;left:0;right:0;bottom:0;display:flex;
   background:color-mix(in srgb,var(--bg2) 92%,transparent);
   backdrop-filter:blur(14px);border-top:1px solid var(--line);
-  padding-bottom:env(safe-area-inset-bottom,0px);
+  padding-bottom:var(--sab);
 }
 #nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:11px 0 10px;color:var(--ink3);transition:color .15s}
 #nav button[aria-current="true"]{color:var(--acc)}
@@ -148,7 +152,7 @@ h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;letter-spacing:-.
 .btn{display:block;width:100%;padding:15px;border-radius:13px;background:var(--acc);color:var(--accink);font-family:var(--display);font-weight:800;font-size:16px;text-align:center;transition:opacity .15s}
 .btn[disabled]{opacity:.32;cursor:not-allowed}
 .btn.ghost{background:none;border:1.5px solid var(--line);color:var(--ink2);font-size:14px;font-weight:600;font-family:var(--body)}
-.stickybar{position:sticky;bottom:0;padding:14px 0 calc(env(safe-area-inset-bottom,0px) + 14px);background:linear-gradient(to top,var(--bg) 62%,transparent)}
+.stickybar{position:sticky;bottom:calc(var(--navh) + var(--sab));padding:14px 0;background:linear-gradient(to top,var(--bg) 62%,transparent)}
 
 input[type=text],input[type=password],input[type=search]{
   width:100%;padding:13px 14px;border-radius:12px;border:1.5px solid var(--line);
@@ -170,11 +174,11 @@ input::placeholder{color:var(--ink3)}
 
 /* ---------- sheets ---------- */
 .sheet{position:absolute;inset:0;z-index:70;background:var(--bg);display:flex;flex-direction:column}
-.sheethead{display:flex;align-items:center;gap:12px;padding:calc(env(safe-area-inset-top,0px) + 16px) 16px 12px;border-bottom:1px solid var(--line)}
+.sheethead{display:flex;align-items:center;gap:12px;padding:calc(var(--sat) + 16px) 16px 12px;border-bottom:1px solid var(--line)}
 .sheethead h2{font-size:19px;font-weight:700;flex:1}
 .iconbtn{width:36px;height:36px;border-radius:50%;background:var(--surf);border:1px solid var(--line);display:grid;place-items:center;flex:none}
 .iconbtn svg{width:15px;height:15px;fill:none;stroke:var(--ink2);stroke-width:2;stroke-linecap:round}
-.sheetbody{flex:1;min-height:0;overflow-y:auto;padding:14px 16px calc(env(safe-area-inset-bottom,0px) + 20px)}
+.sheetbody{flex:1;min-height:0;overflow-y:auto;padding:14px 16px calc(var(--sab) + 20px)}
 .fprofile{text-align:center;padding:26px 0 22px}
 .fprofile .nm{font-family:var(--display);font-weight:800;font-size:26px;margin-top:12px;letter-spacing:-.03em}
 .h2h{display:flex;background:var(--surf);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:8px}
@@ -189,14 +193,14 @@ input::placeholder{color:var(--ink3)}
 
 /* ---------- game ---------- */
 #game{position:absolute;inset:0;background:var(--bg);display:flex;flex-direction:column;z-index:40}
-#gtop{padding:calc(env(safe-area-inset-top,0px) + 10px) 18px 0}
+#gtop{padding:calc(var(--sat) + 10px) 18px 0}
 #tbarwrap{height:5px;border-radius:99px;background:var(--line);overflow:hidden;margin-bottom:9px}
 #tbar{height:100%;width:100%;background:var(--acc);border-radius:99px;transform-origin:left center}
 #tbar.low{background:var(--bad)}
 #tnum{text-align:center;font-family:var(--mono);font-size:15px;color:var(--ink2);letter-spacing:.04em}
 #gmeta{display:flex;justify-content:space-between;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);margin-top:6px}
 #qstage{flex:1;min-height:0;position:relative;overflow:hidden}
-.qcard{position:absolute;inset:0;padding:22px 18px calc(env(safe-area-inset-bottom,0px) + 20px);display:flex;flex-direction:column;gap:18px;overflow-y:auto}
+.qcard{position:absolute;inset:0;padding:22px 18px calc(var(--sab) + 20px);display:flex;flex-direction:column;gap:18px;overflow-y:auto}
 .qcard.in{animation:slideIn .34s cubic-bezier(.22,.7,.3,1) both}
 .qcard.out{animation:slideOut .34s cubic-bezier(.6,0,.78,.3) both}
 @keyframes slideIn{from{transform:translateX(100%);opacity:.4}to{transform:translateX(0);opacity:1}}
@@ -219,9 +223,9 @@ input::placeholder{color:var(--ink3)}
 
 /* ---------- results ---------- */
 #results{position:absolute;inset:0;background:var(--bg);z-index:45;overflow-y:auto}
-.rclose{position:absolute;top:calc(env(safe-area-inset-top,0px) + 12px);right:14px;width:38px;height:38px;border-radius:50%;background:var(--surf);border:1px solid var(--line);display:grid;place-items:center;z-index:2}
+.rclose{position:absolute;top:calc(var(--sat) + 12px);right:14px;width:38px;height:38px;border-radius:50%;background:var(--surf);border:1px solid var(--line);display:grid;place-items:center;z-index:2}
 .rclose svg{width:16px;height:16px;fill:none;stroke:var(--ink2);stroke-width:2;stroke-linecap:round}
-.rhero{text-align:center;padding:calc(env(safe-area-inset-top,0px) + 46px) 18px 26px}
+.rhero{text-align:center;padding:calc(var(--sat) + 46px) 18px 26px}
 .rhero .total{font-family:var(--display);font-weight:800;font-size:76px;line-height:1;letter-spacing:-.045em;font-variant-numeric:tabular-nums}
 .rhero .outof{margin-top:6px;font-size:14px;color:var(--ink2);font-weight:600}
 .bdown{margin:0 18px;padding:4px 16px;border-radius:14px;background:var(--surf);border:1px solid var(--line)}
@@ -231,7 +235,7 @@ input::placeholder{color:var(--ink3)}
 .brow.tot{font-weight:700}
 .brow .lbl{color:var(--ink2)}
 .brow.tot .lbl{color:var(--ink)}
-.lbwrap{padding:28px 18px calc(env(safe-area-inset-bottom,0px) + 32px)}
+.lbwrap{padding:28px 18px calc(var(--sab) + 32px)}
 .lb{display:flex;flex-direction:column;gap:2px;margin-top:10px}
 .lbrow{display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:12px;background:var(--surf);border:1px solid transparent}
 .lbrow.me{border-color:var(--acc)}
@@ -288,7 +292,7 @@ textarea::placeholder{color:var(--ink3)}
 .note{font-size:12px;color:var(--ink3);line-height:1.5}
 .devbar{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap}
 .devbtn{font-size:12px;font-weight:600;padding:8px 12px;border-radius:99px;border:1px dashed var(--line);color:var(--ink3)}
-.signin{min-height:100%;display:flex;flex-direction:column;justify-content:center;gap:16px;padding:32px 22px}
+.signin{min-height:100%;display:flex;flex-direction:column;justify-content:center;gap:16px;padding:calc(var(--sat) + 32px) 22px calc(var(--sab) + 32px)}
 .brandmark{font-family:var(--display);font-weight:800;font-size:42px;letter-spacing:-.04em;line-height:1}
 .brandmark em{font-style:normal;color:var(--acc)}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
@@ -297,7 +301,7 @@ textarea::placeholder{color:var(--ink3)}
 #boot{position:fixed;inset:0;display:grid;place-items:center;background:var(--bg);z-index:200;text-align:center;padding:24px}
 #boot .brandmark{font-size:34px}
 #boot .msg{margin-top:14px;font-size:13px;color:var(--ink3);max-width:34ch}
-#banner{position:fixed;left:12px;right:12px;bottom:calc(var(--navh) + 12px);z-index:150;
+#banner{position:fixed;left:12px;right:12px;bottom:calc(var(--navh) + var(--sab) + 12px);z-index:150;
   padding:12px 15px;border-radius:12px;background:var(--surf2);border:1px solid var(--line);
   font-size:13px;font-weight:600;box-shadow:var(--shadow)}
 #banner.bad{border-color:var(--bad);color:var(--bad)}
