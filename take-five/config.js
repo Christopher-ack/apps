@@ -15,7 +15,7 @@ window.TAKE_FIVE_CONFIG = {
 
   /* Where the app lives once it is deployed. Gets added to nudge and share
      messages so people can tap straight through. Leave blank to omit it. */
-  APP_URL: '',             // e.g. 'https://yourname.github.io/take-five/'
+  APP_URL: 'https://christopher-ack.github.io/apps/take-five/',             // e.g. 'https://yourname.github.io/take-five/'
 
   /* Where question reports go. Fill in either, both, or neither —
      a blank one hides its button, and "Copy report" always works. */
