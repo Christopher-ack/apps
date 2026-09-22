@@ -10,8 +10,8 @@ window.TAKE_FIVE_CONFIG = {
      KEY — Project Settings -> API Keys -> "Publishable key" (sb_publishable_...).
      Older projects call this the "anon public" key (eyJ...); either works.
      NEVER paste a secret key here — it ships inside this page. */
-  SUPABASE_URL:      '',   // e.g. 'https://abcdefghijkl.supabase.co'
-  SUPABASE_ANON_KEY: '',   // e.g. 'sb_publishable_...'  (or a legacy eyJ... anon key)
+  SUPABASE_URL:      'https://dqzqrkuekuioqzozcfcq.supabase.co',   // e.g. 'https://abcdefghijkl.supabase.co'
+  SUPABASE_ANON_KEY: 'sb_publishable_eWFv9xr3mc3FOypfrJyHEg_33s30XvK',   // the long "anon / public" key
 
   /* Where the app lives once it is deployed. Gets added to nudge and share
      messages so people can tap straight through. Leave blank to omit it. */
