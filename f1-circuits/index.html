@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<!--
+  Track geometry derived from the f1-circuits dataset
+  https://github.com/bacinger/f1-circuits
+  Copyright (c) 2019-2025 Tomislav Bacinger, MIT licence.
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Formula 1 Circuits</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#15151E;
+  --paper-2:#0E0E15;
+  --surface:#1E1E2A;
+  --surface-2:#252533;
+  --ink:#F3F3F6;
+  --ink-soft:#9B9BAC;
+  --ink-faint:#6A6A7C;
+  --rule:#2E2E3E;
+  --rule-soft:#262634;
+  --red:#E10600;
+  --red-deep:#B30500;
+  --red-soft:#3A1418;
+  --asphalt:#DCDCE6;
+  --asphalt-edge:#0B0B12;
+  --shadow:rgba(0,0,0,.55);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:
+    radial-gradient(1200px 520px at 18% -8%, #22222F 0%, transparent 62%),
+    var(--paper);
+  background-attachment:fixed;
+  color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+  font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;
+  font-variant-numeric:tabular-nums;
+}
+h1,h2,h3,h4,.cond{font-family:"Barlow Condensed","IBM Plex Sans",system-ui,sans-serif;font-weight:600}
+:focus-visible{outline:2px solid var(--red);outline-offset:2px;border-radius:2px}
+.wrap{max-width:1360px;margin:0 auto;padding:0 20px 64px}
+
+/* ── masthead ─────────────────────────────── */
+.masthead{display:flex;flex-wrap:wrap;gap:16px 24px;align-items:flex-end;padding:26px 0 16px}
+.brand{display:flex;align-items:baseline;gap:11px;margin-right:auto;position:relative;padding-left:18px}
+.brand::before{
+  content:"";position:absolute;left:0;top:2px;bottom:5px;width:6px;
+  background:var(--red);border-radius:1px;
+  transform:skewX(-14deg);
+}
+.brand h1{font-size:33px;line-height:1;margin:0;font-weight:700;letter-spacing:-.01em}
+.kerb{
+  height:4px;border-radius:2px;
+  background:repeating-linear-gradient(90deg,var(--red) 0 16px,#F3F3F6 16px 32px);
+  opacity:.9;
+}
+
+.picker{display:flex;align-items:stretch;gap:8px}
+.picker label{position:absolute;left:-9999px}
+select#circuitSelect{
+  appearance:none;-webkit-appearance:none;
+  font-family:"Barlow Condensed",sans-serif;font-size:19px;font-weight:600;
+  color:var(--ink);background-color:var(--surface);
+  border:1px solid var(--rule);border-radius:4px;
+  padding:8px 40px 8px 14px;min-width:300px;max-width:100%;cursor:pointer;
+  background-image:linear-gradient(45deg,transparent 50%,var(--red) 50%),linear-gradient(135deg,var(--red) 50%,transparent 50%);
+  background-position:calc(100% - 20px) 55%,calc(100% - 14px) 55%;
+  background-size:6px 6px,6px 6px;background-repeat:no-repeat;
+}
+select#circuitSelect option{background:var(--surface);color:var(--ink)}
+
+/* ── kpi pills ────────────────────────────── */
+.pills{display:flex;flex-wrap:wrap;gap:8px;padding:18px 0}
+.pill{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--surface);border:1px solid var(--rule);
+  border-radius:100px;padding:5px 14px 5px 11px;font-size:13px;color:var(--ink-soft);white-space:nowrap;
+}
+.pill b{font-family:"Barlow Condensed",sans-serif;font-size:17px;font-weight:600;color:var(--ink)}
+.pill.flagpill{background:var(--red-soft);border-color:#4A1A1E}
+.pill.flagpill b{color:#fff}
+.pill .em{font-size:15px;line-height:1}
+
+/* ── layout ───────────────────────────────── */
+.grid{display:grid;grid-template-columns:minmax(0,2.6fr) minmax(280px,1fr);gap:24px;align-items:start}
+@media (max-width:980px){.grid{grid-template-columns:1fr}}
+
+/* ── track sits straight on the page ──────── */
+.canvas{position:relative;padding:4px 0 10px}
+.canvas .meta{
+  position:absolute;left:2px;top:0;font-family:"Barlow Condensed",sans-serif;
+  font-size:14px;color:var(--ink-faint);font-weight:500;pointer-events:none;
+}
+.canvas .dir{
+  position:absolute;right:2px;top:0;font-family:"Barlow Condensed",sans-serif;
+  font-size:14px;color:var(--ink-faint);font-weight:500;pointer-events:none;
+}
+svg.track{display:block;width:100%;height:auto;max-height:66vh}
+.trk-shadow{fill:none;stroke:var(--shadow);stroke-linecap:round;stroke-linejoin:round}
+.trk-edge{fill:none;stroke:var(--asphalt-edge);stroke-linecap:round;stroke-linejoin:round}
+.trk-road{fill:none;stroke:var(--asphalt);stroke-linecap:round;stroke-linejoin:round}
+.trk-line{fill:none;stroke:#8B8B9C;stroke-linecap:round;stroke-dasharray:1 26;opacity:.7}
+.cnr circle{fill:var(--paper);stroke:var(--ink-faint);stroke-width:1.5;cursor:pointer}
+.cnr text{
+  font-family:"Barlow Condensed",sans-serif;font-size:15px;font-weight:600;fill:var(--ink);
+  text-anchor:middle;dominant-baseline:central;pointer-events:none;
+}
+.cnr.hot circle{fill:var(--red);stroke:#fff;stroke-width:2}
+.cnr.hot text{fill:#fff}
+.sf line{stroke:var(--red);stroke-width:6;stroke-linecap:butt}
+.sf text{font-family:"Barlow Condensed",sans-serif;font-size:13px;font-weight:700;fill:var(--red)}
+@media (prefers-reduced-motion:no-preference){
+  .drawin{animation:draw .9s ease-out forwards}
+  @keyframes draw{from{stroke-dashoffset:var(--len)}to{stroke-dashoffset:0}}
+  .cnr,.sf{animation:fade .45s ease-out both;animation-delay:.75s}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+}
+
+/* ── tabs, now inside a tile ──────────────── */
+.tabs{
+  margin-top:8px;background:var(--surface);border:1px solid var(--rule);
+  border-radius:8px;overflow:hidden;
+}
+.tablist{display:flex;gap:0;border-bottom:1px solid var(--rule);overflow-x:auto;background:var(--surface-2)}
+.tab{
+  flex:0 0 auto;background:none;border:0;border-bottom:3px solid transparent;
+  padding:11px 18px;cursor:pointer;color:var(--ink-soft);
+  font-family:"Barlow Condensed",sans-serif;font-size:17px;font-weight:600;
+}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--red);background:var(--surface)}
+.panel{padding:20px 20px 22px;max-width:74ch}
+.panel p{margin:0 0 12px}
+.panel h4{margin:20px 0 8px;font-size:18px}
+.panel .lede{font-size:16px}
+.panel ul{margin:0;padding-left:20px}
+.panel ul li{margin-bottom:7px}
+
+.cornerlist{list-style:none;margin:0;padding:0;columns:2;column-gap:28px}
+@media (max-width:640px){.cornerlist{columns:1}}
+.cornerlist li{
+  break-inside:avoid;display:flex;gap:10px;align-items:baseline;
+  padding:4px 8px;border-bottom:1px solid var(--rule-soft);border-radius:3px;
+}
+.cornerlist li:hover,.cornerlist li.hot{background:var(--red-soft)}
+.cornerlist .n{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:15px;min-width:26px;color:var(--red)}
+.cornerlist .nm{color:var(--ink)}
+.cornerlist .nm.none{color:var(--ink-faint)}
+
+table.rec{width:100%;border-collapse:collapse;font-size:14px}
+table.rec th{
+  text-align:left;font-family:"Barlow Condensed",sans-serif;font-size:14px;font-weight:600;
+  color:var(--ink-soft);border-bottom:1px solid var(--rule-soft);padding:7px 8px 7px 0;
+}
+table.rec td{padding:7px 8px 7px 0;border-bottom:1px solid var(--rule-soft)}
+
+/* ── cards ────────────────────────────────── */
+.cards{display:flex;flex-direction:column;gap:14px}
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:14px 16px 16px;position:relative}
+.card h3{
+  margin:0 0 10px;font-size:16px;color:var(--ink-soft);font-weight:600;
+  padding-bottom:8px;border-bottom:1px solid var(--rule);
+}
+.card h3::before{
+  content:"";display:inline-block;width:3px;height:12px;background:var(--red);
+  margin-right:8px;vertical-align:-1px;border-radius:1px;
+}
+.dl{display:grid;grid-template-columns:auto 1fr;gap:8px 14px;font-size:14px;margin:0}
+.dl dt{color:var(--ink-soft)}
+.dl dd{margin:0;text-align:right;font-weight:500}
+.dl dd small{display:block;font-weight:400;color:var(--ink-faint);font-size:12px}
+
+.winners{list-style:none;margin:0;padding:0}
+.winners li{display:flex;align-items:baseline;gap:10px;padding:7px 0;border-bottom:1px solid var(--rule-soft)}
+.winners li:last-child{border-bottom:0;padding-bottom:0}
+.winners .yr{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:16px;min-width:38px;color:var(--ink-faint)}
+.winners .drv{font-weight:500}
+.winners .team{margin-left:auto;font-size:12px;color:var(--ink-faint);text-align:right}
+.winners li.latest .yr{color:var(--red)}
+
+
+.bigstat .t{font-family:"Barlow Condensed",sans-serif;font-size:36px;font-weight:700;line-height:1;color:#fff}
+.card .sub{font-size:13px;color:var(--ink-soft);margin:8px 0 0}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="brand">
+      <h1>Formula 1 Circuits</h1>
+    </div>
+    <div class="picker">
+      <label for="circuitSelect">Choose a circuit</label>
+      <select id="circuitSelect"></select>
+    </div>
+  </header>
+  <div class="kerb"></div>
+
+  <div class="pills" id="pills"></div>
+
+  <div class="grid">
+    <main>
+      <section class="canvas">
+        <div class="meta" id="canvasMeta"></div>
+        <div class="dir" id="canvasDir"></div>
+        <svg class="track" id="trackSvg" viewBox="0 0 1000 700" role="img" aria-labelledby="trackTitle">
+          <title id="trackTitle">Track layout</title>
+        </svg>
+      </section>
+
+      <section class="tabs">
+        <div class="tablist" role="tablist" id="tablist"></div>
+        <div class="panel" id="panel" role="tabpanel"></div>
+      </section>
+    </main>
+
+    <aside class="cards" id="cards"></aside>
+  </div>
+
+</div>
+<script>
+const CIRCUITS = [
+{
+ id:"albert_park", round:1, gp:"Australian Grand Prix", name:"Albert Park Circuit",
+ city:"Melbourne", country:"Australia", flag:"\u{1F1E6}\u{1F1FA}", date:"8 March 2026",
+ km:5.278, laps:58, corners:14, drs:4, dir:"Clockwise", first:1996, elev:"Flat (2 m)",
+ record:{t:"1:19.813", who:"Charles Leclerc", yr:2024},
+ winner26:"George Russell",
+ pts:[[322.7,738.1],[272.2,688.3],[193.2,607.8],[191.4,601.7],[191.7,599.1],[195.5,590.5],[199.7,583],[202.3,573.5],[203.8,561.7],[204.1,553.1],[201.5,536.3],[198.2,527.8],[193.1,518.9],[187.1,511.7],[173.8,498.5],[135.8,462.5],[97.9,422],[69,385.8],[54.7,366.6],[39.8,343.3],[11.3,293.4],[4.3,279.4],[0,268.9],[0.5,263],[3,258.9],[9,255.9],[29.1,252.4],[67.2,244.6],[71.6,242.8],[74.4,241],[76.3,238.4],[79.1,230.1],[79.6,221.5],[76.1,119.8],[76.8,117.5],[84.9,108.1],[148.9,61.6],[161.4,54.4],[219.9,30.5],[242,22.5],[277.2,1.3],[284,0.1],[289.4,0],[294.4,3],[301,10.7],[309,17.8],[319.9,25.5],[333.8,30.7],[351.8,32.9],[368,33.7],[381.8,35.7],[397.2,41.1],[410.8,47.5],[425.8,58.7],[435.9,67.7],[445.9,80.8],[455.4,97.2],[460.7,113.8],[464,126.7],[479.4,212.3],[479.5,221.7],[478,232.9],[474.3,244.4],[470,254.2],[462.3,265.1],[447.4,284.3],[443.5,292],[440.1,300.7],[437.5,310.5],[422,392.9],[420.8,402.9],[420.2,414.9],[421.1,445.6],[423.4,461],[427.6,478.7],[432.8,495.8],[439.5,510.5],[446.6,524.1],[466.1,554],[481.8,570.6],[533.6,616.7],[541.8,623.1],[555.2,630],[566.1,633.3],[576.6,634.2],[612.2,633.2],[621.7,633.5],[629.9,635.5],[638,639.5],[643.5,642.6],[732,718],[750.2,739.5],[758.6,752.9],[767.1,772.8],[775.7,797.6],[798.3,875.9],[811.8,925.6],[815.9,946.4],[816,950.7],[812.4,952.6],[698.3,998.2],[694.2,999.3],[687.7,1000],[679.7,999.4],[671.5,996],[663.1,990.5],[658.2,985.9],[653.5,978.6],[622.4,921.1],[601,886.5],[598.4,884.1],[595.7,883.1],[591.2,882.9],[588,884.7],[554.2,923.1],[549.5,927.8],[544.4,930.7],[538.1,933.2],[532.4,934.6],[527.4,934.5],[521.3,933.3],[513,930.3],[506.8,925.9],[504.3,923.6]],
+ cn:{1:"Jones",3:"Whiteford",6:"Marina",9:"Clark",11:"Stewart",13:"Ascari"},
+ num:{ft:72,vmax:330,straight:880,gears:45,pit:20,df:"Medium",brakes:"Medium",sc:"High"},
+ mw:{d:"Michael Schumacher",n:4}, fw:{d:"Damon Hill",y:1996},
+ racing:"Overtaking happens under braking for Turn 3 and Turn 11, both at the end of long acceleration runs where the override boost is available, though tight exits mean a good defensive line usually holds. The 2022 resurfacing turned the back half into a near-flat-out run, which rewards a car that is settled over kerbs. Walls are close through the final sector and the safety car appears more often than not.",
+ history:"Melbourne took the Australian Grand Prix from Adelaide in 1996 and has opened most seasons since. The track is a temporary layout stitched together from the public roads around Albert Park Lake, which is why it feels faster than a street circuit but bumpier than a purpose-built one. A major 2022 resurface widened several corners and removed the old Turn 9\u201310 chicane, turning the back half into a near-flat-out run and cutting lap times by about five seconds. Adelaide had held the race since 1985 and fought hard to keep it; residents' groups then took Melbourne to court over the use of public parkland, which is still dismantled and rebuilt around the lake every year.",
+ layout:"Two long full-throttle runs on the lake side, then a tight, walled first sector where the run-off is short and the grass is slippery. Turn 6 and Turn 11 are the overtaking spots; everything in between rewards rhythm over bravery.",
+ w:[{y:2026,d:"George Russell",t:"Mercedes"},{y:2025,d:"Lando Norris",t:"McLaren"},{y:2024,d:"Carlos Sainz",t:"Ferrari"},{y:2023,d:"Max Verstappen",t:"Red Bull"},{y:2022,d:"Charles Leclerc",t:"Ferrari"}],
+ facts:["The 2020 race was cancelled on the Friday morning of the event weekend.","Michael Schumacher won here four times, more than anyone else.","2022's resurfacing produced the biggest single-year lap time drop of any current circuit.","Martin Brundle's car was destroyed in a somersaulting crash on lap one of the 1996 race; he walked back to the pits and restarted in the spare.","Jacques Villeneuve took pole on his Formula 1 debut here in 1996 and led until an oil leak handed the win to Damon Hill."]
+},
+{
+ id:"shanghai", round:2, gp:"Chinese Grand Prix", name:"Shanghai International Circuit",
+ city:"Shanghai", country:"China", flag:"\u{1F1E8}\u{1F1F3}", date:"15 March 2026",
+ km:5.451, laps:56, corners:16, drs:2, dir:"Clockwise", first:2004, elev:"Flat (8 m)",
+ record:{t:"1:32.238", who:"Michael Schumacher", yr:2004},
+ winner26:"Kimi Antonelli",
+ pts:[[265.3,785.2],[190,804.1],[176.2,805.3],[159.7,805.3],[145,800.6],[134.9,796.4],[121.6,787.8],[112,779.2],[104.6,769.4],[99.1,757.9],[94.5,746.2],[94.1,733.9],[94.5,719.7],[96.4,709],[99.6,698.8],[105.5,689.8],[113.8,682.1],[132.2,674],[149.2,674],[162.4,679.1],[167.9,685],[171.7,691.5],[172.1,700.5],[169.3,713.3],[163.8,732.5],[162.4,740.7],[165.7,748.9],[173.5,757.4],[186.8,762.5],[201.4,759.5],[209.3,754.4],[218.9,737.3],[223.5,725.7],[226.3,712.9],[227.2,698.3],[224.9,686],[212.5,663.7],[197.3,645.3],[156.9,602.1],[125.8,561.4],[100,533.6],[67.9,497.2],[57.8,480.1],[53.2,467.7],[20.2,370.6],[9.6,341.4],[0.5,312.7],[0,305.5],[4.1,299.5],[12.4,296],[26.6,298.7],[41.3,308.5],[53.7,318.7],[83.5,350],[98.6,372.2],[161,481.8],[172.5,499.3],[184,513],[196.9,525.5],[212,533.6],[228.1,539.6],[244.6,543],[263.9,543],[280.8,539.6],[297.4,533.6],[313.9,523.3],[329.5,510.5],[341.9,495.9],[375.8,423.6],[384.6,410.3],[393.7,401.4],[405.2,394.5],[422.2,387.2],[438.2,385.9],[452,387.2],[464.4,391.9],[475.5,399.2],[483.2,405.6],[490.1,413.3],[524.1,479.2],[532.4,488.2],[542.5,491.2],[552.1,489.5],[560.8,486.1],[594.8,441.1],[599.4,432.1],[599.4,424],[596.6,415.9],[513.5,274.7],[461.7,190.8],[404.7,96.7],[397,94.1],[389.2,96.2],[381.8,102.7],[364.8,122.7],[357.1,127.9],[347.4,130.9],[337.3,129.2],[327.2,120.2],[315.3,106.9],[309.3,96.2],[305.7,86.4],[303.8,71.8],[304.7,58.6],[307,45.8],[311.2,33.8],[322.2,19.2],[332.7,11.1],[347.4,4.6],[363,1.3],[375.4,0],[390.6,0.8],[410.3,5.5],[423.1,11.1],[436.5,18.3],[454.8,35.5],[470.9,58.2],[645.3,325.2],[810.5,575.1],[860,652.5],[925.6,750.5],[995.9,853.3],[1000,862.3],[999.5,870.8],[993.6,876.8],[983.9,876],[964.2,866.5],[939.9,849],[805.5,665.4],[799.5,662],[788.5,661.1]],
+ cn:{1:"The Snail (entry)",6:"Hairpin",13:"Back straight entry",14:"Hairpin"},
+ num:{ft:55,vmax:335,straight:1170,gears:50,pit:22,df:"Medium-high",brakes:"Heavy",sc:"Medium"},
+ mw:{d:"Lewis Hamilton",n:6}, fw:{d:"Rubens Barrichello",y:2004},
+ racing:"The 1.2 km back straight into the Turn 14 hairpin is the classic passing place, and a driver who stays close through the preceding corners can hold the tow all the way down it. Front-left wear through the long right-handers normally dictates a two-stop. The weathered original surface produces heavy graining when track temperature is low.",
+ history:"Hermann Tilke designed Shanghai around the Chinese character \u4e0a, and the circuit was built on marshland using thousands of concrete piles at a reported cost of over $300 million. It opened in 2004 and ran continuously until 2019, then sat idle for four years during the pandemic before returning in 2024 \u2014 with the original, badly worn surface still in place, which produced dramatic tyre graining. Between 2020 and 2023 the race was called off four years running, the longest unbroken absence of any circuit that held a valid contract throughout.",
+ layout:"Turns 1 to 4 form the famous tightening right-hand spiral, dropping from sixth gear to second over more than 270 degrees. The 1.2 km back straight into the Turn 14 hairpin is one of the longest full-throttle sections in the sport and the main overtaking place.",
+ w:[{y:2026,d:"Kimi Antonelli",t:"Mercedes"},{y:2025,d:"Oscar Piastri",t:"McLaren"},{y:2024,d:"Max Verstappen",t:"Red Bull"},{y:2019,d:"Lewis Hamilton",t:"Mercedes"},{y:2018,d:"Daniel Ricciardo",t:"Red Bull"}],
+ facts:["The 2019 race was Formula 1's 1000th World Championship Grand Prix.","Lewis Hamilton has six wins here, the most of any driver.","The paddock buildings float on an artificial lake.","Lewis Hamilton beached his McLaren in the pit entry gravel in 2007, a retirement that cost him the title by a single point.","The paddock and grandstands were built on reclaimed marshland supported by thousands of concrete piles."]
+},
+{
+ id:"suzuka", round:3, gp:"Japanese Grand Prix", name:"Suzuka International Racing Course",
+ city:"Suzuka", country:"Japan", flag:"\u{1F1EF}\u{1F1F5}", date:"29 March 2026",
+ km:5.807, laps:53, corners:18, drs:2, dir:"Clockwise", first:1987, elev:"40 m",
+ record:{t:"1:30.983", who:"Lewis Hamilton", yr:2019},
+ winner26:"Kimi Antonelli",
+ pts:[[854,285.1],[915.7,359.4],[987.8,447.8],[994.4,457.2],[998.1,466.9],[1000,475.7],[999.9,484.3],[998.8,491],[990.4,517],[986.4,523.8],[980.6,529],[975.7,531.7],[966.9,533.9],[958.9,533.6],[950.1,530.7],[941.9,524.2],[891,446.3],[882.9,439.4],[876,437.2],[865.5,435.4],[843.5,435.2],[832.5,432],[824.6,426.5],[818.7,419.3],[815.9,412.3],[806,374.7],[801.9,365],[795.3,356.7],[787.6,351.1],[777.9,346.6],[768,344.7],[742.4,344.3],[730.6,342.1],[722.5,338.2],[714.2,331.7],[708,322.7],[704.2,313.5],[702.5,304.9],[702.6,296.6],[704.2,289.6],[716.8,255.2],[718.7,248.2],[719,239.1],[717.6,233],[714.3,224.2],[709.4,216.7],[700,210],[688.5,203.8],[674.8,196.9],[662.8,192.1],[653.9,189.6],[641.3,187.5],[627.1,187.3],[615.9,187.8],[606.5,190.2],[587.1,198.5],[574.7,205.5],[560.4,217.2],[549.3,229],[499.9,289.2],[492.4,291],[423.8,297.2],[419.4,296.6],[414.7,293.4],[412.8,288],[401.6,240.6],[385,145.3],[384.3,137.9],[386.6,122.2],[404.4,80.3],[405.6,76.4],[404.7,72.8],[402.6,69.5],[399,67.1],[394.9,65.8],[390.9,66],[386.3,69.1],[382.6,74.5],[366.4,102.4],[353.3,123.5],[344.7,135.9],[337.7,144.2],[321.1,157.7],[310.1,163.5],[298.5,167],[278.4,170],[259.4,170.7],[245.1,169.7],[228,165.9],[209.3,160.7],[188.4,152.8],[175.2,146.7],[163.6,139.7],[152.9,131.7],[141.6,121.6],[129.9,108.7],[122.2,97.4],[115.2,85],[98.1,39.5],[89,19.5],[84.3,11.5],[78,5.6],[69.7,1.9],[59.8,0],[47.9,0.3],[36.9,1.9],[26.2,4.3],[15.7,8.6],[7.2,15.1],[2,23.4],[0,31.5],[0.6,41.7],[2.9,49.3],[6.3,56.9],[12.1,63.3],[23.6,74.1],[52.1,98.4],[69.9,111.8],[90.3,125.7],[111.1,138.8],[155.3,160.5],[176.7,168.7],[211.4,180.7],[249.7,195.6],[295.9,211.8],[341.9,226.4],[373.6,237.4],[414.7,253.1],[424.1,255.4],[433.5,255.7],[443.4,253.9],[453,251.2],[470.4,244.5],[486.3,236.5],[499.7,228.2],[513.6,217.5],[575,160.1],[584.9,151.9],[602.9,140],[605.3,139.8],[608.6,141.2],[622.4,153.1],[627.1,154.5],[631.5,153.6],[636.7,150.2],[645.2,142.4],[654.9,135.5],[665.6,131],[678.7,129.8],[691,130.5],[703.9,133.2],[716.9,138.2],[727.8,143.5],[741.6,152.8],[754,164.3],[766.7,178.5]],
+ cn:{1:"First Curve",3:"S Curves",7:"Dunlop",8:"Degner 1",9:"Degner 2",11:"Hairpin",13:"Spoon Curve",15:"130R",16:"Casio Triangle"},
+ num:{ft:68,vmax:320,straight:1200,gears:46,pit:22,df:"High",brakes:"Light",sc:"Medium"},
+ mw:{d:"Michael Schumacher",n:6}, fw:{d:"Gerhard Berger",y:1987},
+ racing:"There is only one straightforward passing spot, the run into the Turn 16 chicane, so track position is worth a great deal. The Esses punish anyone following closely because dirty air costs so much in rapid direction changes. Sustained lateral load usually forces at least two stops.",
+ history:"Suzuka was built by Honda in 1962 as a test track, laid out by Dutch designer John Hugenholtz, and is the only figure-of-eight circuit in Formula 1 \u2014 the back straight passes under the Esses on a flyover. It has hosted more title deciders than any other venue, including Senna and Prost's collisions in 1989 and 1990, and is almost universally named by drivers as their favourite lap of the year. It remains Honda property to this day, the only circuit on the calendar owned outright by a car manufacturer.",
+ layout:"The first sector is the challenge: the Esses are a series of linked direction changes taken in fourth and fifth gear where a single early apex ruins the next four corners. 130R is a genuine flat-out left at over 300 km/h, and the Casio Triangle chicane that follows is the only real overtaking opportunity besides the main straight.",
+ w:[{y:2026,d:"Kimi Antonelli",t:"Mercedes"},{y:2025,d:"Max Verstappen",t:"Red Bull"},{y:2024,d:"Max Verstappen",t:"Red Bull"},{y:2023,d:"Max Verstappen",t:"Red Bull"},{y:2022,d:"Max Verstappen",t:"Red Bull"}],
+ facts:["Michael Schumacher won six Japanese Grands Prix here.","Thirteen world titles have been decided at Suzuka.","The Ferris wheel on the infield belongs to the on-site theme park.","Kimi Räikkönen won here in 2005 from seventeenth on the grid, passing Giancarlo Fisichella on the last lap.","The Virtual Safety Car was introduced after Jules Bianchi's accident at the 2014 race."]
+},
+{
+ id:"miami", round:4, gp:"Miami Grand Prix", name:"Miami International Autodrome",
+ city:"Miami Gardens, Florida", country:"United States", flag:"\u{1F1FA}\u{1F1F8}", date:"3 May 2026",
+ km:5.412, laps:57, corners:19, drs:3, dir:"Clockwise", first:2022, elev:"Flat (6 m)",
+ record:{t:"1:29.708", who:"Max Verstappen", yr:2023},
+ winner26:"Kimi Antonelli",
+ pts:[[382.8,42.1],[355,30.4],[325.4,26.3],[295.4,28.9],[271.1,35.4],[227.6,55.8],[208.9,62.6],[193.7,63.8],[176.4,59.5],[155.1,48.1],[135.4,33],[122.6,21.8],[119,11.3],[121.2,2.8],[132,0],[498.4,16.6],[958.1,32.9],[989.9,35.8],[995.6,40.4],[996.6,47.4],[984,88.2],[984.2,98.8],[991.2,104],[998.9,107.1],[1000,113.3],[984.1,141.7],[973.8,151.7],[967.1,156.1],[951.9,158.2],[921.3,156.3],[911,160.5],[902.2,169.3],[898.5,185.1],[899.9,198],[906.1,210.5],[917.4,219],[933.8,228.8],[940.2,235],[942.5,243],[935.4,252.7],[899.9,275.4],[833.8,310.5],[808,322],[754.4,342.4],[621.6,390.3],[577.3,397.6],[535.2,397.1],[493.2,390],[452.9,377.2],[385.6,353.3],[355.4,343.8],[246.4,348.3],[174.9,350.3],[68,328.4],[49.7,328.3],[33.4,331.9],[20.1,331.9],[9.1,325.9],[3.7,319.1],[0.5,309.2],[0,294.4],[4.1,276.8],[14.7,260.2],[25.8,249.9],[40.9,242.8],[58.8,237.2],[78.3,233.8],[94.5,237],[110.2,244.8],[124.2,258.7],[139.6,272.4],[155.9,280.4],[171.2,281.8],[188.1,279],[201,270.4],[213.4,260.4],[225.5,253.6],[239.9,249],[251.2,247.6],[262.5,248.4],[272.4,250.2],[425.7,342.2],[452.2,354],[474.7,358.1],[503.5,357.5],[523,353.1],[553,342.7],[579.4,321.6],[586.4,306.9],[589.3,283.8],[586.3,265.2],[589.3,247.6],[598.3,237.8],[627.4,216.2],[631.5,208.4],[632.5,202.5],[630.1,196.2],[493.5,110.9]],
+ cn:{1:"Stadium entry",11:"Chicane complex",17:"Bridge",19:"Final left"},
+ num:{ft:66,vmax:340,straight:1170,gears:48,pit:19,df:"Medium",brakes:"Medium",sc:"Medium"},
+ mw:{d:"Max Verstappen",n:2}, fw:{d:"Max Verstappen",y:2022},
+ racing:"Turn 11 at the end of the long back straight is where most passes happen, with a second chance into Turn 17. Lap time is lost in the tight Turn 11 to 16 section, and being out of shape there ruins the straight that follows. Track temperature climbs steeply through the afternoon and overheating rear tyres is the standard complaint.",
+ history:"Laid out through the car parks of the Hard Rock Stadium, Miami arrived in 2022 as Formula 1's second US race and immediately became the most heavily marketed weekend of the season. The first edition was criticised for a fake marina with plastic boats and a low-grip surface; grip has improved every year as rubber has gone down, and the racing has followed.",
+ layout:"Three long straights make up most of the lap, joined by a slow, walled middle sector under the freeway bridges. Turns 11 to 16 are a tight, awkward set of switchbacks where the cars are never settled \u2014 lose time there and the straight that follows is wasted.",
+ w:[{y:2026,d:"Kimi Antonelli",t:"Mercedes"},{y:2025,d:"Oscar Piastri",t:"McLaren"},{y:2024,d:"Lando Norris",t:"McLaren"},{y:2023,d:"Max Verstappen",t:"Red Bull"},{y:2022,d:"Max Verstappen",t:"Red Bull"}],
+ facts:["Lando Norris took his maiden Grand Prix win here in 2024.","The circuit has hosted a Sprint every year since 2024.","The 'marina' section is built over a car park.","The circuit is laid out entirely within the grounds of the Hard Rock Stadium, home of the Miami Dolphins.","Part of the lap runs beneath a purpose-built section of the Florida Turnpike interchange."]
+},
+{
+ id:"villeneuve", round:5, gp:"Canadian Grand Prix", name:"Circuit Gilles Villeneuve",
+ city:"Montreal", country:"Canada", flag:"\u{1F1E8}\u{1F1E6}", date:"24 May 2026",
+ km:4.361, laps:70, corners:14, drs:3, dir:"Clockwise", first:1978, elev:"Flat (4 m)",
+ record:{t:"1:13.078", who:"Valtteri Bottas", yr:2019},
+ winner26:"Kimi Antonelli",
+ pts:[[272.2,724.1],[293.6,823.4],[298.7,854.5],[299.4,880.2],[291.4,949.1],[292.9,957.4],[298.4,962.5],[318.9,971.6],[322.9,974.6],[324.9,980.6],[324.2,986.6],[321.3,992.6],[315.7,997.3],[308.8,1000],[299.6,1000],[289.5,997.8],[265.5,991],[249.1,985.5],[233.5,977],[218.5,967.2],[184.1,937.6],[163.6,918.5],[159.8,912.5],[158.8,907.6],[159.1,902.7],[162.7,891.7],[163.9,884.9],[163.2,879.4],[160.8,874.8],[121.5,826.9],[114.6,820.9],[101.3,811.6],[93.4,805],[84.7,793.5],[79.9,781.2],[76.5,768.7],[75.3,758.6],[75.6,677.6],[72.9,672.7],[68.1,668.9],[59.7,667],[48.4,669.7],[41.9,670.5],[33.9,668.3],[27.2,663.9],[22.4,659.3],[18.1,653.6],[15.4,648.3],[11.8,638],[5.1,609.2],[4.6,595.8],[0,538.7],[0.5,507.8],[1.2,482.9],[3.4,455.6],[9.1,417],[29.4,335.5],[32.7,328.1],[37.6,325.2],[42.6,324.1],[50,323.5],[55.8,321.6],[61.4,318.3],[67.4,312],[72,304.6],[76.1,294.5],[96,213.3],[104,169.3],[106.6,138.4],[107.8,106.6],[107.6,96.2],[106.4,85.3],[91.7,13.1],[91.2,8.8],[91.7,4.9],[95.1,1.1],[101.6,0],[105.7,1.4],[108.6,4.6],[109.5,7.4],[114.6,56.3],[117.7,65.4],[137.7,106.1],[185.1,228.6],[190.6,244.5],[263.7,594.7],[263.1,599.4],[259.9,603],[254.4,605.1],[250.8,608.7],[249.3,612.8],[249.6,618]],
+ cn:{1:"Senna Curve",2:"Senna Curve",10:"L'\u00c9pingle",13:"Wall of Champions",14:"Wall of Champions"},
+ num:{ft:70,vmax:340,straight:1050,gears:46,pit:17,df:"Low-medium",brakes:"Very heavy",sc:"Very high"},
+ mw:{d:"Schumacher & Hamilton",n:7}, fw:{d:"Gilles Villeneuve",y:1978},
+ racing:"Passing is straightforward into the Turn 10 hairpin and the final chicane, both at the end of long acceleration zones. This is the hardest circuit of the year on brakes, and cooling or brake-by-wire trouble regularly decides the result. Safety cars are close to a certainty, which makes a well-timed stop enormously valuable.",
+ history:"Built on the \u00cele Notre-Dame, an artificial island made for Expo 67, the circuit opened in 1978 and Gilles Villeneuve won the inaugural race for Ferrari in front of his home crowd. It was renamed after his death in 1982. Montreal is a low-downforce, stop-start layout that is unusually hard on brakes and famous for producing chaotic, safety-car-strewn races. The pit and paddock buildings were rebuilt from scratch for 2019 after years of complaints that they were the worst in the championship.",
+ layout:"Heavy braking dominates: the Senna Curve at Turn 1, the hairpin at Turn 10, and the final chicane that leads onto the pit straight. The exit wall at that last chicane carries the painted words 'Bienvenue au Qu\u00e9bec' and has caught out so many champions that it is simply called the Wall of Champions.",
+ w:[{y:2026,d:"Kimi Antonelli",t:"Mercedes"},{y:2025,d:"George Russell",t:"Mercedes"},{y:2024,d:"Max Verstappen",t:"Red Bull"},{y:2023,d:"Max Verstappen",t:"Red Bull"},{y:2022,d:"Max Verstappen",t:"Red Bull"}],
+ facts:["Michael Schumacher and Lewis Hamilton share the record with seven wins each.","In 1999 Hill, Villeneuve and Schumacher all hit the same wall in one race.","Groundhogs on the circuit are a recurring hazard.","Île Notre-Dame is artificial, built from 15 million tonnes of rock excavated for the Montreal Metro.","The 2011 race is the longest in Formula 1 history at 4h 04m, most of it under red flag; Jenson Button won it from last place."]
+},
+{
+ id:"monaco", round:6, gp:"Monaco Grand Prix", name:"Circuit de Monaco",
+ city:"Monte Carlo", country:"Monaco", flag:"\u{1F1F2}\u{1F1E8}", date:"7 June 2026",
+ km:3.337, laps:78, corners:19, drs:1, dir:"Clockwise", first:1950, elev:"42 m",
+ record:{t:"1:12.909", who:"Lewis Hamilton", yr:2021},
+ winner26:"Kimi Antonelli",
+ pts:[[493.3,195.4],[491.6,185.1],[493.9,175.8],[499.9,163.2],[505.5,154.3],[523,132.1],[618.1,2.6],[627.3,0],[638.4,3.2],[646.2,9.6],[651.8,19.7],[654.1,48],[658.7,57.1],[674.1,78.2],[680.8,90.6],[683.5,98.1],[686.9,102.6],[692.2,104.1],[698.4,102.3],[703,97.5],[704.4,90.6],[701.4,84.8],[693.5,79.1],[670.3,49.6],[667,42.5],[667,35.6],[668.8,30.4],[671.3,25.5],[682.1,19.9],[699,15.5],[730.6,3.8],[744.8,2.7],[752.3,6.5],[755.1,18.2],[752.5,86.3],[742,156.3],[731.1,200.9],[719,232.6],[698.2,269],[674.2,299.7],[639.6,337.5],[589.9,367.9],[560.4,382.4],[503.4,409],[465.1,422.3],[408.6,435.7],[372.2,441.4],[352.8,445],[349.5,450.6],[349.3,455.6],[348.1,461.3],[345.7,466.9],[337.5,469.7],[325.9,471.7],[313.1,464.4],[306.1,463.9],[204.2,477.3],[94.2,493.8],[85.6,495.3],[79.4,501.7],[69.7,520.9],[61.4,539.5],[54.8,558.2],[51.9,571.4],[48.9,594.5],[48.6,634],[49,643.9],[51.9,650.6],[57.7,657.1],[70.5,666.5],[79.1,674.4],[82.8,682.8],[84.3,695],[98.8,779.1],[103.7,798.6],[103.4,804.8],[99.6,809.9],[91.5,815.6],[83.3,819.6],[81.4,825.3],[83,837.3],[92.3,864.6],[100.8,885.2],[109.5,901.4],[124.3,922.6],[143,941.5],[156.7,949.4],[179.7,960],[183.6,964.4],[188.1,977.7],[185.9,984.8],[179,988.9],[148.2,997],[131,999.8],[119.7,1000],[109.6,998.5],[103.3,993.7],[99.4,989.7],[99.2,980.3],[97.7,972.8],[94.8,963.6],[77.4,942.2],[54.8,906.4],[44.3,877.4],[21.1,796.6],[14.8,770.6],[4.5,702],[0,649.1],[0,614.6],[1.5,588.2],[4.4,560.8],[9.5,541.7],[15.3,524.6],[18.1,514.1],[19.5,504.8],[18.6,482.1],[21.4,476.9],[28.6,473.5],[46.1,469.3],[61.7,468.6],[83.1,466],[112.9,462.2],[139.3,457.5],[206.5,437.7],[244,427.4],[278.5,421.8],[302.1,419.9],[320.5,413.3],[373.7,388],[397.1,378.4],[431.2,370.8],[459.7,366.8],[486.8,362.2],[502.1,356.8],[520.7,345.2],[536.8,328.4],[545.9,314.2],[549.9,299.4],[549.2,283.8],[546.6,269.2],[540.8,253.1],[533.1,237.8],[521.1,228.4],[498.7,207.4]],
+ cn:{1:"Sainte D\u00e9vote",3:"Massenet",4:"Casino",5:"Mirabeau Haute",6:"Grand Hotel Hairpin",7:"Mirabeau Bas",8:"Portier",9:"Tunnel",10:"Nouvelle Chicane",12:"Tabac",13:"Swimming Pool",14:"Swimming Pool",15:"Piscine exit",16:"La Rascasse",17:"Anthony Noghes"},
+ num:{ft:45,vmax:290,straight:650,gears:50,pit:18,df:"Maximum",brakes:"Medium",sc:"Very high"},
+ mw:{d:"Ayrton Senna",n:6}, fw:{d:"Juan Manuel Fangio",y:1950},
+ racing:"Overtaking on track is effectively impossible, so the race is decided in qualifying and in the pit window. The mandatory two-stop rule introduced in 2025 forces teams to play the timing game rather than settle into a train. The pit loss is the smallest of the season, which makes an early stop under a safety car especially cheap.",
+ history:"The Monaco Grand Prix was first run in 1929 and has been on the World Championship calendar since its first season in 1950. The layout has barely changed in ninety years, which means modern cars race on a road built for machines a third of their width. It is the slowest, narrowest and most demanding lap of the year, and a pole position here is worth more than at any other track.",
+ layout:"There is nowhere to hide. The climb from Sainte D\u00e9vote to Casino Square is blind and uphill, the Grand Hotel Hairpin is the slowest corner in Formula 1 at around 45 km/h, and the tunnel is the only place where a car reaches top speed. Overtaking is close to impossible, so strategy and qualifying decide the race \u2014 which is why a mandatory two-stop rule was introduced in 2025.",
+ w:[{y:2026,d:"Kimi Antonelli",t:"Mercedes"},{y:2025,d:"Lando Norris",t:"McLaren"},{y:2024,d:"Charles Leclerc",t:"Ferrari"},{y:2023,d:"Max Verstappen",t:"Red Bull"},{y:2022,d:"Sergio P\u00e9rez",t:"Red Bull"}],
+ facts:["Ayrton Senna won here six times, including five in a row.","Cars turn the steering wheel for roughly 45% of the lap.","Leclerc's 2024 win was his first at home after years of misfortune.","At 260 km the race is the only one exempt from Formula 1's 305 km minimum distance.","Alberto Ascari crashed into the harbour in 1955 and was pulled from the water by frogmen.","The circuit takes around six weeks to build and three to dismantle each year."]
+},
+{
+ id:"catalunya", round:7, gp:"Barcelona-Catalunya Grand Prix", name:"Circuit de Barcelona-Catalunya",
+ city:"Montmel\u00f3", country:"Spain", flag:"\u{1F1EA}\u{1F1F8}", date:"14 June 2026",
+ km:4.657, laps:66, corners:14, drs:2, dir:"Clockwise", first:1991, elev:"30 m",
+ record:{t:"1:16.330", who:"Max Verstappen", yr:2023},
+ winner26:"Lewis Hamilton",
+ pts:[[643.5,446.6],[537.7,614.6],[479.2,708.8],[418.4,804.8],[333,941.7],[326,949.5],[319.8,954.9],[314.4,957.4],[304.8,958.6],[296,958.1],[289.5,956.4],[283.2,953],[261.2,938.9],[254.3,935.8],[241.8,933.1],[231.8,933.1],[217.4,936.2],[209.3,941.3],[148.4,986.8],[139.9,991.1],[119.3,998.3],[108.2,1000],[88,999.4],[76.2,997.9],[64.8,994.2],[51.1,987.4],[44,982.2],[31.6,971.2],[16,950.8],[8.4,935],[2.8,917.4],[0,890.2],[0.4,874.6],[2.7,858],[9.3,831.7],[16.5,810.5],[24.3,793.8],[138.4,612.4],[144.8,606.4],[153.7,601.2],[170.2,597.2],[180.6,598.4],[189.1,600.9],[198.9,606.4],[210,615.3],[217,623.4],[225.5,640.4],[228.6,653.3],[229.4,673.3],[228.7,685.2],[225.8,698.6],[220,711.8],[209.4,732.1],[132.6,852.2],[130.4,860.4],[130.3,867.5],[132.2,876],[135.8,881.9],[139.6,886.8],[145.7,891.1],[153.3,893.7],[159.3,894.7],[169,892.9],[288.9,838.8],[304.9,828.9],[320.9,816.7],[336.9,801.5],[348.2,787.8],[394.2,715.7],[399.1,704.9],[401.2,697.4],[399.3,685.6],[393.4,675],[384.4,666.5],[363.4,654.1],[352,644.9],[345.7,637.8],[339.5,628.7],[336,622.5],[274.3,476],[271.7,462.7],[271.7,449],[273.1,438.5],[275.2,428.4],[286.6,408.7],[297.2,397.1],[307.8,388.8],[675.3,200.3],[688.2,193],[694.9,185.8],[698.2,178.9],[699,170.6],[696.4,161.3],[692.1,153.9],[685.8,147.8],[676.8,140.9],[662.1,134.5],[653.1,132.3],[640.5,130.6],[629.8,130.1],[618.9,130.8],[607.1,133.8],[590.7,141.8],[579.4,148.3],[563.7,162.1],[548.1,173.3],[537.3,178.1],[520.7,179.4],[510.8,177.2],[499,171.1],[489.5,163.2],[483.6,153.9],[478.8,143.5],[476.9,126.6],[480.2,111.5],[486,100.7],[495.1,91.9],[591.3,12.5],[602.2,6.1],[612.1,2.6],[625.9,0.4],[639.5,0],[652,2.6],[662.2,6.9],[706,34.9],[725.9,48.7],[738.8,56.2],[782.4,83.9],[792.8,91.2],[799.5,98.2],[805.5,106.4],[810.4,115.8],[814.4,128.3],[816.7,139.9],[816.8,156.6],[814.4,171.7],[802.3,195.6]],
+ cn:{1:"Elf",2:"Renault",3:"Repsol",4:"Repsol",5:"Seat",7:"W\u00fcrth",9:"Campsa",10:"La Caixa",12:"Banc Sabadell",13:"Europcar",14:"New Holland"},
+ num:{ft:65,vmax:325,straight:1050,gears:44,pit:20,df:"High",brakes:"Medium",sc:"Low"},
+ mw:{d:"Schumacher & Hamilton",n:6}, fw:{d:"Nigel Mansell",y:1991},
+ racing:"The long run to Turn 1 is the main overtaking chance now that the final chicane has gone. Two decades of testing mean every team knows the circuit intimately, so set-ups converge and qualifying gaps shrink. Front-left degradation through the long Turn 3 and Turn 9 right-handers is the defining tyre problem.",
+ history:"Opened in 1991 for the Spanish Grand Prix, Barcelona became Formula 1's default test venue for two decades, which is why every driver on the grid knows it better than their own street. With Madrid taking over the Spanish Grand Prix title in 2026, Catalunya stayed on the calendar under a new name \u2014 the Barcelona-Catalunya Grand Prix \u2014 giving Spain two rounds for the first time since 1991. From 2028 the circuit alternates with Spa-Francorchamps under a rotation deal, appearing in even-numbered years only.",
+ layout:"A proper aerodynamic test: a fast, loaded first sector, a technical middle, and a slow final section that punishes any car that cannot ride kerbs. The chicane at the end of the lap was removed in 2023, restoring the flat-out Turn 14 sweep and making the run to Turn 1 far more useful for overtaking.",
+ w:[{y:2026,d:"Lewis Hamilton",t:"Ferrari"},{y:2025,d:"Oscar Piastri",t:"McLaren"},{y:2024,d:"Max Verstappen",t:"Red Bull"},{y:2023,d:"Max Verstappen",t:"Red Bull"},{y:2022,d:"Max Verstappen",t:"Red Bull"}],
+ facts:["Michael Schumacher won six Spanish Grands Prix here.","Fernando Alonso's first home win came in 2006.","2026 was Hamilton's first Grand Prix victory in Ferrari red.","Nigel Mansell and Ayrton Senna ran wheel to wheel down the main straight at over 300 km/h in 1991, sparks pouring from both cars.","Michael Schumacher won the 1996 race in torrential rain by 45 seconds, in a Ferrari nobody rated."]
+},
+{
+ id:"red_bull_ring", round:8, gp:"Austrian Grand Prix", name:"Red Bull Ring",
+ city:"Spielberg", country:"Austria", flag:"\u{1F1E6}\u{1F1F9}", date:"28 June 2026",
+ km:4.318, laps:71, corners:10, drs:3, dir:"Clockwise", first:1970, elev:"65 m",
+ record:{t:"1:05.619", who:"Carlos Sainz", yr:2020},
+ winner26:"George Russell",
+ pts:[[666.5,565.3],[427,630],[415.2,630.9],[407.4,623.8],[394.2,598.3],[352.4,541.8],[307,477.3],[271.4,420.4],[238.9,364.2],[171,217.3],[148.5,180.9],[113.9,138.5],[3.2,27.6],[0,20.5],[0.4,13],[6.5,9.2],[20.4,6.7],[63.9,1.7],[107.5,0],[152.5,0.4],[195.3,4.6],[244.9,12.6],[396.6,41.9],[465.9,51.1],[615.5,57.4],[627.7,61.5],[635.1,69.9],[638,79.1],[637.3,88.8],[633.3,98],[618.4,119.4],[606.6,133.6],[584.8,152.8],[560.9,165.8],[531.9,175.4],[500.5,180.5],[467.7,178.3],[340.2,157.8],[323.1,160],[309.2,164.9],[297.1,173.4],[286.3,184.6],[279.6,198.1],[276,212.7],[275.3,226.1],[277.4,240.8],[281.3,251.6],[343.1,359.6],[353.5,371],[369.9,381.4],[388.8,385.6],[407,383.9],[426.3,375.9],[438.1,366.4],[461.6,336.6],[473.8,324.1],[488.4,314],[505.5,303.9],[529.5,295.1],[554.4,289.7],[904.3,281.8],[920.4,282.2],[936.1,287.7],[949,297.3],[959.3,310.2],[967.1,327.4],[998.2,432.1],[1000,441.7],[998.2,448.8],[994.6,454.3],[982.5,463.9],[966.5,473.5],[945.7,483.9],[922.2,494],[894.3,503.2]],
+ cn:{1:"Niki Lauda",3:"Remus",4:"Schlossgold",6:"Rauch",7:"W\u00fcrth",9:"Rindt",10:"Red Bull Mobile"},
+ num:{ft:72,vmax:330,straight:870,gears:38,pit:19,df:"Medium",brakes:"Heavy",sc:"Medium"},
+ mw:{d:"Max Verstappen",n:5}, fw:{d:"Jacky Ickx",y:1970},
+ racing:"Three acceleration zones on a 65-second lap compress the field and make traffic in qualifying a real problem. Uphill braking into Turns 3 and 4 produces most of the passes, often several on the same lap. Track limits at the final two corners generate more deleted lap times and penalties than anywhere else on the calendar.",
+ history:"The original \u00d6sterreichring opened in 1969 as one of the fastest tracks in the world, was cut down to the shorter A1-Ring in 1997, then fell off the calendar in 2003 before Red Bull bought and rebuilt it. Formula 1 returned in 2014. At 4.3 km with only ten corners it produces the shortest lap times of the season, often with the entire field covered by a couple of seconds in qualifying.",
+ layout:"Three uphill braking zones and three overtaking zones in barely 65 seconds of lap. The climb out of Turn 1 to Turn 3 is steeper than it looks on television, and track limits at Turns 9 and 10 have generated more deleted lap times than anywhere else on the calendar.",
+ w:[{y:2026,d:"George Russell",t:"Mercedes"},{y:2025,d:"Lando Norris",t:"McLaren"},{y:2024,d:"George Russell",t:"Mercedes"},{y:2023,d:"Max Verstappen",t:"Red Bull"},{y:2022,d:"Charles Leclerc",t:"Ferrari"}],
+ facts:["The 2020 season restarted here behind closed doors after the pandemic shutdown.","Turn 1 is named for Niki Lauda, Turn 9 for Jochen Rindt.","Over 1,200 lap times were deleted for track limits across one 2023 weekend.","The venue was called the A1-Ring from 1997 to 2003, then sat part-demolished for a decade before Red Bull rebuilt it.","Mark Donohue was fatally injured at the original Österreichring in 1975, an accident that led directly to the circuit being shortened."]
+},
+{
+ id:"silverstone", round:9, gp:"British Grand Prix", name:"Silverstone Circuit",
+ city:"Silverstone, Northamptonshire", country:"United Kingdom", flag:"\u{1F1EC}\u{1F1E7}", date:"5 July 2026",
+ km:5.891, laps:52, corners:18, drs:2, dir:"Clockwise", first:1950, elev:"15 m",
+ record:{t:"1:27.097", who:"Max Verstappen", yr:2020},
+ winner26:"Charles Leclerc",
+ pts:[[356.2,9.5],[464.9,0],[484.3,1.2],[499.1,6.1],[508.8,12.5],[520.4,25.9],[527.7,41.2],[533.6,60.5],[550.3,125.3],[555.3,160.7],[557.4,183],[560.2,237.1],[561.4,283.3],[563.3,301.3],[570.2,318.2],[583.1,341.7],[588.6,355.1],[588.3,365.2],[585.9,377.1],[567.6,425.7],[566.4,445.3],[569.2,459.3],[575.8,471.2],[594,496.6],[598.2,508.3],[598.7,522],[595.6,534.5],[584.5,548.3],[570.4,558.4],[536,578.6],[525.3,588.9],[513.1,609.4],[489,654.6],[356.7,898.2],[313.3,965.8],[301,982.3],[291.1,991.1],[279.5,997],[267.5,1000],[256.4,999.1],[244.1,996.3],[233.8,991.8],[224.6,984.4],[216.8,972.8],[202.6,942.6],[189.4,919.6],[175.3,900.7],[165.6,889.1],[154.8,877.1],[135.6,857.6],[92.9,806.5],[88.7,803.8],[82.8,803.2],[76.9,805.9],[59,822.1],[52.8,824.3],[46.7,823.6],[41.5,821.5],[34.2,814.5],[26.4,806.5],[16.7,793.7],[9.7,779.9],[4.7,765.9],[0.5,750],[0,743.6],[1.2,737.1],[13.2,717.6],[172.7,510.1],[178.8,503],[189.4,496],[202.1,493],[212.5,492.6],[226.9,493.9],[280.3,501.5],[293.9,502.1],[309.5,500],[323.7,496.3],[336.4,489.3],[419.4,423.3],[424.8,419.6],[431.5,416.3],[438.3,415.6],[443.5,417.5],[448.2,421.8],[451,426.6],[465.2,476.2],[469.4,483.2],[475.3,487.5],[482.2,487.8],[489.7,484.4],[494.4,478.3],[497.5,471.9],[503.4,455.7],[508.1,441.9],[511.6,428.5],[513.5,415.4],[514.7,401.5],[513.8,387.2],[510.9,380.8],[503.6,372.6],[234.5,126.8],[227.2,122.2],[217,117],[204.5,115.2],[191.5,116.7],[178.3,123.1],[173.6,129],[170.3,137.5],[164.9,182.1],[161.8,191.3],[155.2,198.7],[145.3,203.5],[134.5,205.1],[122.4,202],[113.9,196.2],[108.8,189.5],[104.7,181.5],[104,173],[105.7,163.8],[112.3,148.8],[146.9,80.1],[158.1,66.9],[168.9,55.9],[184.5,42.5],[197.2,33.6],[213.3,26.8],[227.2,22.3],[256.7,18.6]],
+ cn:{1:"Abbey",2:"Farm Curve",3:"Village",4:"The Loop",5:"Aintree",6:"Brooklands",7:"Luffield",8:"Woodcote",9:"Copse",10:"Maggotts",11:"Becketts",12:"Chapel",15:"Stowe",16:"Vale",17:"Club",18:"Club"},
+ num:{ft:75,vmax:330,straight:770,gears:42,pit:19,df:"High",brakes:"Light",sc:"Medium"},
+ mw:{d:"Lewis Hamilton",n:9}, fw:{d:"Giuseppe Farina",y:1950},
+ racing:"Stowe and the run into Village are the overtaking spots, but the lap is defined by Maggotts-Becketts, where dirty air bites hardest. Front-left tyre load is the highest of the season and the late failures of 2020 are still the reference point. The site is exposed, so rain can fall on one part of the lap and not another.",
+ history:"Silverstone hosted the first ever World Championship race on 13 May 1950, on a wartime bomber airfield with straw bales for barriers. It has been reconfigured many times, most significantly in 2010 when the Arena loop was added and the start line moved to the Wellington Straight. It remains the fastest full-length lap on the calendar by average speed, and the British crowd \u2014 around half a million across the weekend \u2014 is the largest of the year. The circuit is owned by the British Racing Drivers' Club, whose members bought it outright in 1971, and a deal signed in 2024 keeps the Grand Prix there until 2034.",
+ layout:"Maggotts-Becketts-Chapel is the signature: a sequence of high-speed direction changes taken at over 250 km/h that loads the tyres harder than anything else in the season. Overtaking happens at Stowe and into Village. The circuit is unusually exposed, so weather can swing a race completely.",
+ w:[{y:2026,d:"Charles Leclerc",t:"Ferrari"},{y:2025,d:"Lando Norris",t:"McLaren"},{y:2024,d:"Lewis Hamilton",t:"Mercedes"},{y:2023,d:"Max Verstappen",t:"Red Bull"},{y:2022,d:"Carlos Sainz",t:"Ferrari"}],
+ facts:["Lewis Hamilton has won the British Grand Prix nine times.","The original layout used the airfield's perimeter roads.","Hamilton's 2024 victory ended a 945-day win drought.","King George VI attended the 1950 race, the only time a reigning British monarch has been present at a Formula 1 Grand Prix.","Nigel Mansell's 1987 pass on Nelson Piquet at Stowe, after a dummy down the Hangar Straight, is the most replayed moment in the race's history."]
+},
+{
+ id:"spa", round:10, gp:"Belgian Grand Prix", name:"Circuit de Spa-Francorchamps",
+ city:"Stavelot", country:"Belgium", flag:"\u{1F1E7}\u{1F1EA}", date:"19 July 2026",
+ km:7.004, laps:44, corners:19, drs:2, dir:"Clockwise", first:1950, elev:"102 m",
+ record:{t:"1:44.701", who:"Valtteri Bottas", yr:2018},
+ winner26:"Kimi Antonelli",
+ pts:[[186.1,106],[131.1,9.9],[130.6,5.6],[133,1.8],[138.1,0],[143.8,1.6],[205.8,31.8],[226.9,44.8],[248.9,61.1],[268.6,77.6],[284.3,94.6],[368.3,194.8],[374.2,200.4],[402.4,218.4],[410.4,226.3],[417.1,237],[421.4,246.7],[424.2,257.6],[426.7,277.7],[428.1,284.8],[430.5,291.4],[435.2,300],[503.1,408.6],[510.4,424.3],[515.1,436.1],[604.6,746.3],[616.4,788.5],[617,795.4],[615.8,803],[611.7,809.1],[605.8,814.2],[598.3,818.2],[593.8,822.5],[590.7,827.6],[588.3,835.3],[588.7,842.9],[598.9,888.4],[598.7,896.3],[597.1,903.4],[591.6,911.3],[585,916.6],[469.2,996.7],[461.8,999.8],[454.5,1000],[446.8,997.7],[440.5,993.1],[436,986.6],[434.2,979.9],[433.8,972.8],[436,966.2],[440.1,959.3],[446,954.5],[496.6,923.2],[502.1,917.6],[505.1,912],[506.4,905.4],[505.7,897.3],[484.8,835.8],[478.3,810.6],[463.5,733],[454.5,680.9],[450.8,672.8],[446,666.2],[438.6,659],[430.5,653.7],[421.6,650.1],[412.2,648.6],[381.9,646.6],[370.3,647.9],[359.7,650.9],[349,655.5],[340.2,661.4],[330,670.7],[323.5,680.1],[316.4,693.6],[262.1,829.2],[256.6,839.1],[250.1,845.9],[241.2,851],[232.2,853.6],[223.9,853.8],[215.6,852],[208.4,848.8],[196.6,841.1],[188.9,837.8],[179.6,836.3],[170.2,837.3],[161.7,840.1],[154.3,845.2],[144,858.9],[97,932.6],[92.3,936.9],[86.6,940],[79.7,941.5],[72,941],[65.3,938],[14.8,901.1],[5.3,887.6],[2.4,880.5],[0.4,872.1],[0,863.5],[1.4,853.1],[15.3,815.4],[26.2,795.8],[38.2,778.8],[56.5,758.2],[87,728.5],[104.9,714.5],[120.2,705.6],[198.7,664.7],[210.1,657.5],[220.9,649.1],[230.8,639.7],[239.3,629.5],[247.3,618.9],[257.9,599.3],[285.9,537],[289.4,527.6],[291.4,517.4],[291.8,504.7],[289.8,493.3],[250.3,389.8],[246.4,374.6],[242.8,356.5],[239.1,325.5],[234.7,259.6],[235.5,255.3],[238.1,252.2],[242.2,251.2],[249.1,252.2],[256.2,252.2],[261.1,251.2],[264.3,247.6],[265.2,243.6],[263.1,238.3],[238.1,197.3]],
+ cn:{1:"La Source",2:"Eau Rouge",3:"Raidillon",5:"Les Combes",7:"Malmedy",8:"Bruxelles",10:"Rivage",11:"Pouhon",13:"Fagnes",15:"Campus",16:"Stavelot",17:"Blanchimont",18:"Bus Stop",19:"Bus Stop"},
+ num:{ft:75,vmax:340,straight:1000,gears:44,pit:19,df:"Low-medium",brakes:"Light",sc:"Medium"},
+ mw:{d:"Michael Schumacher",n:6}, fw:{d:"Juan Manuel Fangio",y:1950},
+ racing:"The Kemmel straight after Eau Rouge is the best overtaking place in Formula 1, and the slipstream is strong enough that defending into Les Combes is close to futile. Teams must choose between a wing level that works in the fast middle sector and one that survives the straights. Over a 7 km lap, rain at one end and dry at the other is routine.",
+ history:"The original Spa was a 14 km road circuit through the Ardennes forest and was lethally fast; it was dropped after 1970 and replaced in 1983 by the shortened 7 km layout still used today. Even cut in half it is the longest track on the calendar. In 2022 the gravel traps and barriers at Raidillon were substantially rebuilt after a fatal junior-category crash. A rotation agreement signed in 2026 means Spa now holds its race in odd-numbered years, sharing the slot with Barcelona.",
+ layout:"Eau Rouge and Raidillon form a compression at the bottom of a valley followed by a blind uphill left, taken flat in a modern car but never comfortable. The Kemmel Straight that follows is the best overtaking spot in Formula 1. Because the lap is so long, one end of the circuit can be soaking wet while the other is dry.",
+ w:[{y:2026,d:"Kimi Antonelli",t:"Mercedes"},{y:2025,d:"Oscar Piastri",t:"McLaren"},{y:2024,d:"Lewis Hamilton",t:"Mercedes"},{y:2023,d:"Max Verstappen",t:"Red Bull"},{y:2022,d:"Max Verstappen",t:"Red Bull"}],
+ facts:["Michael Schumacher took his first win and his 52nd, both at Spa.","The 2021 race was two laps behind the safety car \u2014 the shortest in history.","Elevation change over one lap is about 102 metres.","Eau Rouge is named after the reddish stream that runs beneath the track at the bottom of the hill.","Thirteen cars were wrecked in a single first-corner pile-up in the wet in 1998."]
+},
+{
+ id:"hungaroring", round:11, gp:"Hungarian Grand Prix", name:"Hungaroring",
+ city:"Mogyor\u00f3d", country:"Hungary", flag:"\u{1F1ED}\u{1F1FA}", date:"26 July 2026",
+ km:4.381, laps:70, corners:14, drs:1, dir:"Clockwise", first:1986, elev:"37 m",
+ record:{t:"1:16.627", who:"Lewis Hamilton", yr:2020},
+ winner26:"Lando Norris",
+ pts:[[220.4,753.4],[55.7,621.7],[7,583.6],[2.6,576.3],[0,568.9],[0.7,560.7],[4,554.3],[8.8,549.9],[15,546.9],[24.2,545.5],[75.5,546.5],[100.7,550.8],[123.8,557.6],[148,567.2],[166.3,577.5],[180.2,587.1],[314.6,693.5],[324.4,698.6],[334,700.8],[343.5,700.8],[359.6,695.1],[366.2,690],[371.7,683.9],[375.3,678.3],[378.6,670.5],[379.7,659.7],[379.4,653.7],[373.9,637.3],[335.4,572],[331.4,559.8],[330.7,550.3],[332.9,542.1],[335.8,531.8],[339.5,522.2],[382,437.5],[457.4,284.9],[470.9,260.7],[486.7,239.5],[506.4,216.5],[510.5,210.1],[513.4,203.6],[514.1,196.3],[477.5,58.3],[476.8,48.4],[477.9,38.9],[480.5,29.3],[484.5,20.3],[491.8,12.9],[500.6,6.4],[509.7,1.7],[518.9,0],[530.3,0.4],[541.2,3],[554.4,8.6],[580.1,25.5],[605.7,44.9],[622.2,62.2],[692.5,138.3],[695.7,145.6],[696.9,151.3],[696.5,157.4],[692.8,162.5],[682.2,172.9],[680.4,177.2],[680.8,185],[682.6,193.6],[708.2,290.1],[713.7,303],[717.7,308.3],[721.7,312.9],[727.2,317.3],[733.9,319.5],[746.3,322],[799.4,329.8],[810.4,334.1],[823.2,343.7],[828.3,351.9],[832.3,367.9],[832.3,377.4],[817.3,480.7],[816.9,497.2],[818.1,507.6],[821,518.3],[825,528.8],[877,611.8],[882.1,624.2],[883.3,632.9],[883.6,641.1],[882.5,649.7],[880.7,658.4],[877,666.2],[871.1,673.9],[781.8,774.3],[702.4,866.4],[675.3,896.6],[668.6,900.5],[662.5,901.4],[656.6,900.5],[651.4,897.5],[646.3,892.8],[592.1,831.3],[583.3,822.7],[541.9,789],[534.6,785.1],[527.3,782.1],[518.5,780.8],[510.8,781.6],[500.6,786.4],[494.4,793.3],[490,800.7],[487.4,807.1],[486.7,815.8],[487.8,824.5],[491.4,832.6],[496.2,839.1],[577.8,904.9],[592.9,918.6],[597.3,926.1],[600.5,936.4],[602,948.5],[600.9,959.7],[597.3,969.3],[592.9,978.4],[585.9,986.2],[574.5,993.5],[562.9,998.3],[550.1,1000],[536.5,998.3],[524.4,993.5],[513.1,985.7]],
+ cn:{1:"Turn 1 hairpin",2:"Downhill left",4:"Uphill right",11:"Slow left",14:"Final right"},
+ num:{ft:58,vmax:315,straight:780,gears:48,pit:20,df:"Maximum",brakes:"Medium",sc:"Low"},
+ mw:{d:"Lewis Hamilton",n:8}, fw:{d:"Nelson Piquet",y:1986},
+ racing:"The only dependable passing chance is the long run to Turn 1, so grid position is worth more here than anywhere except Monaco. Following closely through constant medium-speed corners overheats the front tyres quickly. Heat, dust and a narrow racing line make the undercut powerful.",
+ history:"The Hungaroring was the first Grand Prix circuit built behind the Iron Curtain, opening in 1986 after Bernie Ecclestone negotiated directly with the Hungarian government. Two hundred thousand people attended the first race. The layout has been described as Monaco without the walls: narrow, twisty and almost impossible to pass on, in the hottest and dustiest conditions of the European season.",
+ layout:"Downforce is maxed out and the lap is a near-constant sequence of medium and slow corners with only one real straight. The one overtaking chance is the long run into Turn 1; miss it and you are stuck. Track position is everything, which is why the Hungaroring has produced some of the sport's most famous surprise winners.",
+ w:[{y:2026,d:"Lando Norris",t:"McLaren"},{y:2025,d:"Lando Norris",t:"McLaren"},{y:2024,d:"Oscar Piastri",t:"McLaren"},{y:2023,d:"Max Verstappen",t:"Red Bull"},{y:2022,d:"Max Verstappen",t:"Red Bull"}],
+ facts:["Lewis Hamilton has won here eight times, a record at any single circuit.","Jenson Button's maiden win came here in the 2006 wet race.","Only one Hungarian Grand Prix has ever been declared wet at the start.","Damon Hill led the 1997 race in an Arrows and was passed on the final lap with a failing throttle.","Nigel Mansell won from twelfth on the grid in 1989, a result still cited as the best overtaking drive the circuit has produced."]
+},
+{
+ id:"zandvoort", round:12, gp:"Dutch Grand Prix", name:"Circuit Zandvoort",
+ city:"Zandvoort", country:"Netherlands", flag:"\u{1F1F3}\u{1F1F1}", date:"23 August 2026",
+ km:4.259, laps:72, corners:14, drs:2, dir:"Clockwise", first:1952, elev:"18 m",
+ record:{t:"1:11.097", who:"Max Verstappen", yr:2021},
+ winner26:"Lando Norris",
+ pts:[[122.1,389.4],[234.2,118.4],[276.8,19],[286.5,8],[299.5,1.8],[313.8,0],[327,2.7],[339.4,11.2],[348.1,21.9],[352.7,35.1],[353,49.9],[340.7,78.6],[305.1,165.1],[293.7,205.4],[289.1,247.4],[291.5,286.8],[287.8,302.8],[279.1,313.5],[261.6,327.7],[190.9,355.4],[177.6,365.5],[174,380.4],[173.5,393.7],[178.9,407.4],[188.9,417.1],[201.5,422.2],[220.8,421.8],[315.8,391.5],[359.9,383.2],[398,382],[431.7,384.5],[463.5,389.9],[486.2,396.8],[523.4,404.7],[557.7,407.7],[582,402.7],[611.2,395],[646.4,377.3],[687.8,350.3],[715.8,337],[740.7,329.8],[773.6,326.1],[799.5,326.7],[907.5,333.3],[932.5,339.1],[955.6,350.6],[972,364.7],[982.5,379.7],[992.8,396.8],[998.3,416.6],[1000,437.6],[998,458.1],[992,478.9],[979,501.5],[929.4,569.3],[911.1,599.4],[869.6,689],[849.7,696],[825.1,698.8],[801.6,697.7],[773.9,693],[745.1,683.1],[714.3,668.4],[683.8,646.6],[664.9,625.7],[661.5,612.9],[664.5,599.4],[676.2,582.4],[693,571.7],[717.6,562.6],[759.8,556],[800.3,545.8],[837.3,531.6],[857.8,517.2],[865.6,499.9],[866.6,481.1],[860,462.3],[842.9,445.2],[827.5,439.9],[747.7,430.1],[667.3,430.4],[581.9,440.7],[509.7,458.9],[465,472.9],[415.7,491.2],[368.5,511.3],[330.1,534],[316,540.1],[306,538.2],[296.5,525.1],[286.5,506.1],[272.6,497.5],[254.9,496.8],[237.6,505],[228.4,517.4],[224.1,530.8],[228.4,558.1],[267.1,783.9],[267.9,799.1],[263.6,814.5],[256.8,827.5],[250.2,835.9],[233.7,847],[216.2,851],[141.9,852.3],[126.8,851.5],[104.7,848],[81.8,840.6],[63.1,832],[38.1,812.3],[21.8,790.6],[10.7,771.9],[2.6,746.8],[0,724.7],[2.3,688.6],[9.1,663]],
+ cn:{1:"Tarzanbocht",2:"Gerlachbocht",3:"Hugenholtzbocht",4:"Hunserug",5:"Rob Slotemaker",7:"Scheivlak",9:"Mastersbocht",11:"Bosuit",13:"Kumho",14:"Arie Luyendyk"},
+ num:{ft:62,vmax:310,straight:630,gears:44,pit:19,df:"High",brakes:"Medium",sc:"Medium"},
+ mw:{d:"Jim Clark",n:4}, fw:{d:"Alberto Ascari",y:1952},
+ racing:"The banked final corner exists to let cars carry speed onto the main straight, which makes Tarzan at Turn 1 the one reliable overtaking spot. Elsewhere the circuit is too narrow and too blind to pass. Sand blown off the dunes changes grip between sessions and sometimes between laps.",
+ history:"Zandvoort was laid out through the dunes in 1948 using roads built during the German occupation, and hosted Grands Prix until 1985 before losing a chunk of its length to a caravan park. Formula 1 returned in 2021 on a revised layout featuring two banked corners \u2014 Hugenholtz at 18 degrees and the final Arie Luyendyk at 19 \u2014 designed to let cars run side by side. The 2026 race was announced as the last of the current contract.",
+ layout:"Narrow, undulating and almost entirely blind. Scheivlak at Turn 7 is a downhill right taken at over 250 km/h with a wall waiting on exit. The banked final corner lets drivers carry far more speed onto the main straight, which is the whole point \u2014 it is the only place overtaking really works.",
+ w:[{y:2026,d:"Lando Norris",t:"McLaren"},{y:2025,d:"Oscar Piastri",t:"McLaren"},{y:2024,d:"Lando Norris",t:"McLaren"},{y:2023,d:"Max Verstappen",t:"Red Bull"},{y:2022,d:"Max Verstappen",t:"Red Bull"}],
+ facts:["The banking at Turn 3 is steep enough that cars cannot stop on it safely.","Sand blowing off the dunes changes grip levels between sessions.","2026 is scheduled to be the final Dutch Grand Prix of the current deal.","Niki Lauda's final Formula 1 victory came here in 1985, beating team-mate Alain Prost by three tenths.","The circuit lost part of its length to a caravan park during its years away from the championship."]
+},
+{
+ id:"monza", round:13, gp:"Italian Grand Prix", name:"Autodromo Nazionale Monza",
+ city:"Monza", country:"Italy", flag:"\u{1F1EE}\u{1F1F9}", date:"6 September 2026",
+ km:5.793, laps:53, corners:11, drs:2, dir:"Clockwise", first:1950, elev:"Flat (12 m)",
+ record:{t:"1:21.046", who:"Rubens Barrichello", yr:2004},
+ winner26:"Kimi Antonelli",
+ pts:[[18.9,635.1],[35.7,437.4],[43.3,354.5],[44.1,351.1],[46.5,349.2],[49.4,348.7],[56.5,349.4],[59.6,349.2],[61.8,347.5],[63.5,345.1],[63.9,342.9],[63.9,340.5],[52,295.3],[50.3,283],[49.7,271.9],[55,200.8],[58.8,182.2],[62,172.6],[66.2,162.2],[71.1,152],[78.3,140.6],[85.7,131.2],[95.7,120.6],[106.6,111.1],[118.6,102.5],[131.6,95],[146.2,87.7],[160.9,82.6],[177,78.1],[195.3,74.9],[286.7,67],[381.2,61.2],[383.9,59.7],[386.3,57.3],[389.2,46.9],[390.5,44],[392.6,42],[396.2,40.9],[421.5,35.8],[523.5,1.7],[530.7,0],[537.6,0],[544.1,1.2],[548.8,3.1],[557.5,8.7],[562.8,14.5],[565.8,19.1],[567.9,24.7],[569,30.9],[579.4,138.2],[579.2,144.3],[578.1,148.2],[576.4,151.5],[568.5,157.3],[514,186.8],[442,226.9],[428.7,234.6],[413.6,245.3],[402.8,253.5],[345.1,303.3],[310.7,334.5],[194.4,436.7],[188.4,442.7],[186.1,446.6],[185.7,455],[187.2,465.2],[187.6,478.7],[187,483.1],[185.3,488.6],[182.7,495.1],[178.5,501.7],[172.7,508.5],[160.9,518.1],[158.1,521.3],[156,525.6],[154.1,533.6],[145,609],[107.4,970.5],[105.9,976.3],[102.9,982.3],[98.9,987.2],[94.2,991.5],[87.7,995.8],[80.5,998.5],[72.2,1000],[65.1,999.5],[58.6,998.1],[50.9,995.1],[43.5,991.7],[31.4,982.8],[24,974.8],[18.9,967.6],[14.4,959.9],[7,940.5],[4.3,930.1],[1.5,907.7],[0,833.7],[0.4,809.5],[3.2,777.9],[13.6,677.8]],
+ cn:{1:"Variante del Rettifilo",2:"Variante del Rettifilo",3:"Curva Grande",4:"Variante della Roggia",5:"Variante della Roggia",6:"Curva di Lesmo 1",7:"Curva di Lesmo 2",8:"Variante Ascari",9:"Variante Ascari",10:"Variante Ascari",11:"Curva Alboreto"},
+ num:{ft:80,vmax:355,straight:1100,gears:42,pit:22,df:"Minimum",brakes:"Very heavy",sc:"Low"},
+ mw:{d:"Michael Schumacher",n:5}, fw:{d:"Giuseppe Farina",y:1950},
+ racing:"Slipstreaming is so effective that qualifying becomes a game of finding a tow, and the race often settles into a queue of cars into the first chicane, nobody quite able to break clear. Braking from over 340 km/h for the Rettifilo is the heaviest deceleration of the season. Minimum downforce leaves the cars nervous over the kerbs at the Roggia and Ascari.",
+ history:"Monza opened in 1922 and is the third-oldest purpose-built racing circuit still in use. The crumbling banked oval, abandoned after 1961, still stands in the park and crosses over the modern track. Nicknamed the Temple of Speed, it has the highest average speed of any circuit on the calendar, and the post-race invasion of the main straight by Ferrari fans is one of the sport's fixed rituals. A full resurfacing and a rebuilt pit complex were completed across 2024 and 2025, the most significant work done to the circuit since the 1970s.",
+ layout:"Teams run their lowest-downforce package of the year, with cars spending roughly 80% of the lap at full throttle. Braking for the Rettifilo chicane from over 340 km/h is the heaviest deceleration of the season. Slipstreaming works so well here that qualifying often turns into a game of who can find a tow.",
+ w:[{y:2026,d:"Kimi Antonelli",t:"Mercedes"},{y:2025,d:"Max Verstappen",t:"Red Bull"},{y:2024,d:"Charles Leclerc",t:"Ferrari"},{y:2023,d:"Max Verstappen",t:"Red Bull"},{y:2022,d:"Max Verstappen",t:"Red Bull"}],
+ facts:["The 2003 race averaged 247.6 km/h, still the fastest Grand Prix ever run.","Peter Gethin won the 1971 race by 0.01s in a five-car photo finish.","The old banking is still standing, disused, inside the park.","Ferrari finished first and second here in 1988, three weeks after Enzo Ferrari's death, in the only race McLaren failed to win that season.","The original circuit was built in 110 days in 1922, including the banked oval."]
+},
+{
+ id:"madring", round:14, gp:"Spanish Grand Prix", name:"Madring",
+ city:"Madrid", country:"Spain", flag:"\u{1F1EA}\u{1F1F8}", date:"13 September 2026",
+ km:5.474, laps:57, corners:22, drs:2, dir:"Clockwise", first:2026, elev:"46 m",
+ record:{t:"Set in 2026", who:"Inaugural edition", yr:2026},
+ winner26:"Kimi Antonelli",
+ pts:[[393,945],[290.2,963.1],[284.1,966.8],[283.1,990.2],[280.1,993.9],[244.2,1000],[227.2,999],[206.2,990.2],[191.3,976],[112.4,849.5],[69.7,783.1],[56.9,756.8],[49.1,738.9],[45.4,728],[36.5,694.6],[32.5,658.6],[33.8,631.5],[37.6,602.4],[47.7,575],[57.9,558],[62,552.3],[62,547.6],[56.2,544.2],[51.5,539.4],[52.2,533.6],[56.2,527.9],[58.6,521.1],[57.2,507.6],[50.1,482.9],[44,465.9],[35.2,452.1],[27.8,441.9],[23.7,430.1],[13.2,387.3],[7.4,371.4],[0.3,363.7],[0,358.2],[16.9,345.2],[22.7,335.7],[22.7,326.2],[19,314.7],[2,283.6],[0.7,274.9],[0,216],[1.7,193],[8.5,183.3],[39.9,158.3],[46.4,145.4],[46,129.8],[44,120.5],[23.7,71.4],[21.7,55.2],[23,38.6],[30.1,23.7],[41,10.8],[57.2,2.7],[74.8,0],[93.8,1],[112.4,10.5],[130.4,26.4],[141.2,44.7],[144.3,66],[142.9,85.3],[135.5,105.6],[118.5,134.6],[62.6,204.3],[34.9,247],[32.5,254.5],[34.5,264.9],[46.4,276.1],[86.3,304],[102.6,318.3],[109.7,330.1],[113.1,342.3],[113.1,402.8],[115.1,414.7],[121.6,428.5],[131.1,442.9],[141.2,454.1],[155.1,462.6],[171.4,467.9],[246.2,467.9],[259,462.2],[272.2,454.7],[278.7,453],[284.5,458.2],[304.8,488.6],[330.2,533.2],[335.2,544.3],[341.7,553.8],[353.6,561.3],[365,563.3],[409.1,557.5],[430.1,557.9],[451.4,565.3],[465.6,579.4],[472.4,592.3],[496.8,728.6],[499.2,745.3],[502.2,753.5],[511,754.5],[523.9,745],[531.7,743],[583.8,736.5],[588.6,741.6],[598.7,775.8],[609.6,820.7],[619.7,880.3],[620.7,895.9],[612.3,905.7],[599.1,908.8]],
+ cn:{1:"Turn 1",5:"La Monumental",9:"IFEMA banking",12:"Uphill left",17:"Downhill right",22:"Final right"},
+ num:{ft:65,vmax:330,straight:900,gears:52,pit:21,df:"Medium",brakes:"Medium",sc:"Medium"},
+ mw:{d:"Kimi Antonelli",n:1}, fw:{d:"Kimi Antonelli",y:2026},
+ racing:"The long straight into Turn 1 and the exit of the banked section are the designated passing zones, though the inaugural race suggested the tighter street portions leave little room to run side by side. Track evolution is dramatic on a surface this new. With one race of data, strategy is still being learned.",
+ history:"The Madring is a part-street, part-permanent circuit built around the IFEMA exhibition centre in north-east Madrid, and it took over the Spanish Grand Prix name for its debut in 2026 \u2014 leaving Barcelona to run under its own title earlier in the year. It is the first new European venue to join the calendar since 2020 and features a banked corner around the exhibition halls.",
+ layout:"An unusually corner-heavy lap for a modern design, with a long climb through the middle sector and a fast, semi-permanent run around the exhibition grounds. Early verdicts focused on the banked section and on whether the tight street portions leave enough room to race.",
+ w:[{y:2026,d:"Kimi Antonelli",t:"Mercedes"}],
+ facts:["The first Spanish Grand Prix held in Madrid since 1981.","Roughly two thirds of the lap uses closed public roads.","Spain had two rounds in 2026 for the first time since 1991.","Madrid last held the Spanish Grand Prix at the Jarama circuit, north of the city, in 1981.","The layout wraps around the IFEMA exhibition centre and includes a banked corner — a rarity in modern circuit design."]
+},
+{
+ id:"baku", round:15, gp:"Azerbaijan Grand Prix", name:"Baku City Circuit",
+ city:"Baku", country:"Azerbaijan", flag:"\u{1F1E6}\u{1F1FF}", date:"26 September 2026",
+ km:6.003, laps:51, corners:20, drs:2, dir:"Anti-clockwise", first:2016, elev:"Flat (10 m)",
+ record:{t:"1:43.009", who:"Charles Leclerc", yr:2019},
+ winner26:null,
+ pts:[[920,187.2],[993.2,155.8],[997,152.7],[999.5,148.2],[1000,143.8],[998.8,137.5],[983.9,98.9],[958.7,50.2],[938,3],[934.6,0.8],[930.2,0],[860.2,28],[774.5,61.2],[657.7,113.7],[557,159.9],[550.4,166.8],[550.4,176.2],[583.3,261.6],[583.5,268.3],[578.4,274.1],[521.1,301.2],[488.7,319],[445,347],[442.3,350.6],[443.3,355.7],[450.6,371.8],[450.3,376.4],[430.1,394.5],[330.6,471.5],[313.7,486.8],[306.7,491.6],[299.6,491.4],[293.7,485],[267.4,407.5],[264.2,404.2],[259.3,403.1],[253,403.1],[243.5,397.3],[237.6,395.8],[225.7,396.5],[219.3,394],[216.1,389.1],[210.5,370.8],[207.9,367.4],[203.9,364.9],[198.1,364.6],[156.1,379.2],[89.3,411.8],[45.1,438.4],[36.4,445.5],[29.5,454.6],[23.2,467.7],[1.5,541.4],[0,551.3],[7.1,653.1],[9.3,659.5],[14.6,665.8],[105.1,713.2],[130.5,724.5],[144.4,729.6],[152.2,730.8],[161.2,729.3],[167.6,725],[171.8,720.4],[205.4,658.2],[212.7,648.7],[290.5,577.8],[296.9,568.9],[300.1,560.2],[306.9,513.6],[309.8,504.4],[315.7,495.7],[322.5,489.6],[434.5,402.7],[449.6,392.7],[466.7,383.5],[482.6,375.9],[533.1,354.7],[577.9,333.8],[687.5,286.9],[731.9,266.7]],
+ cn:{1:"Turn 1",3:"Turn 3",8:"Castle Section",9:"Castle Section",10:"Castle Section",15:"Old City exit",16:"Seafront entry",20:"Final left"},
+ num:{ft:70,vmax:350,straight:2200,gears:48,pit:18,df:"Low",brakes:"Heavy",sc:"Very high"},
+ mw:{d:"Verstappen & Pérez",n:2}, fw:{d:"Nico Rosberg",y:2016},
+ racing:"The 2.2 km run to Turn 1 produces the largest slipstream effect on the calendar, and leading onto that straight is frequently a disadvantage. The castle section demands a car that will turn in a 7.6 m gap, which pulls directly against the low-drag set-up the straight wants. Safety cars are close to guaranteed.",
+ history:"Baku joined the calendar in 2016 as the European Grand Prix and took the Azerbaijan name the following year. Designed by Hermann Tilke around the UNESCO-listed old city, it combines the longest full-throttle run of the season with the narrowest gap on the calendar \u2014 7.6 metres through the castle walls. It has produced an extraordinary hit rate of chaotic races.",
+ layout:"The 2.2 km run from Turn 16 to Turn 1 along the seafront means top speeds over 350 km/h and a slipstream so strong that leading into the final sector is often a disadvantage. The castle section between Turns 8 and 10 climbs and narrows sharply, and the walls there have ended many races.",
+ w:[{y:2025,d:"Max Verstappen",t:"Red Bull"},{y:2024,d:"Oscar Piastri",t:"McLaren"},{y:2023,d:"Sergio P\u00e9rez",t:"Red Bull"},{y:2022,d:"Max Verstappen",t:"Red Bull"},{y:2021,d:"Sergio P\u00e9rez",t:"Red Bull"}],
+ facts:["Turn 8 is 7.6 m wide, the narrowest point on the calendar.","2021's late red flag and restart handed victory to P\u00e9rez.","Sergio P\u00e9rez has more Baku wins than anyone.","At roughly 28 metres below sea level, Baku is the lowest-altitude circuit on the calendar.","Daniel Ricciardo won the 2017 race from tenth after a safety car, a red flag and a collision between the two Mercedes drivers ahead of him."]
+},
+{
+ id:"sepang", round:16, gp:"Bahrain Grand Prix (in Malaysia)", name:"Sepang International Circuit",
+ city:"Sepang, Selangor", country:"Malaysia", flag:"\u{1F1F2}\u{1F1FE}", date:"4 October 2026",
+ km:5.543, laps:56, corners:15, drs:2, dir:"Clockwise", first:1999, elev:"Flat (18 m)",
+ record:{t:"1:34.080", who:"Lewis Hamilton", yr:2017},
+ winner26:null,
+ pts:[[292.8,443.1],[34.5,464.4],[22.6,463.4],[11.9,458],[4.5,450.3],[0.5,439.7],[0,427.9],[4.3,415.4],[14.4,406],[27.9,401.7],[43.8,404.9],[73.3,415.4],[83.2,413.8],[91.5,405.5],[94.2,395.5],[91.5,382.2],[82.7,368.8],[62.6,344.2],[54.1,329.2],[48.5,311.3],[45.8,293.4],[45.8,273.1],[50.7,223.1],[58.6,199.6],[70.9,175.6],[83.4,160.2],[102.5,142.9],[122.6,129.6],[143.7,121.9],[262,83.3],[350.5,48.4],[409.7,22.7],[447.9,5.4],[461.1,0],[471,0.4],[479.5,5.7],[482.6,16.5],[499,108.4],[509.1,155.7],[523.3,213.1],[533.6,235.2],[545.2,251.1],[565.1,267],[584.8,277.5],[604.4,282.4],[623.7,283.3],[645.6,279.9],[668,271.2],[683.9,259.8],[714.9,226.5],[730.1,217.3],[754,209.1],[774.4,208.4],[794.5,211.1],[810.8,217.8],[825.3,229.4],[999,427.6],[1000,437.2],[996,448.3],[966.4,514.7],[957.5,520.9],[947,523.4],[788.4,532.6],[639.5,550],[557.8,563.4],[550.1,569.8],[547.6,580.2],[554.5,591.9],[612.7,624.1],[625.4,636.9],[634.3,655.9],[638.8,675.7],[638.1,703.8],[634.3,727.5],[629,750.6],[615.1,780.1],[594.4,810.3],[583,817.5],[572.1,819.3],[559.7,817],[549.9,810.6],[367.9,660.6],[355.2,655.9],[338.8,655],[320.9,659.5],[254.6,693.5],[236.9,699],[215.8,701.9],[197.4,701.7],[162.9,695.5],[139.5,685.8],[124.2,673.7],[103.8,646.9],[96.7,626.8],[95.6,614.5],[104.1,600.7],[122.4,593.1],[844,460.4],[854.3,451.3],[861.9,433.9],[858.1,419.3],[844.9,405.7],[823.4,402.4]],
+ cn:{1:"Turn 1",2:"Turn 2",4:"Langkawi",5:"Genting",9:"Berjaya",14:"Turn 14",15:"Turn 15"},
+ num:{ft:65,vmax:330,straight:920,gears:48,pit:20,df:"High",brakes:"Medium",sc:"Medium"},
+ mw:{d:"Sebastian Vettel",n:4}, fw:{d:"Eddie Irvine",y:1999},
+ racing:"Two long straights into heavy braking zones at Turns 1 and 15 give plenty of opportunity, and the track is wide enough that a second line genuinely works. Heat and humidity are the most severe of the year for drivers and for cooling. Afternoon thunderstorms arrive with almost no warning and have decided several races here.",
+ history:"Sepang was Hermann Tilke's first Formula 1 circuit, opening in 1999, and it set the template for every modern track that followed: wide, with long straights leading into tight hairpins. It left the calendar after 2017. In 2026 it returned unexpectedly, hosting the Bahrain Grand Prix after regional security concerns made the Sakhir round impossible \u2014 the race keeps the Bahrain title even though it is run in Malaysia.",
+ layout:"Two very long straights separated by hairpins, plus a genuinely fast opening sequence through Turns 5 and 6. The heat and humidity are the hardest of the year on drivers and on cooling, and tropical downpours arrive with almost no warning in the afternoon.",
+ w:[{y:2017,d:"Max Verstappen",t:"Red Bull"},{y:2016,d:"Daniel Ricciardo",t:"Red Bull"},{y:2015,d:"Sebastian Vettel",t:"Ferrari"},{y:2014,d:"Lewis Hamilton",t:"Mercedes"},{y:2013,d:"Sebastian Vettel",t:"Red Bull"}],
+ facts:["Sebastian Vettel won here four times, more than anyone else.","'Multi 21' \u2014 Red Bull's most infamous team order \u2014 happened here in 2013.","The first F1 race at Sepang since the 2017 Malaysian Grand Prix.","The 2009 race was abandoned after 31 laps when a monsoon and failing light made it impossible to continue; half points were awarded.","The grandstand roofs were designed to echo the leaves of the hibiscus, Malaysia's national flower."]
+},
+{
+ id:"marina_bay", round:17, gp:"Singapore Grand Prix", name:"Marina Bay Street Circuit",
+ city:"Singapore", country:"Singapore", flag:"\u{1F1F8}\u{1F1EC}", date:"11 October 2026",
+ km:4.940, laps:62, corners:19, drs:3, dir:"Anti-clockwise", first:2008, elev:"Flat (6 m)",
+ record:{t:"1:34.486", who:"Daniel Ricciardo", yr:2024},
+ winner26:null,
+ pts:[[963.5,140.4],[956.6,56.7],[954.1,46.7],[949.6,40.5],[940.9,37],[924,38.7],[910.4,34.9],[894.3,27],[887.3,21.1],[879.4,10.4],[871.9,1.8],[865.2,0],[857.7,0.7],[848.9,9.6],[842.4,24.5],[838.7,62.2],[838.7,79.2],[840.8,92.4],[844.9,103.2],[850.9,116.3],[873,177.5],[880.3,215.5],[882.2,243.4],[880.5,255.2],[873.7,267.5],[863.2,275],[850.3,281],[840.5,282.9],[586.1,267.9],[565.6,264.1],[536.2,252.8],[349.6,144.8],[338.7,140],[332.8,142.2],[326.5,151.4],[292.6,208.8],[262.9,266.8],[258.1,268],[252.4,265],[188.1,197.6],[172.4,186.7],[160.1,179.1],[146.1,181.9],[131.7,194.7],[11.8,410.1],[0,430.3],[0.5,440.9],[2.4,453.1],[6.6,461.7],[18.3,472],[33.4,482.6],[45.6,490.4],[67.7,497.9],[69.9,503.2],[65.7,511.6],[64,518.9],[63.1,528.4],[69.1,548.7],[75,557],[99.9,580.4],[130.7,605],[137.2,611.5],[143.3,624.6],[151.5,636.2],[159.6,646.6],[162.9,647.9],[170,648],[175.7,646.7],[180.5,643.2],[183.1,640],[185,636.2],[236.9,369.6],[243.7,340.4],[256.5,301.4],[260.9,297],[267.7,292.5],[276.7,290.9],[283.9,292],[319.3,322],[390.2,384.3],[407.6,392.9],[424.6,397.5],[448.8,400.4],[747,416.3],[749.5,420.3],[749.1,428.1],[749.8,441.2],[754.9,454.4],[760.9,461],[768.6,465.7],[780.8,468.9],[877.1,479.1],[953,483.3],[958.9,482.6],[963.6,480.3],[992.7,436.5],[998.1,428],[1000,418.3],[998.1,398.6],[978.2,246.6]],
+ cn:{1:"Sheares",5:"Memorial",7:"Esplanade",10:"Anderson Bridge",13:"Singapore Sling",14:"Bay Grandstand",16:"Turn 16",19:"Final left"},
+ num:{ft:48,vmax:320,straight:1100,gears:80,pit:27,df:"Maximum",brakes:"Heavy",sc:"Very high"},
+ mw:{d:"Sebastian Vettel",n:5}, fw:{d:"Fernando Alonso",y:2008},
+ racing:"Turns 1, 7 and 14 are the passing spots, but a tow is hard to sustain with this many direction changes. The pit loss is the longest of the season, so the safety car is the dominant strategic factor. Two hours of walls, humidity and roughly 80 gear changes a lap make this the most physically demanding race of the year.",
+ history:"Singapore hosted Formula 1's first night race in 2008, run entirely under 1,600 floodlights so that European television audiences could watch at a normal hour. It is consistently the most physically punishing race of the year \u2014 humidity near 80%, ambient temperature over 30\u00b0C, and a two-hour race distance. A 2023 revision removed the slow Turns 16 to 19 under the Bay Grandstand and replaced them with a long straight.",
+ layout:"Bumpy, walled and relentless, with no meaningful run-off and a very high safety car probability. The 2023 changes cut about 20 seconds from the lap and gave the final sector a proper acceleration zone, but overtaking still mostly happens at Turns 1, 7 and 14.",
+ w:[{y:2025,d:"George Russell",t:"Mercedes"},{y:2024,d:"Lando Norris",t:"McLaren"},{y:2023,d:"Carlos Sainz",t:"Ferrari"},{y:2022,d:"Sergio P\u00e9rez",t:"Red Bull"},{y:2019,d:"Sebastian Vettel",t:"Ferrari"}],
+ facts:["Drivers can lose up to 3 kg of body weight over the race.","Sainz's 2023 win ended Red Bull's 15-race winning streak.","The circuit runs past the Singapore Flyer and City Hall.","The 2008 race was decided by a deliberate crash: Nelson Piquet Jr put his Renault into the wall to trigger a safety car that handed the win to team-mate Fernando Alonso.","Around 1,600 floodlights light the circuit, arranged so that rain does not produce glare on the racing line."]
+},
+{
+ id:"americas", round:18, gp:"United States Grand Prix", name:"Circuit of the Americas",
+ city:"Austin, Texas", country:"United States", flag:"\u{1F1FA}\u{1F1F8}", date:"25 October 2026",
+ km:5.513, laps:56, corners:20, drs:2, dir:"Anti-clockwise", first:2012, elev:"41 m",
+ record:{t:"1:36.169", who:"Charles Leclerc", yr:2019},
+ winner26:null,
+ pts:[[200.6,468],[290.9,540],[315.8,557.5],[335.1,569],[345.1,573.2],[348.2,572.7],[351,571],[352.9,568.1],[353.8,565.5],[353.5,562.4],[325.1,479.8],[323.6,471.8],[323.6,456.9],[325.1,449.4],[327.9,439.9],[332.3,431.9],[337,424.7],[343.5,417.2],[350.6,412.1],[434.5,359.9],[439.1,355.3],[446.6,345.3],[451.6,333.5],[457.2,317.8],[465.6,306.6],[476.8,299.9],[489.2,295.1],[498.9,290.2],[504.5,285.9],[508,281.6],[511.1,275.9],[515.1,249.8],[517,241.5],[519.5,235.5],[522.6,229.7],[526.7,224],[531,218.8],[537.5,213.1],[545,207.6],[553.1,203],[561.8,199.3],[569.3,197.5],[580.5,197.5],[588.6,199.9],[645.3,225.7],[650.6,225.7],[654.6,224],[664.9,217.6],[677,207.9],[685.8,199],[694.5,187.3],[701,179.5],[707,174.9],[713.5,172.1],[718.5,170.9],[725.7,170.9],[733.8,173.2],[740,176.6],[747.8,185],[753.1,194.1],[756.8,198.2],[761.2,199.9],[765.5,199.9],[858.6,179.2],[864.6,177.2],[868.3,175.2],[871.1,172.6],[973.5,48.4],[991.9,24.9],[999.4,11.2],[1000,7.7],[999.1,4.6],[994.1,0.9],[991,0],[987.6,0.2],[883.2,33.3],[813.8,52.7],[737.2,71.4],[645.6,89.7],[588.3,99.2],[535.3,107],[379.3,124.2],[361.9,127.3],[359.7,128.7],[358.7,131.6],[359.1,133.9],[361.3,137.1],[371.5,148.5],[407.1,197.3],[422.6,222.6],[423.6,226.3],[422.6,231.7],[420.4,235.5],[416.4,238.3],[412.9,239.2],[406.4,240],[377.5,237.7],[374.6,236.3],[369.7,231.1],[367.5,227.1],[359.1,204.7],[355,199],[333.2,177.2],[329.8,175.8],[326.4,175.2],[307.7,173.5],[304,173.8],[301.8,175.2],[299.6,177.8],[298.7,181.2],[299.9,185.3],[336,247.5],[350.6,275],[351.9,282.5],[351.6,289.9],[348.8,302],[344.8,313.1],[339.1,325.5],[335.4,330.4],[329.2,334.9],[292.4,351.8],[286.5,353.3],[280.6,353.6],[259.4,351.3],[249.5,348.1],[238.6,343.8],[228.9,338.1],[222.4,333.2],[218,325.8],[184.1,278.2],[157.6,244.9],[154.2,241.5],[150.1,239.7],[144.8,238.6],[140.1,238.9],[133.6,240.6],[119.3,245.7],[9.9,293.7],[3.7,297.9],[1.3,302],[0,306.3],[1.3,309.4],[6.8,315.2],[64.1,361.3]],
+ cn:{1:"Turn 1",3:"The Esses",4:"The Esses",5:"The Esses",6:"The Esses",11:"Hairpin",12:"Back straight",16:"Turn 16",17:"Turn 17",18:"Turn 18",19:"Turn 19"},
+ num:{ft:62,vmax:335,straight:1010,gears:48,pit:20,df:"Medium-high",brakes:"Medium",sc:"Medium"},
+ mw:{d:"Lewis Hamilton",n:5}, fw:{d:"Lewis Hamilton",y:2012},
+ racing:"Turn 12 at the end of the back straight is the main passing place, with Turn 1 available to anyone brave on the uphill approach. The surface has subsided over old lignite workings and the resulting bumps force compromised ride heights — two cars were disqualified for plank wear in 2023. The Esses reward a car that is stable on entry.",
+ history:"Circuit of the Americas opened in 2012 as the first purpose-built Formula 1 facility in the United States, on rolling ranch land outside Austin. Its designers deliberately quoted famous corners from elsewhere \u2014 the Turn 3\u20136 Esses echo Silverstone's Maggotts-Becketts, and the Turn 16\u201318 sequence borrows from Istanbul's Turn 8. The surface has famously subsided over old lignite seams, leaving bumps that teams complain about every year.",
+ layout:"Turn 1 is a blind 40-metre climb to a hairpin, the steepest gradient on any current start line. The Esses that follow are a rhythm test where a modern car is barely settled. Turn 12, at the end of the long back straight, is the primary overtaking spot.",
+ w:[{y:2025,d:"Max Verstappen",t:"Red Bull"},{y:2024,d:"Charles Leclerc",t:"Ferrari"},{y:2023,d:"Max Verstappen",t:"Red Bull"},{y:2022,d:"Max Verstappen",t:"Red Bull"},{y:2021,d:"Max Verstappen",t:"Red Bull"}],
+ facts:["Lewis Hamilton has won the United States Grand Prix here five times.","Turn 1 rises 41 m from the start line.","Both Hamilton and Leclerc were disqualified for plank wear in 2023.","The 2015 race was run in the remnants of Hurricane Patricia, with qualifying pushed to Sunday morning after a washed-out Saturday.","Turn 1 is a 40-metre climb to a blind hairpin, the steepest approach to any first corner in the sport."]
+},
+{
+ id:"rodriguez", round:19, gp:"Mexico City Grand Prix", name:"Aut\u00f3dromo Hermanos Rodr\u00edguez",
+ city:"Mexico City", country:"Mexico", flag:"\u{1F1F2}\u{1F1FD}", date:"1 November 2026",
+ km:4.304, laps:71, corners:17, drs:3, dir:"Clockwise", first:1963, elev:"Flat, at 2,240 m altitude",
+ record:{t:"1:17.774", who:"Valtteri Bottas", yr:2021},
+ winner26:null,
+ pts:[[182.6,14.2],[430.8,48.6],[511.2,59.2],[596,66.8],[636.9,71.9],[742.3,86.8],[926,114.1],[963.9,121.7],[970.3,124.3],[973.8,127.2],[975.5,131.9],[975.9,136.2],[969,181.7],[969.9,185.7],[972.1,189.3],[997,202.7],[1000,207.4],[1000,211.8],[996.1,240.2],[990.1,265.6],[980.7,290.3],[969.9,312.5],[885.6,455.6],[784.4,614.4],[778,625.3],[777.1,631.8],[778.4,637.3],[781.5,641.3],[811.6,659.8],[814.5,662.7],[815,667.4],[812.9,671.4],[807.7,676.1],[751.3,718.7],[745.7,721.2],[741,721.9],[736.7,720.5],[726.4,713.9],[724.6,709.6],[724.6,700.9],[750.4,499.5],[750.1,493.4],[747.4,487.6],[743.6,482.8],[737.5,478.5],[707.5,459.9],[690.2,443.6],[683.8,431.3],[676.8,413.1],[670,402.2],[662.2,394.6],[653.7,389.1],[642,384],[549,369.8],[538.7,366.6],[532.3,361.1],[529.3,357.5],[526.7,352.4],[514.6,315],[510.8,307.7],[504.8,300.8],[489.7,291.7],[420.9,254.7],[401,246.3],[372.2,239.4],[141.5,206],[136.8,204.2],[134.3,201.3],[132.1,196.5],[127.8,131.1],[123.1,90.1],[121.3,85.4],[117.9,82.1],[113.2,79.9],[107.2,80.6],[100.7,86.5],[92.5,98.8],[87.7,102.4],[82.2,104.6],[75.8,104.3],[59.8,97],[51.6,94.4],[12.5,90.1],[6,87.9],[3,85.4],[0.4,80.6],[0,75.9],[2.5,64.7],[8.1,49.8],[15.5,37.4],[26.2,22.5],[38.7,12.3],[54.7,4.3],[69.3,0.4],[83.5,0],[104.1,2.5]],
+ cn:{1:"Turn 1",4:"Turn 4",6:"Esses",8:"Esses",12:"Peraltada (Turn 12)",13:"Foro Sol",14:"Foro Sol",15:"Foro Sol",16:"Peraltada exit",17:"Peraltada exit"},
+ num:{ft:65,vmax:350,straight:1200,gears:44,pit:21,df:"Maximum",brakes:"Heavy",sc:"Medium"},
+ mw:{d:"Max Verstappen",n:5}, fw:{d:"Jim Clark",y:1963},
+ racing:"The run to Turn 1 is close to 900 metres and the braking zone is wide enough for three cars abreast, which it regularly holds. Thin air cuts downforce by roughly a quarter and leaves cooling marginal, so engine and brake temperatures dominate team radio. Rear graining through the stadium section is the usual limitation.",
+ history:"Named for brothers Ricardo and Pedro Rodr\u00edguez, the circuit first hosted a Grand Prix in 1963. Formula 1 returned in 2015 after a 23-year absence, with the old Peraltada banked corner cut short and the lap routed through the Foro Sol baseball stadium instead \u2014 a section that gives the race its unmistakable atmosphere. At 2,240 metres it is by far the highest venue on the calendar.",
+ layout:"Thin air means roughly a quarter less aerodynamic downforce and much less cooling, so teams run their steepest wing angles of the year and still have Monza-like straight-line speeds. The run to Turn 1 is close to 900 metres and produces some of the season's boldest passes.",
+ w:[{y:2025,d:"Lando Norris",t:"McLaren"},{y:2024,d:"Carlos Sainz",t:"Ferrari"},{y:2023,d:"Max Verstappen",t:"Red Bull"},{y:2022,d:"Max Verstappen",t:"Red Bull"},{y:2021,d:"Max Verstappen",t:"Red Bull"}],
+ facts:["The highest-altitude circuit in Formula 1 at 2,240 m.","Cars run maximum downforce yet still hit over 350 km/h.","The stadium section seats around 30,000 fans.","Ricardo Rodríguez, one of the two brothers the circuit is named for, was killed here in practice in 1962, aged twenty.","The original Peraltada was a banked 180-degree final corner taken at over 300 km/h; Nigel Mansell passed Gerhard Berger around its outside in 1990."]
+},
+{
+ id:"interlagos", round:20, gp:"Brazilian Grand Prix", name:"Aut\u00f3dromo Jos\u00e9 Carlos Pace",
+ city:"S\u00e3o Paulo", country:"Brazil", flag:"\u{1F1E7}\u{1F1F7}", date:"8 November 2026",
+ km:4.309, laps:71, corners:15, drs:2, dir:"Anti-clockwise", first:1973, elev:"43 m",
+ record:{t:"1:10.540", who:"Valtteri Bottas", yr:2018},
+ winner26:null,
+ pts:[[61.3,717.8],[123.2,957.1],[129.1,970.3],[142.5,990.2],[149.4,995.9],[159.3,999.9],[169.1,1000],[179.9,997.8],[185.5,994.8],[203,978.7],[220,959.8],[226.7,954.8],[235.5,951.7],[244.3,951.2],[257.1,955.3],[284.3,972],[305.9,980.9],[321.9,985],[336.6,987],[350,987.7],[369.7,985.4],[384.8,982.1],[403.3,975.4],[420.7,965.3],[437.9,951.8],[451.8,937.2],[462.8,921.6],[470.9,907],[477.7,890.5],[504.4,802.6],[534.9,683.5],[558.4,587.8],[629.9,316.4],[631.7,304.7],[630.5,293.8],[627.8,286.3],[621.9,277.5],[611.2,270.1],[598.8,264.9],[527.1,250.6],[506.1,248.2],[493.1,249.2],[477.2,251.4],[462.1,255.9],[436.2,271.2],[423.5,281.6],[411.4,295],[394.8,316.1],[340.2,389.9],[280.8,474.1],[250.9,513.4],[223,551.7],[214.6,561],[205.2,566.8],[191.8,571.6],[177,573.5],[154.8,573],[140.1,570.5],[128.3,566.8],[117.8,562.1],[99.9,552.3],[90.9,544.3],[85,536.5],[79.3,525.1],[74.9,509.8],[65,466.3],[59,428.1],[57.8,412.3],[58.1,396.2],[61.9,384],[68,377.9],[72.3,375.7],[77.6,373.9],[84.9,373],[92.6,374.9],[100.6,378.1],[122.4,394.7],[131.1,399.9],[137.9,402.7],[145.2,404.2],[151.9,404.7],[159.3,403.8],[169.4,400.1],[181.4,390.2],[188.1,380.2],[191.7,369.3],[192.2,360],[190.8,349.1],[186.7,340.7],[177.4,327],[139.1,289.3],[123.8,271.7],[113.2,256],[105.5,235],[99.6,208.9],[96.9,193.1],[95.4,178.9],[96.4,167.2],[100.9,159.2],[104.7,154.5],[115.9,151.2],[122.4,152.2],[130,155.3],[166.4,196.8],[197.9,231.6],[203.3,236],[215.1,244.2],[225.9,249],[234.8,251.6],[256,254.6],[267.7,254.7],[286.2,252.1],[300.3,247.5],[315.2,238.9],[330.4,226.6],[338.8,215.5],[347.9,202.9],[372.1,164.9],[398.8,120.1],[429,71.2],[430.9,65.5],[431.4,58.7],[429.6,52],[426.1,44.8],[419.4,38.5],[403.5,30.2],[333.8,4.2],[324.6,1.8],[313,0],[289.5,2.5],[268.9,6],[223.8,15.7],[208.9,20.8],[164.5,39.7],[129.5,58.6],[115.6,68],[91.7,89.8],[81.9,101.3],[73.1,114.9],[65.2,132.2],[58.8,150.6],[48.7,188.3],[37.7,235.7],[30.4,280.4],[17.9,328],[9.8,363.9],[2.8,388.7],[0.5,406.7],[0,431.3],[1.4,460.3],[4.6,482.1],[10,507.4],[19.4,543.9]],
+ cn:{1:"Senna S",2:"Senna S",3:"Curva do Sol",4:"Descida do Lago",5:"Descida do Lago",6:"Ferradura",7:"Ferradura",8:"Laranja",9:"Pinheirinho",10:"Bico de Pato",11:"Mergulho",12:"Junç\u00e3o",13:"Subida dos Boxes",14:"Subida dos Boxes",15:"Arquibancadas"},
+ num:{ft:70,vmax:330,straight:1080,gears:42,pit:19,df:"Medium",brakes:"Medium",sc:"High"},
+ mw:{d:"Alain Prost",n:6}, fw:{d:"Emerson Fittipaldi",y:1973},
+ racing:"The uphill run from Junção to Turn 1 is a long acceleration zone, which makes the slipstream unusually powerful on a lap this short. The Senna S genuinely accepts an inside line, so passes happen at both ends of the straight. Weather off the Atlantic is unpredictable and has produced some of the sport's most chaotic races.",
+ history:"Interlagos opened in 1940 and once ran to nearly 8 km before being shortened in 1990. It is one of only a handful of anti-clockwise circuits in Formula 1 and is built on genuinely steep ground, so the lap constantly climbs and drops. Renamed in 1985 for Jos\u00e9 Carlos Pace, it has hosted an unusual number of championship-deciding races and is widely regarded as producing the best racing of the season.",
+ layout:"The lap is short \u2014 barely 70 seconds \u2014 and the whole final sector is an uphill acceleration zone from Junç\u00e3o all the way to Turn 1, which makes the slipstream enormously powerful. The Senna S at the start is a downhill left-right where the inside line is genuinely available.",
+ w:[{y:2025,d:"Lando Norris",t:"McLaren"},{y:2024,d:"Max Verstappen",t:"Red Bull"},{y:2023,d:"Max Verstappen",t:"Red Bull"},{y:2022,d:"George Russell",t:"Mercedes"},{y:2021,d:"Lewis Hamilton",t:"Mercedes"}],
+ facts:["Verstappen won from 17th on the grid in the 2024 wet race.","Hamilton passed 25 cars across sprint and race weekend in 2021.","Felipe Massa was world champion here for 38 seconds in 2008.","The name means 'between the lakes' — the land was bought for housing but two reservoirs made it unsuitable, so a circuit was built instead.","Ayrton Senna won his first home Grand Prix here in 1991 with the car stuck in sixth gear, and had to be lifted from the cockpit."]
+},
+{
+ id:"vegas", round:21, gp:"Las Vegas Grand Prix", name:"Las Vegas Strip Circuit",
+ city:"Las Vegas, Nevada", country:"United States", flag:"\u{1F1FA}\u{1F1F8}", date:"22 November 2026",
+ km:6.201, laps:50, corners:17, drs:2, dir:"Anti-clockwise", first:2023, elev:"Flat (12 m)",
+ record:{t:"1:35.490", who:"Oscar Piastri", yr:2023},
+ winner26:null,
+ pts:[[549.4,887.8],[583.5,849.5],[587.8,842.3],[589.2,833.7],[585.6,826],[579.7,821.1],[569,817.1],[558.9,815.4],[549.1,816],[540,818.7],[520,830.7],[501.5,849.1],[494.4,853.8],[478.9,857.3],[470.5,857.1],[455.3,852],[446.9,847.3],[439.1,840.7],[426.2,823.2],[420.9,808.4],[417.3,369.4],[420.1,362.7],[425.3,359.4],[515.9,361.1],[543,360.9],[557.2,357.6],[578.9,337],[586.1,326.9],[591.6,315.9],[595.6,306.3],[598,293.8],[599.7,279],[599.2,270.2],[594.3,267.1],[581.1,265.6],[576.6,262.7],[572.6,256.6],[571.1,247.2],[571.8,240.2],[584.5,218.3],[586.7,212.4],[592,202.3],[590.1,191.7],[579.8,184.9],[560.6,182.7],[417,179.1],[364,171.4],[346.5,162.9],[327.1,143],[310.5,109.8],[285.1,50],[268.8,32.8],[251.9,21.2],[234.7,14.8],[207.7,6.1],[177.2,0],[173,1],[169,4.1],[165.9,14.5],[162.7,21.7],[131,83.6],[111.3,120.5],[72.3,188.8],[53.6,231.3],[32.8,300.4],[25.5,326.9],[20,353.2],[15.7,379.9],[11.1,419],[8.7,469.1],[9.6,616.7],[3.5,783.4],[1.7,869],[1.7,911.7],[0,963.2],[2.9,967.3],[6.8,968.7],[16.3,968.5],[23.3,971.2],[38.9,986.9],[52.7,994.7],[70.9,998.3],[150.4,1000],[254.4,998.8],[339.9,999.3],[381.7,998.7],[415.9,993.9],[451.7,987.1],[461,982.9],[468.5,978.1],[474.5,972.5]],
+ cn:{1:"Turn 1",5:"Sphere",6:"Sphere",12:"Strip entry",14:"Strip",16:"Turn 16",17:"Turn 17"},
+ num:{ft:79,vmax:345,straight:1900,gears:40,pit:20,df:"Minimum",brakes:"Heavy",sc:"High"},
+ mw:{d:"Max Verstappen",n:2}, fw:{d:"Max Verstappen",y:2023},
+ racing:"Two enormous straights and minimum downforce make this a slipstreaming circuit, with passing into Turn 14 and Turn 1. The real problem is temperature: racing at night in the desert leaves the surface cold and green, and switching tyres on for a single qualifying lap is the weekend's central puzzle. Front-left graining early in a stint is common.",
+ history:"Formula 1 raced in Las Vegas car parks in 1981 and 1982, then returned in 2023 on a purpose-built street layout that runs 1.9 km straight down the Strip past the Bellagio, Caesars Palace and the Sphere. It is promoted by Formula 1 itself rather than a local organiser. The first practice session was abandoned after two laps when a loose drain cover destroyed Carlos Sainz's car, and the rescheduled session eventually ran at 2:30 am.",
+ layout:"A genuinely low-downforce configuration built around two enormous straights, run at night in near-freezing desert temperatures. Getting tyres into their working window on a cold, green street surface is the central problem of the weekend, and the long straights make the slipstream decisive.",
+ w:[{y:2025,d:"Max Verstappen",t:"Red Bull"},{y:2024,d:"George Russell",t:"Mercedes"},{y:2023,d:"Max Verstappen",t:"Red Bull"}],
+ facts:["The race starts at 10 pm local time on a Saturday.","Verstappen clinched the 2024 drivers' title here.","The Strip straight is one of the longest flat-out sections of the year.","Formula 1 first raced in Las Vegas in the Caesars Palace car park in 1981, on an anti-clockwise layout that decided Nelson Piquet's first world title.","The Strip section is closed to traffic only in the small hours, so the circuit is assembled and dismantled nightly across the race weekend."]
+},
+{
+ id:"losail", round:22, gp:"Qatar Grand Prix", name:"Lusail International Circuit",
+ city:"Lusail", country:"Qatar", flag:"\u{1F1F6}\u{1F1E6}", date:"29 November 2026",
+ km:5.419, laps:57, corners:16, drs:1, dir:"Clockwise", first:2021, elev:"Flat (10 m)",
+ record:{t:"1:22.384", who:"Lando Norris", yr:2024},
+ winner26:null,
+ pts:[[148.7,605.3],[2.7,338.9],[0,325],[1.8,310.5],[7,299.3],[15.2,291.1],[27.9,283.7],[42.3,281.4],[56,283.9],[160.6,347.4],[170.6,350.2],[183.8,350.6],[198.9,346.2],[211.2,334.7],[218.2,322.2],[219.9,309.6],[217.5,218.4],[219,205.9],[222.7,195.3],[227.8,185],[384.2,11.2],[392.4,4.5],[405.1,1],[417.3,0],[429.8,3.2],[439.5,9],[483.8,51.3],[488.8,60.2],[491,72.5],[490.5,83.2],[487.6,93.7],[481.1,103.1],[384.2,209.6],[380,217.3],[379.7,225.8],[381.9,233.2],[386.7,238.7],[393.7,243.1],[403.3,244.4],[410.1,242.5],[418.8,238.5],[588.1,170.7],[599.2,169.5],[612.9,171.5],[624.4,176.7],[633.3,185.7],[638.9,197.1],[641,208.4],[640.8,218.4],[637.6,227.9],[630.6,238.9],[624.9,244.3],[611.7,255],[597,271.9],[584.7,288.9],[574.6,306.9],[566.3,328.1],[561.6,342.5],[556.6,367.9],[552.4,378.8],[545.2,388],[537.4,393.7],[527,398.4],[430.8,421.8],[422.4,426.8],[415.9,432.5],[412.2,442],[410.7,451.2],[412.4,465.1],[422.8,478.8],[440.8,496.9],[468.5,518],[497.3,534.4],[526.7,544.9],[556.1,551.1],[584.7,553.6],[616.1,550.6],[759.9,534.6],[773.1,537.4],[788.3,544.7],[800,553.6],[811,568.5],[844.3,630.6],[847,641.3],[847,651],[845.6,661.1],[838.6,674.1],[786.8,757.7],[780.3,763.9],[770.6,768.4],[760.7,771.4],[747.2,770.9],[581.8,737.5],[570.1,737.5],[558.4,741],[548.5,747.7],[541.5,756.4],[426.3,980.3],[417.1,991],[406.6,997.5],[391.4,1000],[380,998.7],[368.7,994],[357.3,984]],
+ cn:{1:"Turn 1",4:"Turn 4",6:"Turn 6",10:"Turn 10",12:"Turn 12",14:"Turn 14",16:"Final right"},
+ num:{ft:68,vmax:325,straight:1070,gears:40,pit:22,df:"High",brakes:"Light",sc:"Low"},
+ mw:{d:"Max Verstappen",n:3}, fw:{d:"Lewis Hamilton",y:2021},
+ racing:"One real overtaking zone and almost no slow corners make passing difficult, so qualifying position tends to hold. The flowing medium and high-speed sequence puts sustained lateral load into the tyres, and after the sidewall failures of 2023 the FIA has capped stint lengths. Blown sand keeps grip moving all weekend.",
+ history:"Lusail was built in 2004 for MotoGP and hosted its first Formula 1 race at short notice in 2021, when the calendar needed replacement rounds. A ten-year deal followed from 2023, along with a substantial rebuild of kerbs and run-off. The 2023 race became infamous for extreme heat: several drivers were physically unable to continue afterwards, and the FIA imposed mandatory tyre stint limits.",
+ layout:"A fast, flowing sequence of medium and high-speed corners with almost no slow sections, which means constant lateral load and very high tyre stress. The main straight is the only place a following car can properly deploy. Desert sand blowing across the circuit keeps grip levels moving all weekend.",
+ w:[{y:2025,d:"Max Verstappen",t:"Red Bull"},{y:2024,d:"Max Verstappen",t:"Red Bull"},{y:2023,d:"Max Verstappen",t:"Red Bull"},{y:2021,d:"Lewis Hamilton",t:"Mercedes"}],
+ facts:["Verstappen sealed the 2023 title in the Sprint here.","The 2023 race forced mandatory 18-lap tyre stints for safety.","Built for MotoGP in 2004, it was F1's first Qatari venue in 2021.","Lusail's floodlighting was among the largest permanent sports installations in the world when it was built in 2008.","The 2021 race was added at short notice to replace a cancelled round, and Lusail signed a ten-year deal within weeks."]
+},
+{
+ id:"yas_marina", round:23, gp:"Abu Dhabi Grand Prix", name:"Yas Marina Circuit",
+ city:"Abu Dhabi", country:"United Arab Emirates", flag:"\u{1F1E6}\u{1F1EA}", date:"6 December 2026",
+ km:5.281, laps:58, corners:16, drs:2, dir:"Anti-clockwise", first:2009, elev:"Flat (8 m)",
+ record:{t:"1:26.103", who:"Max Verstappen", yr:2021},
+ winner26:null,
+ pts:[[228.9,560.2],[368,541.4],[375.3,538.9],[380.8,533.2],[384.6,525.2],[385.3,517.4],[361,414.5],[357.2,404.1],[352,396.5],[343.3,389.2],[336,385.6],[296.6,373.3],[283.5,366.7],[273.7,360],[264.9,351.7],[253.3,337.4],[247.3,323],[245.1,312.1],[245,300.3],[247.4,286.2],[251.8,271.4],[261.7,233.8],[265.1,205.9],[265.5,186.1],[252.8,80.6],[245.6,24.9],[244.2,18.5],[242.9,13.2],[238.7,7.9],[231.6,2],[227.3,0.5],[222.3,0],[217.6,0.8],[212.6,2.8],[208.8,6.6],[203.7,16.1],[195,41.8],[186.8,79],[75,411.5],[63.8,446.2],[52,489.3],[27.1,568.8],[3.5,640.3],[0.7,647.3],[0,652.5],[0.7,655.5],[3.3,658.6],[9.3,658.7],[31.5,656.1],[36.4,656.1],[40.3,660.8],[55.5,717.6],[63.4,737.4],[70.6,751.6],[86.2,774.2],[103.9,794.9],[126.3,814.1],[242.5,906.3],[259.5,918.4],[282.2,933.1],[301.6,944.3],[333,959.5],[361.8,972.4],[404.5,992.6],[422.8,999.9],[433.1,1000],[443.9,997.8],[453.9,992.1],[459.1,987],[462.7,981.9],[466.2,974.5],[469.4,960.6],[468.4,949.5],[466.2,941.4],[463,933.6],[458.4,926.6],[451.8,920.3],[443.6,914.8],[435,911],[422.4,909.2],[322.8,901.2],[305.2,898.4],[299.6,896.4],[246.1,862.9],[240.7,858.9],[237,854.2],[233.2,844.3],[220.7,786],[221.5,781.4],[224.4,778.3],[228.8,777.1],[273.2,770.4],[281.8,766.5],[285.3,762.9],[288.8,756.2],[289.6,748],[289.7,707.7],[286.5,700.8],[282.5,696.6],[276.5,694.3],[268.2,692.5],[261,691.5],[251.3,691.2],[241.8,691.9],[149.1,706.2],[141.1,706.8],[130.9,706.4],[121,704.6],[114.2,702.4],[104.9,693.2],[79.5,647],[66.3,625.8],[63.6,619.5],[61.6,611.2],[60.9,595.5],[62.3,589.7],[65.7,585.5],[69.9,583.4]],
+ cn:{1:"Turn 1",2:"Turn 2",5:"Turn 5",6:"Turn 6",9:"Hairpin",10:"Turn 10",12:"Marina entry",14:"Marina",15:"Hotel",16:"Final right"},
+ num:{ft:68,vmax:335,straight:1140,gears:46,pit:21,df:"Medium",brakes:"Heavy",sc:"Medium"},
+ mw:{d:"Lewis Hamilton",n:5}, fw:{d:"Sebastian Vettel",y:2009},
+ racing:"The long straight into Turn 5 is the main overtaking place, and the 2021 reprofiling of the hairpin and marina section measurably improved the racing. The race begins in daylight and finishes under floodlights, so track temperature falls steadily and grip improves through the evening. As the finale, it often turns into a strategy free-for-all.",
+ history:"Yas Marina opened in 2009 and has closed every season since 2014. Designed as a showpiece \u2014 a hotel straddles the track, the pit exit runs through a tunnel, and the race starts in daylight and finishes under floodlights \u2014 it was long criticised for poor racing. A 2021 redesign removed two chicanes and opened out the hairpin and the marina section, which measurably improved overtaking.",
+ layout:"Two long straights joined by a heavy braking zone form the overtaking half of the lap; the second half winds through the marina and under the hotel. The 2021 changes banked and widened the final section, and the sunset transition means grip and engine performance both shift during the race.",
+ w:[{y:2025,d:"Lando Norris",t:"McLaren"},{y:2024,d:"Lando Norris",t:"McLaren"},{y:2023,d:"Max Verstappen",t:"Red Bull"},{y:2022,d:"Max Verstappen",t:"Red Bull"},{y:2021,d:"Max Verstappen",t:"Red Bull"}],
+ facts:["The 2021 final-lap restart decided one of the sport's most contested titles.","The W Hotel is built over the circuit itself.","Every season since 2014 has ended here.","The pit exit runs through a tunnel beneath the circuit, the only arrangement of its kind in Formula 1.","Fernando Alonso lost the 2010 title here after spending most of the race stuck behind Vitaly Petrov's Renault."]
+},
+{
+ id:"bahrain", gp:"Bahrain Grand Prix", name:"Bahrain International Circuit",
+ city:"Sakhir", country:"Bahrain", flag:"\u{1F1E7}\u{1F1ED}",
+ km:5.412, laps:57, corners:15, drs:3, dir:"Clockwise", first:2004, elev:"Flat (12 m)",
+ record:{t:"1:31.447", who:"Pedro de la Rosa", yr:2005},
+ pts:[[21.7,474],[29.5,193.4],[36.9,9.5],[40.4,1.3],[47.8,0],[55.7,2.1],[61.6,6.5],[99.5,44.9],[109.8,48.8],[121.1,48],[187.1,26.6],[202.9,24.8],[217.3,25.7],[650.1,109.5],[664.9,113.9],[672.8,122.1],[674.7,132.7],[673.2,142.7],[668.3,154],[659,165.4],[648.2,174.6],[581.2,224.7],[539.3,268.4],[528.9,278.5],[520.6,292.8],[501.9,335.2],[495.5,344.4],[485.6,350.9],[475.8,356.1],[460,357.9],[412.7,350],[399.9,350.5],[386.7,353.1],[375.8,358.7],[362.5,371],[266.4,492.7],[257.1,501.1],[243.8,503.2],[235.5,496.7],[232.5,483.6],[233,463.6],[256.1,325.6],[269.4,239.2],[271.4,222.2],[268.9,206.4],[265.5,194.6],[258.6,182.9],[219.2,148.8],[213.8,146.2],[207.8,147.9],[204.4,154],[190.1,260.6],[179.3,459.6],[169.4,715],[171.4,735],[179.3,746.8],[191.6,753.3],[208.8,756.8],[226.6,755.5],[248.7,751.2],[271.4,740.3],[290.6,726.7],[309.3,707.6],[320.7,688.8],[341.8,633.8],[353.6,610.6],[364.9,597.1],[379.8,584.9],[397.5,573.9],[422.1,567.8],[449.1,567.4],[468.4,571.8],[561.5,617.6],[575.3,627.7],[587.1,639.4],[600.3,662.6],[600.3,673.5],[594.4,684.8],[582.6,696.2],[566.4,708.4],[45.8,999.5],[31,1000],[24.6,993.9],[2,945.8],[0,926.7],[0.5,890.5],[6.9,691.8]],
+ num:{ft:60,vmax:330,straight:1090,gears:42,pit:21,df:"Medium",brakes:"Heavy",sc:"Medium"},
+ mw:{d:"Lewis Hamilton",n:5}, fw:{d:"Michael Schumacher",y:2004},
+ racing:"Overtaking is genuinely easy by modern standards: three long straights and three heavy braking zones give a following car real options at Turns 1, 4 and 11. Tyre wear rather than track position usually decides it, and a three-stop is often quicker than a two. Wind blowing sand across the circuit shifts grip between sessions.",
+ cn:{},
+ history:"Built on desert scrubland at Sakhir and opened in 2004, Bahrain was the first Formula 1 circuit in the Middle East and set the template Tilke would reuse for a decade. It has run under floodlights since 2014, hosted two rounds in the compressed 2020 season, and in 2026 its race was relocated to Sepang when regional security made the Gulf impossible. It returns in 2027 as the season opener.",
+ layout:"Three long straights, each ending in a heavy braking zone, define the lap — Turns 1, 4 and 11 are all first- or second-gear stops after big deceleration. The middle sector is tighter and rear-limited. The surface is unusually abrasive, which combined with high track temperature makes this the most degradation-driven race of the year.",
+ w:[{y:2025,d:"Oscar Piastri",t:"McLaren"},{y:2024,d:"Max Verstappen",t:"Red Bull"},{y:2023,d:"Max Verstappen",t:"Red Bull"},{y:2022,d:"Charles Leclerc",t:"Ferrari"},{y:2021,d:"Lewis Hamilton",t:"Mercedes"}],
+ facts:["The 2004 race was the first Formula 1 Grand Prix held in the Middle East.","In 2020 the circuit hosted two rounds on different layouts two weeks apart.","Pedro de la Rosa's 2005 lap record has stood longer than any other on the calendar.","The desert either side of the circuit is sprayed with adhesive before each event to stop sand blowing onto the racing line.","The 2011 race was cancelled amid the Arab Spring protests, the first Grand Prix lost to civil unrest since 1985.","The 2014 edition was the 900th World Championship Grand Prix and produced a race-long duel between the two Mercedes drivers."]
+},
+{
+ id:"jeddah", gp:"Saudi Arabian Grand Prix", name:"Jeddah Corniche Circuit",
+ city:"Jeddah", country:"Saudi Arabia", flag:"\u{1F1F8}\u{1F1E6}",
+ km:6.174, laps:50, corners:27, drs:3, dir:"Anti-clockwise", first:2021, elev:"Flat (5 m)",
+ record:{t:"1:30.734", who:"Lewis Hamilton", yr:2021},
+ pts:[[158.4,770],[107.3,620.6],[104.3,618.1],[101.8,617.8],[90.1,621.6],[87,620.8],[84.2,619.4],[82,616.4],[80.8,612.3],[82.9,600.8],[91.5,573.9],[92.4,570],[92.6,562.2],[77.7,473.9],[76.7,460.3],[74.3,455.8],[62.5,451.1],[56.9,447.6],[52.5,443.8],[46.5,434.3],[43.3,424.8],[42.8,413.3],[44.4,404.3],[46.9,399.1],[55.1,386.7],[58.1,379.9],[59.5,372.8],[58.6,362],[54.4,343.8],[49.2,335.7],[34.2,324.6],[31.2,321.3],[29.1,313],[29.7,278],[30.9,270.4],[38.4,260.7],[44.4,256.5],[58.5,251.5],[62.6,249.3],[67.4,241.5],[72.5,213.7],[77.9,196.1],[82,185.2],[84.9,167.1],[85.9,154.9],[83.5,86.8],[79.4,16.6],[77.8,12],[73.7,6.3],[68.5,2.8],[60.6,0],[52.6,1.3],[47.3,4],[41.9,7.7],[37.4,16.1],[35.2,27.7],[35.7,38.1],[37.8,46.5],[49.7,67.5],[56.2,77.4],[61.5,91.8],[63.6,100.9],[65.1,113.6],[63.5,135],[59.5,147],[43.4,181.2],[41.2,194.1],[41.3,209.7],[38.9,214.8],[35.2,219.2],[29.4,222.5],[16.9,226.2],[8.1,233.6],[4.1,240.3],[0.5,257.3],[0,279.1],[2.4,299.5],[6.8,312.6],[18,336.8],[25.6,355.3],[29.6,371.1],[31.4,385.1],[30,407],[30.1,424.7],[32.3,437.9],[37.1,452.6],[41.5,461.8],[56.8,486.9],[63.3,498.4],[68.1,510.6],[73.2,529.1],[74.8,542.8],[75.6,558.1],[75.2,572.2],[73.6,585],[70.5,602.1],[67,613.4],[67.4,618.3],[68.8,623.3],[72.5,628.7],[86,640.1],[90.7,645.8],[95.1,653.8],[101.4,683],[101.5,690.6],[98.6,699.3],[72.2,750.6],[67.2,762.8],[63.3,777],[61.8,787],[61.2,796.1],[63,816.8],[71.8,849.9],[79.8,877],[86.8,892.9],[97,911.7],[104.3,922],[113.4,933.9],[126.1,948.6],[142.6,963.2],[190.4,996.3],[199.3,1000],[205.3,998.3],[210.5,995],[213.8,989.3],[213.5,983.2],[205,945.4],[188.7,867.2],[180.3,837.2]],
+ num:{ft:79,vmax:330,straight:1200,gears:50,pit:21,df:"Medium-low",brakes:"Medium",sc:"High"},
+ mw:{d:"Max Verstappen",n:2}, fw:{d:"Lewis Hamilton",y:2021},
+ racing:"Three long acceleration runs and the sprint to Turn 1 make passing possible, but the blind, walled sequence through the middle of the lap leaves almost no margin and visibility over crests is poor. Safety cars and red flags are frequent and have decided the outcome more than once. Track evolution overnight is dramatic on a surface used only once a year.",
+ cn:{},
+ history:"Jeddah was built along the Red Sea corniche in under eight months and hosted its first Grand Prix in December 2021, a race that produced two red flags, a negotiated position swap and a collision between the two title contenders. At 6.174 km it is the second-longest circuit on the calendar and by some margin the fastest street track ever used in Formula 1. Its 2026 edition was cancelled because of the regional conflict; it returns as round two in 2027. It was always intended as a temporary home: a permanent circuit at Qiddiya, in the hills above Riyadh, is being built to take the race later this decade.",
+ layout:"Twenty-seven corners, most of them flat or near-flat, strung together by walls that sit close enough to make the lap feel like a single continuous sweep. Several corners are banked to let cars carry speed. Average lap speed is around 250 km/h, higher than anywhere except Monza.",
+ w:[{y:2025,d:"Oscar Piastri",t:"McLaren"},{y:2024,d:"Max Verstappen",t:"Red Bull"},{y:2023,d:"Sergio Pérez",t:"Red Bull"},{y:2022,d:"Max Verstappen",t:"Red Bull"},{y:2021,d:"Lewis Hamilton",t:"Mercedes"}],
+ facts:["Twenty-seven corners is the highest count of any circuit on the calendar.","It is the fastest street circuit in Formula 1 history by average lap speed.","The inaugural 2021 race was stopped twice and settled the championship fight going into the finale.","Practice for the 2022 race went ahead while smoke rose from an oil depot struck a few kilometres away; the drivers met for several hours before agreeing to race.","Some corners are banked at up to 12 degrees to let cars hold speed through a street layout."]
+},
+{
+ id:"portimao", gp:"Portuguese Grand Prix", name:"Autódromo Internacional do Algarve",
+ city:"Portimão", country:"Portugal", flag:"\u{1F1F5}\u{1F1F9}",
+ km:4.653, laps:66, corners:15, drs:2, dir:"Clockwise", first:2020, elev:"Severe (about 60 m)",
+ record:{t:"1:18.750", who:"Lewis Hamilton", yr:2020},
+ pts:[[94.8,419.8],[17.9,155.9],[0.6,93.1],[0,85.2],[4.1,77.9],[12.1,69.9],[22.3,63.4],[70.8,27.2],[104.9,3.4],[116.4,0],[125.5,0.6],[235,27.3],[241,32.8],[243.4,38.8],[244.1,44.5],[242.3,51.4],[235.8,58],[173.3,94.8],[163.9,102.7],[156,114.1],[153.5,121.1],[150.4,132.6],[151.6,151],[271.3,569.4],[277.5,588.1],[285.3,594.7],[293.8,594.9],[302,590.3],[306.9,582.3],[308.2,566.2],[321.2,443.4],[323,418.9],[319.8,390.6],[314,370.9],[306.1,353.1],[245.4,237.8],[242.3,225],[243.7,211.1],[248.1,198.9],[258.6,184.3],[305.2,128.9],[312.1,126.2],[319.9,124.9],[331.7,127.2],[341.2,133.7],[345.9,141.8],[382.6,394.8],[384.9,406.1],[390.8,420.3],[396.4,431.4],[409.4,445.6],[427.9,458.5],[551.6,522.1],[562,532],[574,549.2],[585.2,578.2],[586.9,590.1],[584.9,599.7],[580.8,606.3],[573.1,613.3],[440.6,653.7],[432.1,658.3],[419.8,668.4],[406.7,682.8],[397.2,700.6],[392.6,721.1],[376.7,827.1],[378,837],[383.3,844.4],[391.9,852.8],[404.7,854.4],[415.1,852.3],[419.7,848.7],[502.1,749],[513.9,743],[526.5,740.3],[542.6,744.1],[555.8,755.9],[565.3,769],[569.1,778.4],[573,797.8],[572.6,808.8],[570.1,821.6],[564.2,834.4],[547.7,857.2],[464.5,957.3],[446.5,972.5],[430.5,983.2],[417.8,989.3],[397.9,996.3],[379.1,999.9],[355.5,1000],[337,997.1],[318.3,992.1],[299.9,983.5],[281.4,972.8],[266.3,958.2],[253.7,943.6],[240.2,923.8]],
+ num:{ft:65,vmax:320,straight:970,gears:44,pit:19,df:"Medium-high",brakes:"Medium",sc:"Low"},
+ mw:{d:"Lewis Hamilton",n:2}, fw:{d:"Lewis Hamilton",y:2020},
+ racing:"The long main straight into Turn 1 is the main passing place, with a second opportunity into Turn 5. Blind crests make following closely uncomfortable but also reward a driver willing to commit. The surface was freshly laid for the 2020 race and offered unusually low grip, so how it has aged will be the story of the 2027 weekend.",
+ cn:{},
+ history:"Opened in 2008 in the hills above Portimão, the Algarve circuit was pressed into Formula 1 service in 2020 when the pandemic forced a rebuilt calendar, and it stayed for 2021. Lewis Hamilton's win in the first of those races was his 92nd, taking him past Michael Schumacher's record. It returns in 2027 on a two-year deal, the first Portuguese Grand Prix in six years.",
+ layout:"The defining feature is elevation: the lap climbs and drops roughly 60 metres, and several corners are taken over a blind crest with the apex out of sight. Turn 1 falls away sharply on entry, and the final corner is a long downhill right onto the main straight. Drivers consistently rank it among the most enjoyable laps they drive.",
+ w:[{y:2021,d:"Lewis Hamilton",t:"Mercedes"},{y:2020,d:"Lewis Hamilton",t:"Mercedes"}],
+ facts:["Hamilton's 2020 win here was his 92nd, passing Michael Schumacher's record.","The lap climbs and descends around 60 metres, more than any circuit except Spa.","Only two Formula 1 Grands Prix have been held here, both during the pandemic seasons.","The circuit is nicknamed the rollercoaster; several corners are entered blind over a crest with the apex out of sight.","It also hosts MotoGP and World Endurance rounds, and sits in a complex with a karting track, a technology park and a hotel."]
+},
+{
+ id:"istanbul", gp:"Turkish Grand Prix", name:"Intercity Istanbul Park",
+ city:"Istanbul", country:"Türkiye", flag:"\u{1F1F9}\u{1F1F7}",
+ km:5.338, laps:58, corners:14, drs:2, dir:"Anti-clockwise", first:2005, elev:"About 30 m",
+ record:{t:"1:24.770", who:"Juan Pablo Montoya", yr:2005},
+ pts:[[352.3,823.1],[506.8,788.8],[519,783.3],[524.6,772.3],[523.1,763.3],[513,721.9],[507.1,700.1],[507.1,683.9],[511.2,660.7],[525.2,635.8],[548.3,613.7],[594.8,586.1],[621.8,574.9],[655.3,563.7],[716.6,552.1],[755.8,550.3],[777.7,550],[808.9,554.5],[822.4,552.6],[837.1,546],[851.2,532],[858.3,515.5],[861.4,499.5],[854.7,448.6],[856.4,438.4],[863.5,431.7],[874.5,431.7],[907.5,435.8],[936.8,435.8],[952.5,431.7],[959.4,423.7],[960.9,414],[952.8,369.2],[947.6,359.3],[937.3,351.4],[685.8,223.5],[669.9,211.4],[664.2,200],[664.6,188.8],[667.7,179.1],[674.9,171.5],[696,158.6],[714.1,154.4],[729.5,153.4],[806.3,167.5],[869.9,182.4],[901.9,191.7],[917.6,195],[927.6,192.4],[977.8,164.8],[984,156.3],[1000,107.8],[999.8,95.7],[995.2,84.7],[976,52],[958.9,32.3],[932.7,6.9],[920.6,1.4],[902.5,0],[877.8,3.1],[559.1,97.9],[540.5,108.1],[534.1,116.5],[535.1,127.6],[546.7,146.4],[554.6,162.3],[554.6,180.2],[453,495],[440.4,511.1],[420.6,529.6],[9.3,752.7],[1.7,760.7],[0,771.7],[1.9,781.9],[10.5,792.6],[19.5,796],[46.8,793.8],[54.4,797.1],[58.3,802.8],[57.3,815.7],[49.5,863.1],[50.6,872.2],[57.1,878.3],[66.3,878.3]],
+ num:{ft:65,vmax:330,straight:1050,gears:44,pit:19,df:"Medium-high",brakes:"Medium",sc:"Low"},
+ mw:{d:"Felipe Massa",n:3}, fw:{d:"Kimi Räikkönen",y:2005},
+ racing:"The long back straight into the Turn 12 hairpin is the main overtaking place, with Turn 1 available on the opening lap. Turn 8 punishes the front-left tyre harder than any single corner in the sport and often dictates stint length. The 2020 resurfacing left the track notoriously slippery in the wet; how much it has rubbered in since will shape the 2027 race.",
+ cn:{8:"The quadruple apex"},
+ history:"Istanbul Park opened in 2005 and was immediately regarded as the best of the modern Tilke circuits, largely on the strength of Turn 8. It dropped off the calendar after 2011, returned twice during the pandemic seasons, and comes back in 2027 for the first time since. Lewis Hamilton sealed his seventh world championship here in the 2020 race, won in appalling conditions on a freshly resurfaced and almost gripless track. The circuit was bought by the Intercity group in 2021 after years of uncertain ownership, which is how it acquired its current name.",
+ layout:"One of only a handful of anti-clockwise circuits, which loads the driver's neck the opposite way round. Turn 8 is the signature: a 640-metre left with four apexes taken at around 265 km/h, sustaining lateral load for roughly seven seconds. The downhill Turn 1 and the fast Turn 9 to 11 sequence are the other highlights.",
+ w:[{y:2021,d:"Max Verstappen",t:"Red Bull"},{y:2020,d:"Lewis Hamilton",t:"Mercedes"},{y:2011,d:"Sebastian Vettel",t:"Red Bull"},{y:2010,d:"Lewis Hamilton",t:"McLaren"},{y:2009,d:"Jenson Button",t:"Brawn"}],
+ facts:["Turn 8 is a 640-metre left with four apexes, taken at around 265 km/h.","Felipe Massa won the first three Turkish Grands Prix held here.","Hamilton clinched his seventh world title here in the wet in 2020.","The 2006 trophy was presented by the president of Northern Cyprus, a breach of protocol that cost the organisers a five million dollar FIA fine.","Turn 8 sustains lateral load for around seven seconds, longer than any other corner in Formula 1."]
+}
+];
+</script>
+<script>
+(function(){
+"use strict";
+const SVGNS="http://www.w3.org/2000/svg";
+const VW=1000, MIN_AR=1.35, MAX_AR=2.6;
+const $=id=>document.getElementById(id);
+const el=(n,a)=>{const e=document.createElementNS(SVGNS,n);for(const k in (a||{}))e.setAttribute(k,a[k]);return e;};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+let idx=0, tab=0, hot=null;
+const reduced=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ── geometry ─────────────────────────────── */
+/* Frame each circuit snugly: pad the bounding box, clamp the aspect so a very
+   tall layout doesn't produce a 2000px-tall panel, then scale to a 1000-wide
+   viewBox so stroke widths and marker sizes stay consistent between tracks. */
+function fit(pts){
+  let minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
+  for(const [x,y] of pts){minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y);}
+  let w=maxX-minX||1, h=maxY-minY||1;
+  const pad=Math.max(w,h)*0.075;
+  minX-=pad; maxX+=pad; minY-=pad; maxY+=pad;
+  w=maxX-minX; h=maxY-minY;
+  let ar=w/h;
+  if(ar<MIN_AR){const nw=h*MIN_AR, d=(nw-w)/2; minX-=d; maxX+=d; w=nw;}
+  else if(ar>MAX_AR){const nh=w/MAX_AR, d=(nh-h)/2; minY-=d; maxY+=d; h=nh;}
+  const s=VW/w, H=h*s;
+  return {pts:pts.map(([x,y])=>[(x-minX)*s,(y-minY)*s]), h:H};
+}
+/* The survey points are dense enough to draw straight — smoothing them would
+   round off chicanes that are genuinely square. */
+function pathOf(p){
+  let d="M "+p[0][0].toFixed(1)+" "+p[0][1].toFixed(1);
+  for(let i=1;i<p.length;i++) d+=" L "+p[i][0].toFixed(1)+" "+p[i][1].toFixed(1);
+  return d+" Z";
+}
+/* Find the N sharpest bends along the lap and return them in racing order. */
+function findCorners(path,count){
+  const L=path.getTotalLength(), N=900, S=[];
+  for(let i=0;i<N;i++)S.push(path.getPointAtLength(L*i/N));
+  const w=Math.max(3,Math.round(N/200)), k=new Array(N);
+  for(let i=0;i<N;i++){
+    const a=S[(i-w+N)%N],b=S[i],c=S[(i+w)%N];
+    const ux=b.x-a.x,uy=b.y-a.y,vx=c.x-b.x,vy=c.y-b.y;
+    k[i]=Math.abs(Math.atan2(ux*vy-uy*vx,ux*vx+uy*vy));
+  }
+  const sm=new Array(N);
+  for(let i=0;i<N;i++){let t=0;for(let j=-2;j<=2;j++)t+=k[(i+j+N)%N];sm[i]=t/5;}
+  let R=Math.max(4,Math.floor(N/(count*5))), peaks=[];
+  while(R>=2){
+    peaks=[];
+    for(let i=0;i<N;i++){
+      let top=true;
+      for(let j=-R;j<=R;j++){if(j&&sm[(i+j+N)%N]>sm[i]+1e-9){top=false;break;}}
+      if(top)peaks.push({i:i,v:sm[i]});
+    }
+    if(peaks.length>=count)break;
+    R=Math.floor(R/2);
+  }
+  peaks.sort((a,b)=>b.v-a.v);
+  const keep=peaks.slice(0,count).sort((a,b)=>a.i-b.i);
+  let cx=0,cy=0;for(const p of S){cx+=p.x;cy+=p.y;}cx/=N;cy/=N;
+  return keep.map(p=>{
+    const b=S[p.i], a=S[(p.i-8+N)%N], c=S[(p.i+8)%N];
+    let nx=-(c.y-a.y), ny=(c.x-a.x);
+    const m=Math.hypot(nx,ny)||1; nx/=m; ny/=m;
+    if((b.x-cx)*nx+(b.y-cy)*ny<0){nx=-nx;ny=-ny;}
+    return {x:b.x+nx*25,y:b.y+ny*25};
+  });
+}
+
+/* ── track drawing ────────────────────────── */
+let cornerNodes=[];
+function drawTrack(c){
+  const svg=$("trackSvg");
+  while(svg.firstChild)svg.removeChild(svg.firstChild);
+  svg.appendChild(el("title")).textContent=c.name+" track layout";
+  const F=fit(c.pts), d=pathOf(F.pts);
+  svg.setAttribute("viewBox","0 0 "+VW+" "+F.h.toFixed(0));
+
+  const shadow=el("path",{d:d,class:"trk-shadow","stroke-width":26,transform:"translate(3,5)"});
+  const edge  =el("path",{d:d,class:"trk-edge","stroke-width":25});
+  const road  =el("path",{d:d,class:"trk-road","stroke-width":19});
+  const line  =el("path",{d:d,class:"trk-line","stroke-width":2});
+  svg.appendChild(shadow);svg.appendChild(edge);svg.appendChild(road);svg.appendChild(line);
+
+  if(!reduced){
+    const len=road.getTotalLength();
+    [edge,road].forEach(n=>{
+      n.style.setProperty("--len",len);
+      n.style.strokeDasharray=len;
+      n.style.strokeDashoffset=len;
+      n.classList.add("drawin");
+    });
+  }
+
+  /* start / finish line */
+  const L=road.getTotalLength();
+  const s0=road.getPointAtLength(0), s1=road.getPointAtLength(Math.min(14,L*0.01));
+  let tx=s1.x-s0.x, ty=s1.y-s0.y; const tm=Math.hypot(tx,ty)||1; tx/=tm; ty/=tm;
+  const nx=-ty, ny=tx;
+  const g=el("g",{class:"sf"});
+  g.appendChild(el("line",{x1:s0.x-nx*15,y1:s0.y-ny*15,x2:s0.x+nx*15,y2:s0.y+ny*15}));
+  const lab=el("text",{x:s0.x+nx*30,y:s0.y+ny*30,"text-anchor":"middle","dominant-baseline":"central"});
+  lab.textContent="START";
+  g.appendChild(lab);
+  svg.appendChild(g);
+
+  cornerNodes=[];
+  findCorners(road,c.corners).forEach((pt,i)=>{
+    const n=i+1;
+    const gg=el("g",{class:"cnr",tabindex:"0",role:"button"});
+    gg.appendChild(el("circle",{cx:pt.x,cy:pt.y,r:12.5}));
+    const t=el("text",{x:pt.x,y:pt.y+.5}); t.textContent=n; gg.appendChild(t);
+    const nm=c.cn&&c.cn[n];
+    const ti=el("title"); ti.textContent="Turn "+n+(nm?" \u2014 "+nm:""); gg.appendChild(ti);
+    gg.addEventListener("mouseenter",()=>setHot(n));
+    gg.addEventListener("mouseleave",()=>setHot(null));
+    gg.addEventListener("focus",()=>setHot(n));
+    gg.addEventListener("blur",()=>setHot(null));
+    gg.addEventListener("click",()=>{
+      if(tab!==1){tab=1;renderTabs(c);}
+      setHot(n);
+      const li=document.querySelector('.cornerlist li[data-n="'+n+'"]');
+      if(li)li.scrollIntoView({block:"nearest",behavior:reduced?"auto":"smooth"});
+    });
+    svg.appendChild(gg);
+    cornerNodes[n]=gg;
+  });
+
+  $("canvasMeta").textContent=c.name;
+  $("canvasDir").textContent=c.dir+" \u00b7 "+c.corners+" corners";
+}
+function setHot(n){
+  if(hot&&cornerNodes[hot])cornerNodes[hot].classList.remove("hot");
+  document.querySelectorAll(".cornerlist li.hot").forEach(e=>e.classList.remove("hot"));
+  hot=n;
+  if(n&&cornerNodes[n])cornerNodes[n].classList.add("hot");
+  if(n){const li=document.querySelector('.cornerlist li[data-n="'+n+'"]');if(li)li.classList.add("hot");}
+}
+
+/* ── chrome ───────────────────────────────── */
+function renderPills(c){
+  const pills=[
+    ['<span class="em">'+c.flag+'</span>','',esc(c.country),"flagpill"],
+    ["","Lap",c.km.toFixed(3)+" km"],
+    ["","Corners",String(c.corners)],
+    ["","Laps",String(c.laps)],
+    ["","Race",(c.km*c.laps).toFixed(1)+" km"],
+    ["","First GP",String(c.first)]
+  ];
+  $("pills").innerHTML=pills.map(p=>
+    '<span class="pill '+(p[3]||"")+'">'+(p[0]||"")+(p[1]?p[1]+" ":"")+'<b>'+p[2]+'</b></span>').join("");
+}
+
+const TABS=["History","Layout","Racing","Trivia"];
+function renderTabs(c){
+  $("tablist").innerHTML=TABS.map((t,i)=>
+    '<button class="tab" role="tab" data-i="'+i+'" aria-selected="'+(i===tab)+'">'+t+'</button>').join("");
+  $("tablist").querySelectorAll("button").forEach(b=>
+    b.addEventListener("click",()=>{tab=+b.dataset.i;renderTabs(c);}));
+  $("panel").innerHTML=panelHTML(c);
+  if(tab===1){
+    document.querySelectorAll(".cornerlist li").forEach(li=>{
+      li.addEventListener("mouseenter",()=>setHot(+li.dataset.n));
+      li.addEventListener("mouseleave",()=>setHot(null));
+    });
+  }
+}
+function panelHTML(c){
+  if(tab===0) return '<p class="lede">'+esc(c.history)+'</p>';
+  if(tab===1){
+    let li="";
+    for(let n=1;n<=c.corners;n++){
+      const nm=c.cn&&c.cn[n];
+      li+='<li data-n="'+n+'"><span class="n">'+n+'</span><span class="nm'+(nm?"":" none")+'">'+(nm?esc(nm):"unnamed")+'</span></li>';
+    }
+    return '<p>'+esc(c.layout)+'</p><h4>Corner by corner</h4><ul class="cornerlist">'+li+'</ul>';
+  }
+  if(tab===2){
+    const n=c.num;
+    return '<p class="lede">'+esc(c.racing)+'</p>'+
+      '<h4>What the lap asks for</h4>'+
+      '<table class="rec"><tbody>'+
+      row("Full throttle","~"+n.ft+"% of the lap")+
+      row("Longest straight",n.straight+" m")+
+      row("Top speed","~"+n.vmax+" km/h")+
+      row("Gear changes","~"+n.gears+" per lap")+
+      row("Downforce level",n.df)+
+      row("Brake load",n.brakes)+
+      row("Pit lane time loss","~"+n.pit+" s")+
+      row("Safety car likelihood",n.sc)+
+      '</tbody></table>';
+  }
+  return '<ul>'+c.facts.map(f=>"<li>"+esc(f)+"</li>").join("")+'</ul>';
+}
+
+function row(k,v){return '<tr><th scope="row">'+esc(k)+'</th><td style="text-align:right">'+esc(v)+'</td></tr>';}
+
+function renderCards(c){
+  const winners=c.w.map((w,i)=>
+    '<li'+(i===0?' class="latest"':'')+'><span class="yr">'+w.y+'</span><span class="drv">'+esc(w.d)+'</span><span class="team">'+esc(w.t)+'</span></li>').join("");
+
+  $("cards").innerHTML=
+    card("Circuit stats",
+      '<dl class="dl">'+
+      dd("Location",esc(c.city)+"<small>"+esc(c.country)+"</small>")+
+      dd("Lap length",c.km.toFixed(3)+" km")+
+      dd("Corners",c.corners)+
+      dd("First Grand Prix",c.first)+
+      dd("Direction",c.dir)+
+      dd("Elevation",esc(c.elev))+
+      dd("Race distance",(c.km*c.laps).toFixed(1)+" km <small>"+c.laps+" laps</small>")+
+      '</dl>')+
+    card("Recent winners",'<ul class="winners">'+winners+'</ul>'+
+      (c.w.length<5?'<p class="sub">Only '+c.w.length+' edition'+(c.w.length===1?'':'s')+' on record.</p>':''))+
+    card("Fastest race lap",
+      '<div class="bigstat"><span class="t">'+esc(c.record.t)+'</span></div>'+
+      '<p class="sub">'+esc(c.record.who)+(c.record.yr?", "+c.record.yr:"")+'</p>')+
+    card("In the record books",
+      '<dl class="dl">'+
+      dd("Most wins here",esc(c.mw.d)+"<small>"+c.mw.n+(c.mw.n===1?" win":" wins")+"</small>")+
+      dd("First winner",esc(c.fw.d)+"<small>"+c.fw.y+"</small>")+
+      dd("Lap record",esc(c.record.t)+"<small>"+esc(c.record.who)+(c.record.yr?", "+c.record.yr:"")+"</small>")+
+      '</dl>');
+}
+function card(h,b){return '<section class="card"><h3>'+h+'</h3>'+b+'</section>';}
+function dd(k,v){return "<dt>"+k+"</dt><dd>"+v+"</dd>";}
+
+/* ── wiring ───────────────────────────────── */
+function select(i){
+  idx=(i+CIRCUITS.length)%CIRCUITS.length;
+  const c=CIRCUITS[idx];
+  hot=null;
+  $("circuitSelect").value=String(idx);
+  renderPills(c); drawTrack(c); renderTabs(c); renderCards(c);
+  try{localStorage.setItem("cf:last",c.id);}catch(e){}
+}
+function init(){
+  CIRCUITS.sort((a,b)=>a.name.localeCompare(b.name,"en"));
+  $("circuitSelect").innerHTML=CIRCUITS.map((c,i)=>
+    '<option value="'+i+'">'+esc(c.name)+" \u2014 "+esc(c.country)+'</option>').join("");
+  $("circuitSelect").addEventListener("change",e=>select(+e.target.value));
+  let start=0;
+  try{
+    const last=localStorage.getItem("cf:last");
+    if(last){const j=CIRCUITS.findIndex(c=>c.id===last); if(j>=0)start=j;}
+  }catch(e){}
+  select(start);
+}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
+})();
+</script>
+</body>
+</html>

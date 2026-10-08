@@ -1,0 +1,1910 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#000000">
+<meta name="color-scheme" content="dark">
+<title>Remix</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="Remix">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600&family=Figtree:wght@400;500;600;700;800&family=Pirata+One&family=Uncial+Antiqua&family=IM+Fell+English+SC&family=Mountains+of+Christmas:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#000; --surface:#121212; --surface2:#1E1E1E; --surface3:#2A2A2A; --line:#262626;
+  --ink:#FFFFFF; --ink2:#E6E6E6; --muted:#8C8C8C;
+  --accent:#FF3D7F; --accent-ink:#2A0612; --green:#3BD17F; --heart:#FF4F6E;
+  --wordmark:"Fredoka","Trebuchet MS",system-ui,sans-serif;
+  --body:"Figtree","Segoe UI",system-ui,-apple-system,sans-serif;
+  --nav-h:58px;
+  --nav-bg:#000; --nav-line:#1A1A1A; --nav-ink:#8C8C8C; --nav-active:#fff; --head-font:var(--body);
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  background:var(--bg);color-scheme:dark;
+}
+/* This app is dark in every mode, like most short-video apps. */
+@media (prefers-color-scheme:light){:root:not([data-theme="light"]){--bg:#000}}
+:root[data-theme="light"]{--bg:#000}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{height:100%;margin:0;font-family:var(--body);color:var(--ink);background:var(--bg);display:flex;flex-direction:column;overflow:hidden;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer}
+a{color:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible,summary:focus-visible,label:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+main{flex:1;min-height:0;position:relative}
+.view{position:absolute;inset:0;display:none}
+.view.on{display:block}
+.av{border-radius:50%;display:grid;place-items:center;flex:none;overflow:hidden;background:var(--surface3)}
+.av img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* ---------- Feed ---------- */
+#feed{overflow-y:auto;scroll-snap-type:y mandatory;overscroll-behavior:contain;background:#000;scrollbar-width:none}
+#feed::-webkit-scrollbar{display:none}
+.slide{height:100%;scroll-snap-align:start;scroll-snap-stop:always;display:flex;justify-content:center;position:relative}
+.stage{position:relative;height:100%;width:100%;overflow:hidden;background:#000}
+@media (min-aspect-ratio:3/4){.stage{width:auto;aspect-ratio:9/16;border-radius:10px}}
+.stage iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}
+.shield{position:absolute;inset:0;z-index:2}
+.paused-badge{position:absolute;inset:0;display:grid;place-items:center;z-index:3;pointer-events:none;opacity:0;transition:opacity .15s}
+.paused-badge.show{opacity:1}
+.paused-badge span{width:72px;height:72px;display:grid;place-items:center;opacity:.85}
+.caption{position:absolute;left:0;right:0;bottom:0;z-index:3;padding:80px 84px 18px 14px;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.55));pointer-events:none;text-shadow:0 1px 3px rgba(0,0,0,.45)}
+.who{pointer-events:auto;border:0;background:none;color:#fff;padding:0;margin:0 0 6px;font-weight:700;font-size:1rem;display:flex;align-items:center;gap:6px;width:fit-content}
+.cap-tags{display:flex;gap:6px;margin-bottom:6px}
+.new-tag{display:inline-block;background:var(--accent);color:var(--accent-ink);font-weight:800;font-size:.72rem;padding:2px 8px;border-radius:4px;text-shadow:none}
+.new-tag.seen-tag{background:rgba(255,255,255,.2);color:#fff}
+.caption h2{font-weight:500;font-size:.98rem;margin:0 0 8px;line-height:1.35}
+.note{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.16);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;font-weight:600;font-size:.86rem;padding:6px 10px;border-radius:8px;max-width:100%;line-height:1.35;text-shadow:none}
+.note b{color:var(--accent);font-weight:800}
+.rail{position:absolute;right:8px;bottom:20px;z-index:4;display:flex;flex-direction:column;align-items:center;gap:16px}
+.rail button{border:0;background:none;color:#fff;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:.72rem;font-weight:700;padding:0;filter:drop-shadow(0 1px 3px rgba(0,0,0,.45))}
+.rail .ico{width:44px;height:44px;display:grid;place-items:center}
+.rail .creator-btn{position:relative;margin-bottom:8px}
+.rail .creator-btn .av{width:48px;height:48px;font-size:1.4rem;border:2px solid #fff}
+.rail .creator-btn .badge{position:absolute;left:50%;bottom:-9px;transform:translateX(-50%);width:20px;height:20px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-size:.7rem;font-weight:900}
+.rail .fav[aria-pressed="true"] svg{fill:var(--heart);stroke:var(--heart)}
+.rail .keep[aria-pressed="true"] svg{fill:var(--accent);stroke:var(--accent)}
+.progress{position:absolute;left:0;right:0;bottom:0;height:2px;z-index:4;background:rgba(255,255,255,.18)}
+.progress i{display:block;height:100%;width:0;background:#fff}
+.fail{position:absolute;inset:0;z-index:3;display:none;place-items:center;text-align:center;padding:28px;color:#fff;background:#000}
+.fail.show{display:grid}
+.fail p{max-width:30ch;line-height:1.5;margin:0;color:var(--ink2)}
+#feedTop{display:contents}
+.feed-top{position:absolute;top:8px;left:0;right:0;z-index:5;display:flex;justify-content:center;align-items:center;gap:4px;pointer-events:none}
+.seg{pointer-events:auto;border:0;background:none;color:rgba(255,255,255,.62);font-weight:700;font-size:1.05rem;padding:8px 10px 6px;position:relative;text-shadow:0 1px 4px rgba(0,0,0,.5)}
+.seg[aria-pressed="true"]{color:#fff}
+.seg[aria-pressed="true"]::after{content:"";position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:28px;height:3px;border-radius:2px;background:#fff}
+.seg-sep{width:1px;height:14px;background:rgba(255,255,255,.35)}
+.chip{pointer-events:auto;border:0;background:rgba(0,0,0,.45);color:#fff;font-weight:700;border-radius:999px;padding:8px 14px;font-size:.92rem;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.empty{height:100%;display:grid;place-items:center;text-align:center;color:#fff;padding:32px}
+.empty h2{font-size:1.3rem;margin:0 0 8px;font-weight:700}
+.empty p{color:var(--muted);max-width:32ch;margin:0 auto;line-height:1.5}
+
+/* sample "videos" */
+.fake{position:absolute;inset:0;display:grid;place-items:center;overflow:hidden}
+.fake .big{font-size:min(36vw,180px);line-height:1;filter:drop-shadow(0 10px 20px rgba(0,0,0,.25))}
+.fake .orb{position:absolute;border-radius:50%;background:#fff;opacity:.16}
+.fake .sample{position:absolute;top:56px;right:12px;font-size:.7rem;font-weight:700;color:#fff;background:rgba(0,0,0,.35);padding:3px 8px;border-radius:4px}
+.m-bounce{animation:bounce 1.6s ease-in-out infinite}
+.m-rock{animation:rock 2.2s ease-in-out infinite}
+.m-float{animation:float 3.2s ease-in-out infinite}
+.m-pop{animation:pop 1.8s ease-in-out infinite}
+.orb{animation:drift 10s ease-in-out infinite alternate}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-14%)}}
+@keyframes rock{0%,100%{transform:rotate(-10deg)}50%{transform:rotate(10deg)}}
+@keyframes float{0%,100%{transform:translate(-6%,4%)}50%{transform:translate(6%,-6%)}}
+@keyframes pop{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+@keyframes drift{from{transform:translate(0,0)}to{transform:translate(40px,-60px)}}
+.stage.paused .fake *{animation-play-state:paused}
+
+/* caught-up card */
+.caught .stage{background:radial-gradient(circle at 50% 38%,#1C1C1C,#000 70%)}
+.caught-card{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#fff;padding:32px}
+.caught-check{width:80px;height:80px;border-radius:50%;background:var(--accent);display:grid;place-items:center;margin-bottom:20px}
+.caught-card h2{font-weight:800;font-size:1.6rem;margin:0 0 10px}
+.caught-card p{color:var(--muted);line-height:1.55;margin:0;max-width:30ch}
+.caught-arrow{margin-top:36px;font-size:1.5rem;color:#fff;animation:nudge 1.8s ease-in-out infinite}
+@keyframes nudge{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+
+/* ---------- Pages ---------- */
+.page{background:var(--bg);overflow-y:auto;padding:0 0 40px}
+#profile{touch-action:pan-y;will-change:transform}
+.page-inner{max-width:640px;margin:0 auto;padding:0 16px}
+.topbar{position:sticky;top:0;z-index:6;background:var(--bg);display:grid;grid-template-columns:44px 1fr 44px;align-items:center;height:52px;margin:0 -16px 8px;padding:0 6px;border-bottom:1px solid var(--line)}
+.topbar.clean{border-bottom-color:transparent}
+.topbar h1{grid-column:2;margin:0;text-align:center;font-size:1.05rem;font-weight:700;font-family:var(--head-font);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.icon-btn{border:0;background:none;color:var(--ink);width:44px;height:44px;display:grid;place-items:center;padding:0}
+.topbar .right{grid-column:3}
+.page h3{font-size:.8rem;font-weight:700;color:var(--muted);margin:26px 0 10px;letter-spacing:.02em}
+.lede{color:var(--muted);margin:4px 0 18px;line-height:1.5}
+.hint{color:var(--muted);font-size:.92rem;line-height:1.5}
+.btn{border:0;border-radius:8px;padding:12px 18px;font-weight:700;background:var(--accent);color:var(--accent-ink);font-size:.98rem}
+.btn.sun{background:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:var(--surface2);color:var(--ink)}
+.btn.ghost.light{background:rgba(255,255,255,.15)}
+.btn.danger{background:var(--surface2);color:var(--heart)}
+.btn.danger-fill{background:var(--heart);color:#fff}
+.back{border:0;background:none;color:#fff;padding:0}
+
+/* profile */
+.me{display:flex;flex-direction:column;align-items:center;text-align:center;padding-top:10px}
+.me .av,.creator-head .av{width:96px;height:96px;font-size:3rem;background:var(--accent)}
+.me .uname,.creator-head .handle{margin:10px 0 0;font-weight:700;font-size:1.05rem}
+.me .rname{margin:2px 0 0;color:var(--muted);font-size:.9rem}
+.stats{display:flex;justify-content:center;gap:0;margin:16px 0 14px}
+.stats>*{display:flex;flex-direction:column;align-items:center;min-width:92px;border:0;background:none;padding:0;color:var(--ink)}
+.stats>*+*{border-left:1px solid var(--line)}
+.stats b{font-weight:800;font-size:1.1rem}
+.stats small{color:var(--muted);font-size:.82rem;margin-top:2px}
+.prof-actions{display:flex;gap:8px;justify-content:center}
+.prof-actions .btn{padding:10px 22px;font-size:.92rem}
+.ptabs{display:flex;border-bottom:1px solid var(--line);margin:18px -16px 2px;position:sticky;top:52px;background:var(--bg);z-index:5}
+.ptabs button{flex:1;border:0;background:none;padding:12px 4px 10px;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;display:grid;place-items:center}
+.ptabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin:0 -16px}
+@media (min-width:600px){.grid{margin:0;border-radius:6px;overflow:hidden}}
+.tile{aspect-ratio:3/4;border:0;padding:6px;text-align:left;display:flex;flex-direction:column;justify-content:flex-end;color:#fff;font-weight:600;font-size:.72rem;line-height:1.25;position:relative;overflow:hidden;border-radius:0}
+.tile .te{position:absolute;top:28%;left:0;right:0;text-align:center;font-size:2.2rem}
+.tile span{position:relative;text-shadow:0 1px 3px rgba(0,0,0,.6);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tile::after{content:"";position:absolute;inset:50% 0 0;background:linear-gradient(transparent,rgba(0,0,0,.45))}
+.tile span{z-index:1}
+.follow-list{display:flex;flex-direction:column}
+.frow,.shelf-row{display:flex;align-items:center;gap:12px;background:none;border:0;border-bottom:1px solid var(--line);padding:12px 0;width:100%;text-align:left;color:var(--ink)}
+.frow .av{width:52px;height:52px;font-size:1.5rem}
+.frow div{flex:1;min-width:0}
+.frow b,.shelf-row b{display:block;font-weight:700;font-size:.98rem}
+.frow small,.shelf-row small{color:var(--muted);font-size:.85rem;display:block}
+.pill{font-size:.85rem;font-weight:700;padding:8px 14px;border-radius:6px;background:var(--surface2);color:var(--ink);flex:none}
+.shelf-row .em{font-size:1.5rem;width:52px;height:52px;border-radius:8px;background:var(--surface2);display:grid;place-items:center;flex:none}
+.creator-head{display:flex;flex-direction:column;align-items:center;text-align:center;padding-top:8px}
+.creator-head .cname{margin:2px 0 0;color:var(--muted);font-size:.9rem}
+.creator-head .bio{margin:12px 0 14px;max-width:34ch;line-height:1.45;color:var(--ink2);font-size:.92rem}
+.av-edit{position:relative;border:0;background:none;padding:0;border-radius:50%}
+.av-edit .pen{position:absolute;right:0;bottom:0;width:28px;height:28px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;border:3px solid var(--bg)}
+
+/* forms */
+form.stack{display:flex;flex-direction:column;gap:14px}
+label{font-weight:600;font-size:.88rem;display:flex;flex-direction:column;gap:6px;color:var(--ink2)}
+input,select{font:inherit;color:var(--ink);background:var(--surface2);border:1px solid transparent;border-radius:8px;padding:12px;width:100%}
+input:focus{border-color:var(--muted);outline:none}
+input::placeholder{color:#6A6A6A}
+.row{display:flex;gap:10px}
+.row>*{flex:1}
+.msg{font-weight:600;font-size:.9rem;margin:0}
+.msg.bad{color:var(--heart)} .msg.good{color:var(--green)}
+.vlist{display:flex;flex-direction:column}
+.vitem{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.vitem .sw{width:44px;height:58px;border-radius:4px;flex:none;display:grid;place-items:center;font-size:1.2rem}
+.vitem .av{width:44px;height:44px;font-size:1.3rem}
+.vitem>div:not(.acts){flex:1;min-width:0}
+.vitem b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700}
+.vitem small{color:var(--muted);font-size:.84rem}
+.acts{display:flex;flex-direction:column;flex:none;gap:4px}
+.x{border:0;background:var(--surface2);color:#fff;font-weight:700;font-size:.8rem;padding:7px 12px;border-radius:6px;text-decoration:none;text-align:center}
+.x.danger-x{color:var(--heart)}
+.sample-box{background:var(--surface);border-radius:10px;padding:16px}
+.sample-box p{margin:0 0 12px}
+details summary{font-weight:700;cursor:pointer;color:#fff;padding:6px 0}
+details code{background:var(--surface2);padding:2px 6px;border-radius:4px}
+.forbox{display:flex;flex-direction:column;gap:8px}
+.forbox .fb-title{font-weight:600;font-size:.88rem;color:var(--ink2)}
+.forlist{display:flex;flex-wrap:wrap;gap:8px}
+.forlist label{flex-direction:row;align-items:center;gap:8px;border:1px solid var(--surface3);background:var(--surface);border-radius:999px;padding:6px 14px 6px 6px;cursor:pointer;font-weight:700;color:#fff}
+.forlist label:has(input:checked){border-color:var(--accent);background:#2A2310}
+.forlist .all-box{flex-basis:100%}
+.forlist input{width:18px;height:18px;margin:0;accent-color:var(--accent);flex:none;padding:0}
+.forlist .av{width:28px;height:28px;font-size:.95rem;background:var(--accent)}
+.for-line{display:block;color:var(--accent);font-weight:600;font-size:.8rem;margin-top:2px}
+.kidstat{display:flex;flex-wrap:wrap;gap:6px;margin-top:5px}
+.status{display:inline-block;font-size:.72rem;font-weight:700;padding:2px 7px;border-radius:4px;margin-top:5px}
+.kidstat .status{margin:0}
+.status.w{background:rgba(59,209,127,.15);color:var(--green)}
+.status.n{background:rgba(255,201,60,.15);color:var(--accent)}
+.kidrow{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.kidrow .av{width:52px;height:52px;font-size:1.5rem;background:var(--accent)}
+.kidrow div{flex:1;min-width:0}
+.kidrow b{display:block;font-weight:700;font-size:1rem}
+.kidrow small{color:var(--muted);font-size:.84rem;display:block}
+.mini{border:0;background:var(--surface2);border-radius:6px;padding:8px 12px;font-weight:700;font-size:.82rem;color:#fff;flex:none}
+.lib-sum{display:flex;gap:8px;margin:4px 0 14px}
+.lib-sum div{flex:1;background:var(--surface);border-radius:10px;padding:12px;text-align:center}
+.lib-sum b{display:block;font-weight:800;font-size:1.4rem}
+.lib-sum small{color:var(--muted);font-weight:600;font-size:.8rem}
+.filters{display:flex;gap:8px;margin:4px 0 8px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+.filters::-webkit-scrollbar{display:none}
+.filters button{border:0;background:var(--surface2);border-radius:6px;padding:8px 14px;font-weight:700;font-size:.88rem;color:var(--ink2);flex:none}
+.filters button[aria-pressed="true"]{background:#fff;color:#000}
+.whoami{display:flex;align-items:center;gap:6px;color:var(--muted);font-weight:600;font-size:.85rem}
+.whoami .av{width:26px;height:26px;font-size:.85rem}
+
+/* login */
+.login{max-width:380px;margin:0 auto;padding:7vh 20px calc(30px + env(safe-area-inset-bottom,0px));text-align:center}
+.login .mark{font-family:var(--wordmark);font-weight:600;font-size:2.4rem;margin:0;line-height:1;letter-spacing:.01em}
+.login .tree{width:76px;height:76px;border-radius:20px;background:var(--accent);display:grid;place-items:center;font-size:2.6rem;margin:0 auto 16px}
+.login .lede{margin:8px 0 26px}
+.login form{text-align:left}
+.demo-accts{margin-top:26px;text-align:left}
+.demo-accts p{margin:0 0 10px}
+.demo-accts .row{flex-wrap:wrap;gap:8px}
+.demo-accts button{flex:1 1 40%;border:0;background:var(--surface);border-radius:10px;padding:12px 8px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:2px;color:#fff}
+.demo-accts small{color:var(--muted);font-weight:500}
+#banner{flex:none;background:var(--accent);color:var(--accent-ink);display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 14px;font-weight:700;font-size:.88rem}
+#banner[hidden]{display:none}
+#banner button{border:0;background:var(--accent-ink);color:#fff;border-radius:6px;padding:6px 12px;font-weight:700;font-size:.82rem}
+
+/* nav */
+nav[hidden]{display:none}
+nav{flex:none;height:calc(var(--nav-h) + env(safe-area-inset-bottom,0px));padding-bottom:env(safe-area-inset-bottom,0px);display:flex;background:var(--nav-bg);border-top:1px solid var(--nav-line)}
+nav button{flex:1;border:0;background:none;color:var(--nav-ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:.68rem;font-weight:600}
+nav button[aria-current="page"]{color:var(--nav-active)}
+nav button.create{gap:0}
+nav button.create .plus{width:46px;height:30px;border-radius:9px;background:#fff;color:#000;display:grid;place-items:center;}
+nav button.create[aria-current="page"] .plus{background:var(--accent)}
+
+/* sheets */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:20;display:none}
+.scrim.on{display:block}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;background:var(--sheet-bg,var(--surface));color:var(--ink);border-radius:14px 14px 0 0;padding:26px 16px calc(18px + env(safe-area-inset-bottom,0px));max-width:560px;margin:0 auto;transform:translateY(105%);transition:transform .25s ease;max-height:80%;overflow-y:auto}
+.sheet::before{content:"";position:absolute;top:8px;left:50%;transform:translateX(-50%);width:36px;height:4px;border-radius:2px;background:var(--surface3)}
+.sheet.on{transform:none}
+.sheet h3{font-weight:700;margin:0 0 14px;font-size:1.05rem;text-align:center}
+.sheet .hint{text-align:center}
+.pick{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;padding:12px 4px;text-align:left;border-bottom:1px solid var(--line);color:var(--ink)}
+.pick .em{font-size:1.4rem}
+.pick .ck{margin-left:auto;width:24px;height:24px;border-radius:50%;border:2px solid var(--surface3);display:grid;place-items:center;color:var(--accent-ink);font-size:.8rem;font-weight:900}
+.pick[aria-checked="true"] .ck{background:var(--accent);border-color:var(--accent)}
+.newcol{display:flex;gap:8px;margin-top:14px}
+.newcol input{flex:1}
+.av-sheet-top{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:16px}
+.av-sheet-top .av{width:80px;height:80px;font-size:2.4rem;background:var(--accent)}
+.av-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:12px 0 16px}
+.av-grid button{aspect-ratio:1;border-radius:50%;border:2px solid transparent;background:var(--surface2);font-size:1.6rem;display:grid;place-items:center}
+.av-grid button[aria-pressed="true"]{border-color:var(--accent)}
+.photo-btns{display:flex;flex-direction:column;gap:8px}
+.menu-list{display:flex;flex-direction:column}
+.menu-list button{border:0;background:none;color:var(--ink);text-align:left;padding:14px 4px;font-weight:600;font-size:1rem;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px}
+.menu-list button.danger-x{color:var(--heart)}
+.toast{position:fixed;left:50%;top:calc(70px + env(safe-area-inset-top,0px));transform:translateX(-50%);background:rgba(40,40,40,.95);color:#fff;font-weight:600;padding:10px 16px;border-radius:8px;z-index:30;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap;font-size:.9rem}
+.toast.on{opacity:1}
+@media (prefers-reduced-motion:reduce){
+  .sheet,.toast,.paused-badge{transition:none}
+  .fake *,.caught-arrow{animation:none!important}
+}
+
+/* ================= Themes (child app only) ================= */
+#skinFx{position:absolute;inset:0;pointer-events:none;z-index:4;overflow:hidden;display:none}
+.lights{display:block;width:calc(100% + 32px);height:46px;margin:-6px -16px 0}
+.lights .bulb{animation:twinkle 2.4s ease-in-out infinite}
+@keyframes twinkle{0%,100%{opacity:1}50%{opacity:.35}}
+.flake{position:absolute;top:-20px;color:#fff;opacity:.9;animation:snow linear infinite;text-shadow:0 0 6px rgba(255,255,255,.6)}
+@keyframes snow{0%{transform:translate(0,-20px) rotate(0)}50%{transform:translate(18px,50vh) rotate(180deg)}100%{transform:translate(-10px,105vh) rotate(360deg)}}
+
+/* Holiday: cranberry red and snowy white */
+html[data-skin="holiday"]{
+  --bg:#9E1523; --surface:#B3202F; --surface2:rgba(255,255,255,.16); --surface3:rgba(255,255,255,.28); --line:rgba(255,255,255,.2);
+  --ink:#FFFFFF; --ink2:#FFF1F1; --muted:#F8C9CE;
+  --accent:#FFFFFF; --accent-ink:#9E1523; --green:#1F8A4C; --heart:#FF8FA0;
+  --nav-bg:#7E0F1A; --nav-line:rgba(255,255,255,.15); --nav-ink:#F2B3BA; --nav-active:#FFFFFF;
+  --head-font:"Mountains of Christmas","Figtree",cursive; --sheet-bg:#8E1320;
+}
+html[data-skin="holiday"] body[data-tab="profile"] #skinFx{display:block}
+html[data-skin="holiday"] #profile{background:radial-gradient(120% 60% at 50% 0%,#B8202F 0%,#9E1523 55%,#7E0F1A 100%)}
+html[data-skin="holiday"] .topbar{background:transparent}
+html[data-skin="holiday"] .topbar h1{font-size:1.5rem}
+html[data-skin="holiday"] .btn{background:repeating-linear-gradient(-45deg,#fff 0 9px,#FFE1E5 9px 18px);color:#9E1523;border-radius:999px;box-shadow:0 2px 0 rgba(0,0,0,.18)}
+html[data-skin="holiday"] .btn.ghost{background:#fff;color:#9E1523}
+html[data-skin="holiday"] .me .av{background:#fff;box-shadow:0 0 0 4px #1F8A4C,0 0 0 7px #fff}
+html[data-skin="holiday"] .av-edit .pen{background:#1F8A4C;color:#fff;border-color:#9E1523}
+html[data-skin="holiday"] .pill{background:#fff;color:#9E1523}
+html[data-skin="holiday"] .new-tag{background:#fff;color:#9E1523}
+html[data-skin="holiday"] .caught .stage{background:radial-gradient(circle at 50% 38%,#B3202F,#5E0A12 75%)}
+html[data-skin="holiday"] .caught-check{background:#fff}
+html[data-skin="holiday"] .caught-check svg{stroke:#9E1523}
+html[data-skin="holiday"] .ptabs{background:transparent}
+html[data-skin="holiday"] .frow .pill{border-radius:999px}
+html[data-skin="holiday"] .note b{color:#FFB3BE}
+
+/* Pirate: aged treasure map */
+html[data-skin="pirate"]{
+  --bg:#E6D2A3; --surface:#DCC28C; --surface2:rgba(90,58,26,.14); --surface3:rgba(90,58,26,.3); --line:rgba(90,58,26,.28);
+  --ink:#3A230E; --ink2:#4A2F16; --muted:#7A5A33;
+  --accent:#8B2E1A; --accent-ink:#F6E7C4; --green:#3E6B2E; --heart:#B3261E;
+  --nav-bg:#3A230E; --nav-line:#2A1808; --nav-ink:#C9A46A; --nav-active:#F6E7C4;
+  --head-font:"Pirata One","IM Fell English SC",serif; --sheet-bg:#E9D7AB;
+  color-scheme:light;
+}
+html[data-skin="pirate"] .page,html[data-skin="pirate"] .sheet{
+  background-color:#E6D2A3;
+  background-image:
+    radial-gradient(ellipse at 50% 40%,rgba(255,248,225,.55) 0%,rgba(255,248,225,0) 60%),
+    radial-gradient(ellipse at 50% 50%,rgba(0,0,0,0) 55%,rgba(110,70,25,.38) 100%),
+    radial-gradient(circle at 18% 22%,rgba(140,95,40,.18) 0 6%,transparent 7%),
+    radial-gradient(circle at 82% 68%,rgba(140,95,40,.14) 0 9%,transparent 10%),
+    repeating-linear-gradient(8deg,rgba(120,80,30,.035) 0 2px,transparent 2px 7px);
+}
+html[data-skin="pirate"] #profile{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 900' preserveAspectRatio='xMidYMin slice'%3E%3Cg fill='none' stroke='%236B4520' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' opacity='.55'%3E%3Cg transform='translate(338 112)'%3E%3Ccircle r='34'/%3E%3Ccircle r='26' stroke-dasharray='2 5'/%3E%3Cpath d='M0-46L7-7 46 0 7 7 0 46-7 7-46 0-7-7z' fill='%23C9A46A' fill-opacity='.5'/%3E%3Cpath d='M0-46V46M-46 0H46'/%3E%3C/g%3E%3Ctext x='332' y='58' font-family='serif' font-size='16' fill='%236B4520' stroke='none'%3EN%3C/text%3E%3Cpath d='M18 300c20-30 60-40 72-18s-10 52 18 60 42 40 10 58-80 6-96-22-22-50-4-78z' fill='%23D6BB82' fill-opacity='.6'/%3E%3Cpath d='M46 330l10-16 10 16M60 336l8-12 8 12'/%3E%3Cpath d='M300 520c26-22 74-14 82 14s-18 40-4 62-20 46-54 34-48-34-44-58 2-36 20-52z' fill='%23D6BB82' fill-opacity='.6'/%3E%3Cpath d='M336 560v-26M336 534c-10-6-18-2-22 6M336 534c8-8 18-6 22 2M336 534c-2-10 4-16 12-16'/%3E%3Cg stroke-width='1.6' opacity='.8'%3E%3Cpath d='M150 250q8-6 16 0t16 0M220 420q8-6 16 0t16 0M40 520q8-6 16 0t16 0M170 690q8-6 16 0t16 0M300 760q8-6 16 0t16 0M60 800q8-6 16 0t16 0'/%3E%3C/g%3E%3Cpath d='M64 360C120 430 70 470 140 520S260 470 230 600 300 650 320 700' stroke='%238B2E1A' stroke-width='3' stroke-dasharray='9 9'/%3E%3Cpath d='M308 688l26 26M334 688l-26 26' stroke='%238B2E1A' stroke-width='6'/%3E%3Cg transform='translate(40 640)'%3E%3Cpath d='M0 20h46l-8 12H8z' fill='%238B5A2B' fill-opacity='.5'/%3E%3Cpath d='M22 20V-14M22-12l18 22H22M22-10L6 14h16'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"),
+    radial-gradient(ellipse at 50% 40%,rgba(255,248,225,.55) 0%,rgba(255,248,225,0) 60%),
+    radial-gradient(ellipse at 50% 50%,rgba(0,0,0,0) 55%,rgba(110,70,25,.38) 100%),
+    repeating-linear-gradient(8deg,rgba(120,80,30,.035) 0 2px,transparent 2px 7px);
+  background-repeat:no-repeat,no-repeat,no-repeat,repeat;
+  background-size:100% auto,100% 100%,100% 100%,auto;
+  background-attachment:local,scroll,scroll,local;
+}
+html[data-skin="pirate"] .topbar,html[data-skin="pirate"] .ptabs{background:rgba(230,210,163,.92)}
+html[data-skin="pirate"] .topbar{border-bottom:2px solid rgba(90,58,26,.35)}
+html[data-skin="pirate"] .topbar.clean{border-bottom-color:transparent;background:transparent}
+html[data-skin="pirate"] .topbar h1{font-size:1.6rem;font-weight:400;letter-spacing:.02em}
+html[data-skin="pirate"] .me .uname,html[data-skin="pirate"] .creator-head .handle{font-family:"Pirata One",serif;font-weight:400;font-size:1.5rem}
+html[data-skin="pirate"] .stats b{font-family:"IM Fell English SC",serif;font-size:1.3rem}
+html[data-skin="pirate"] .stats small,html[data-skin="pirate"] .pill,html[data-skin="pirate"] .btn,html[data-skin="pirate"] .menu-list button,html[data-skin="pirate"] .rail button{font-family:"IM Fell English SC",Georgia,serif}
+/* wooden plank buttons with brass rivets */
+html[data-skin="pirate"] .btn{
+  background:
+    radial-gradient(circle at 10px 50%,#E0B45A 0 3px,transparent 3.5px),
+    radial-gradient(circle at calc(100% - 10px) 50%,#E0B45A 0 3px,transparent 3.5px),
+    repeating-linear-gradient(0deg,rgba(0,0,0,.07) 0 2px,transparent 2px 6px),
+    linear-gradient(#8A5A2B,#6A4220);
+  color:#F6E7C4;border:2px solid #3A230E;border-radius:4px;box-shadow:0 3px 0 #3A230E;font-size:1.05rem;padding:10px 26px}
+html[data-skin="pirate"] .btn:active{transform:translateY(2px);box-shadow:0 1px 0 #3A230E}
+/* rope-edged secondary buttons */
+html[data-skin="pirate"] .btn.ghost,html[data-skin="pirate"] .pill{
+  background:rgba(246,231,196,.65);color:#3A230E;border:3px solid transparent;border-radius:3px;box-shadow:none;
+  border-image:repeating-linear-gradient(45deg,#7A5530 0 3px,#C9A46A 3px 6px) 3}
+html[data-skin="pirate"] .me .av{background:#F6E7C4;box-shadow:0 0 0 3px #3A230E,0 0 0 7px #C9A46A,0 0 0 9px #3A230E}
+html[data-skin="pirate"] .av-edit .pen{background:#8B2E1A;color:#F6E7C4;border-color:#E6D2A3}
+html[data-skin="pirate"] .ptabs{border-bottom:2px dashed rgba(90,58,26,.45)}
+html[data-skin="pirate"] .frow,html[data-skin="pirate"] .shelf-row{border-bottom:1px dashed rgba(90,58,26,.4)}
+html[data-skin="pirate"] .tile{border:2px solid #3A230E;filter:sepia(.35)}
+html[data-skin="pirate"] .grid{gap:4px}
+html[data-skin="pirate"] .new-tag{background:#8B2E1A;color:#F6E7C4;font-family:"IM Fell English SC",serif}
+html[data-skin="pirate"] .note b{color:#F2C46B}
+html[data-skin="pirate"] .rail .keep[aria-pressed="true"] svg{fill:#E0B45A;stroke:#E0B45A}
+html[data-skin="pirate"] .caught .stage{background:radial-gradient(circle at 50% 38%,#6A4220,#2A1808 75%)}
+html[data-skin="pirate"] .caught-check{background:#E0B45A}
+html[data-skin="pirate"] .caught-card h2{font-family:"Pirata One",serif;font-weight:400;font-size:2rem}
+html[data-skin="pirate"] nav{background:linear-gradient(#4A2E14,#2E1B09)}
+html[data-skin="pirate"] input{background:rgba(246,231,196,.7);border:1px solid rgba(90,58,26,.35)}
+html[data-skin="pirate"] .scrim{background:rgba(42,24,8,.55)}
+
+
+/* Dragon: stormy Viking skies, embers and gliding dragons */
+html[data-skin="dragon"]{
+  --bg:#1C2830; --surface:#26343E; --surface2:rgba(205,225,235,.08); --surface3:rgba(205,225,235,.18); --line:rgba(160,185,198,.2);
+  --ink:#EFE7D6; --ink2:#E2D9C6; --muted:#9DB0BA;
+  --accent:#E8742C; --accent-ink:#1A0E05; --green:#7CC48A; --heart:#FF6A4D;
+  --nav-bg:#121A20; --nav-line:#0B1115; --nav-ink:#7F95A1; --nav-active:#F2A65A;
+  --head-font:"Uncial Antiqua","Figtree",serif; --sheet-bg:#1F2D36;
+}
+html[data-skin="dragon"] .page,html[data-skin="dragon"] .sheet{
+  background-color:#1C2830;
+  background-image:
+    radial-gradient(circle at 50% 0,transparent 8px,rgba(180,210,225,.05) 9px,transparent 10.5px),
+    radial-gradient(circle at 0 100%,transparent 8px,rgba(180,210,225,.05) 9px,transparent 10.5px),
+    radial-gradient(circle at 100% 100%,transparent 8px,rgba(180,210,225,.05) 9px,transparent 10.5px),
+    linear-gradient(#1C2830,#1C2830);
+  background-size:20px 12px,20px 12px,20px 12px,auto;
+}
+html[data-skin="dragon"] #profile{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 900' preserveAspectRatio='xMidYMin slice'%3E%3Cdefs%3E%3CradialGradient id='m' cx='.5' cy='.5' r='.5'%3E%3Cstop offset='0' stop-color='%23F6E2B8' stop-opacity='.9'/%3E%3Cstop offset='.35' stop-color='%23F6E2B8' stop-opacity='.35'/%3E%3Cstop offset='1' stop-color='%23F6E2B8' stop-opacity='0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='70' cy='120' r='70' fill='url(%23m)'/%3E%3Ccircle cx='70' cy='120' r='18' fill='%23F3E4C4' opacity='.85'/%3E%3Cg fill='%232A3B47' opacity='.9'%3E%3Cpath d='M0 330L30 250L48 270L70 200L92 262L110 240L140 330Z'/%3E%3Cpath d='M250 330L270 230L282 248L300 180L318 236L334 214L360 290L380 260L400 300V330Z'/%3E%3C/g%3E%3Cg fill='%231B2831'%3E%3Cpath d='M150 340L162 280L170 292L178 250L190 300L198 286L210 340Z'/%3E%3Cpath d='M330 345L340 300L350 312L358 285L370 345Z'/%3E%3C/g%3E%3Cg fill='%23C7D3D9' opacity='.12'%3E%3Cellipse cx='120' cy='325' rx='160' ry='14'/%3E%3Cellipse cx='320' cy='335' rx='140' ry='12'/%3E%3C/g%3E%3Cg fill='none' stroke='%237F95A1' stroke-width='1.4' opacity='.35'%3E%3Cpath d='M0 360q10-5 20 0t20 0 20 0 20 0 20 0 20 0 20 0 20 0 20 0 20 0 20 0 20 0 20 0 20 0 20 0 20 0 20 0 20 0 20 0 20 0'/%3E%3Cpath d='M10 380q10-5 20 0t20 0 20 0 20 0 20 0 20 0 20 0 20 0 20 0 20 0 20 0 20 0 20 0 20 0 20 0 20 0 20 0 20 0 20 0'/%3E%3C/g%3E%3Cg opacity='.8'%3E%3Cg%3E%3CanimateTransform attributeName='transform' type='translate' from='-120 150' to='480 124' dur='24s' begin='0s' repeatCount='indefinite'/%3E%3Cg%3E%3CanimateTransform attributeName='transform' type='translate' values='0 0;0 -5;0 0' dur='3.2s' repeatCount='indefinite'/%3E%3Cg transform='scale(0.85 0.85)'%3E%3Cpath d='M56 24Q54 12 60 4Q52 -8 39 -17Q43 -4 33 -3Q38 6 30 10Q38 15 40 25Z' fill='%230F171D' opacity='.6' transform='translate(5 -2)'%3E%3Canimate attributeName='d' values='M56 24Q54 12 60 4Q52 -8 39 -17Q43 -4 33 -3Q38 6 30 10Q38 15 40 25Z;M56 24Q60 21 67 20Q52 16 37 14Q42 18 33 19Q37 21 30 23Q37 25 40 26Z;M56 25Q56 35 62 41Q52 47 42 52Q44 44 35 43Q39 38 31 35Q38 32 40 27Z;M56 24Q60 21 67 20Q52 16 37 14Q42 18 33 19Q37 21 30 23Q37 25 40 26Z;M56 24Q54 12 60 4Q52 -8 39 -17Q43 -4 33 -3Q38 6 30 10Q38 15 40 25Z' keyTimes='0;.25;.5;.75;1' calcMode='spline' keySplines='.4 0 .6 1;.4 0 .6 1;.4 0 .6 1;.4 0 .6 1' dur='1.6s' begin='-0.12s' repeatCount='indefinite'/%3E%3C/path%3E%3Cpath d='M1 27L-6 21.5L-3 27.4L-6 33Z' fill='%230F171D'/%3E%3Cpath d='M0 27C12 24 24 31 36 28C44 26 50 22 58 21C64 20 70 15 74 10C76 7 79 5 83 5L86 1L86.6 5.2L93 7L97.5 9.6L91 11.6L88 11.2L86 13C82 14 79 17 77 21C74 27 68 32 60 33C54 34 48 33 44 32C34 31 20 30 8 29C5 28.7 2 28 0 27Z' fill='%230F171D'/%3E%3Cpath d='M62 31L66.5 36.5L63.5 37.4L59 33ZM46 31L48.5 38L51.5 39.2L46 40.2L43 32Z' fill='%230F171D'/%3E%3Cpath d='M56 24Q54 12 60 4Q52 -8 39 -17Q43 -4 33 -3Q38 6 30 10Q38 15 40 25Z' fill='%230F171D'%3E%3Canimate attributeName='d' values='M56 24Q54 12 60 4Q52 -8 39 -17Q43 -4 33 -3Q38 6 30 10Q38 15 40 25Z;M56 24Q60 21 67 20Q52 16 37 14Q42 18 33 19Q37 21 30 23Q37 25 40 26Z;M56 25Q56 35 62 41Q52 47 42 52Q44 44 35 43Q39 38 31 35Q38 32 40 27Z;M56 24Q60 21 67 20Q52 16 37 14Q42 18 33 19Q37 21 30 23Q37 25 40 26Z;M56 24Q54 12 60 4Q52 -8 39 -17Q43 -4 33 -3Q38 6 30 10Q38 15 40 25Z' keyTimes='0;.25;.5;.75;1' calcMode='spline' keySplines='.4 0 .6 1;.4 0 .6 1;.4 0 .6 1;.4 0 .6 1' dur='1.6s' begin='0s' repeatCount='indefinite'/%3E%3C/path%3E%3C/g%3E%3C/g%3E%3C/g%3E%3C/g%3E%3Cg opacity='.55'%3E%3Cg%3E%3CanimateTransform attributeName='transform' type='translate' from='480 92' to='-120 66' dur='32s' begin='-14s' repeatCount='indefinite'/%3E%3Cg%3E%3CanimateTransform attributeName='transform' type='translate' values='0 0;0 -5;0 0' dur='2.6s' repeatCount='indefinite'/%3E%3Cg transform='scale(-0.5 0.5)'%3E%3Cpath d='M56 24Q54 12 60 4Q52 -8 39 -17Q43 -4 33 -3Q38 6 30 10Q38 15 40 25Z' fill='%230F171D' opacity='.6' transform='translate(5 -2)'%3E%3Canimate attributeName='d' values='M56 24Q54 12 60 4Q52 -8 39 -17Q43 -4 33 -3Q38 6 30 10Q38 15 40 25Z;M56 24Q60 21 67 20Q52 16 37 14Q42 18 33 19Q37 21 30 23Q37 25 40 26Z;M56 25Q56 35 62 41Q52 47 42 52Q44 44 35 43Q39 38 31 35Q38 32 40 27Z;M56 24Q60 21 67 20Q52 16 37 14Q42 18 33 19Q37 21 30 23Q37 25 40 26Z;M56 24Q54 12 60 4Q52 -8 39 -17Q43 -4 33 -3Q38 6 30 10Q38 15 40 25Z' keyTimes='0;.25;.5;.75;1' calcMode='spline' keySplines='.4 0 .6 1;.4 0 .6 1;.4 0 .6 1;.4 0 .6 1' dur='1.3s' begin='-14.12s' repeatCount='indefinite'/%3E%3C/path%3E%3Cpath d='M1 27L-6 21.5L-3 27.4L-6 33Z' fill='%230F171D'/%3E%3Cpath d='M0 27C12 24 24 31 36 28C44 26 50 22 58 21C64 20 70 15 74 10C76 7 79 5 83 5L86 1L86.6 5.2L93 7L97.5 9.6L91 11.6L88 11.2L86 13C82 14 79 17 77 21C74 27 68 32 60 33C54 34 48 33 44 32C34 31 20 30 8 29C5 28.7 2 28 0 27Z' fill='%230F171D'/%3E%3Cpath d='M62 31L66.5 36.5L63.5 37.4L59 33ZM46 31L48.5 38L51.5 39.2L46 40.2L43 32Z' fill='%230F171D'/%3E%3Cpath d='M56 24Q54 12 60 4Q52 -8 39 -17Q43 -4 33 -3Q38 6 30 10Q38 15 40 25Z' fill='%230F171D'%3E%3Canimate attributeName='d' values='M56 24Q54 12 60 4Q52 -8 39 -17Q43 -4 33 -3Q38 6 30 10Q38 15 40 25Z;M56 24Q60 21 67 20Q52 16 37 14Q42 18 33 19Q37 21 30 23Q37 25 40 26Z;M56 25Q56 35 62 41Q52 47 42 52Q44 44 35 43Q39 38 31 35Q38 32 40 27Z;M56 24Q60 21 67 20Q52 16 37 14Q42 18 33 19Q37 21 30 23Q37 25 40 26Z;M56 24Q54 12 60 4Q52 -8 39 -17Q43 -4 33 -3Q38 6 30 10Q38 15 40 25Z' keyTimes='0;.25;.5;.75;1' calcMode='spline' keySplines='.4 0 .6 1;.4 0 .6 1;.4 0 .6 1;.4 0 .6 1' dur='1.3s' begin='-14s' repeatCount='indefinite'/%3E%3C/path%3E%3C/g%3E%3C/g%3E%3C/g%3E%3C/g%3E%3Cg opacity='.45'%3E%3Cg%3E%3CanimateTransform attributeName='transform' type='translate' from='-120 225' to='480 199' dur='28s' begin='-7s' repeatCount='indefinite'/%3E%3Cg%3E%3CanimateTransform attributeName='transform' type='translate' values='0 0;0 -5;0 0' dur='2.4s' repeatCount='indefinite'/%3E%3Cg transform='scale(0.3 0.3)'%3E%3Cpath d='M56 24Q54 12 60 4Q52 -8 39 -17Q43 -4 33 -3Q38 6 30 10Q38 15 40 25Z' fill='%230F171D' opacity='.6' transform='translate(5 -2)'%3E%3Canimate attributeName='d' values='M56 24Q54 12 60 4Q52 -8 39 -17Q43 -4 33 -3Q38 6 30 10Q38 15 40 25Z;M56 24Q60 21 67 20Q52 16 37 14Q42 18 33 19Q37 21 30 23Q37 25 40 26Z;M56 25Q56 35 62 41Q52 47 42 52Q44 44 35 43Q39 38 31 35Q38 32 40 27Z;M56 24Q60 21 67 20Q52 16 37 14Q42 18 33 19Q37 21 30 23Q37 25 40 26Z;M56 24Q54 12 60 4Q52 -8 39 -17Q43 -4 33 -3Q38 6 30 10Q38 15 40 25Z' keyTimes='0;.25;.5;.75;1' calcMode='spline' keySplines='.4 0 .6 1;.4 0 .6 1;.4 0 .6 1;.4 0 .6 1' dur='1.2s' begin='-7.12s' repeatCount='indefinite'/%3E%3C/path%3E%3Cpath d='M1 27L-6 21.5L-3 27.4L-6 33Z' fill='%230F171D'/%3E%3Cpath d='M0 27C12 24 24 31 36 28C44 26 50 22 58 21C64 20 70 15 74 10C76 7 79 5 83 5L86 1L86.6 5.2L93 7L97.5 9.6L91 11.6L88 11.2L86 13C82 14 79 17 77 21C74 27 68 32 60 33C54 34 48 33 44 32C34 31 20 30 8 29C5 28.7 2 28 0 27Z' fill='%230F171D'/%3E%3Cpath d='M62 31L66.5 36.5L63.5 37.4L59 33ZM46 31L48.5 38L51.5 39.2L46 40.2L43 32Z' fill='%230F171D'/%3E%3Cpath d='M56 24Q54 12 60 4Q52 -8 39 -17Q43 -4 33 -3Q38 6 30 10Q38 15 40 25Z' fill='%230F171D'%3E%3Canimate attributeName='d' values='M56 24Q54 12 60 4Q52 -8 39 -17Q43 -4 33 -3Q38 6 30 10Q38 15 40 25Z;M56 24Q60 21 67 20Q52 16 37 14Q42 18 33 19Q37 21 30 23Q37 25 40 26Z;M56 25Q56 35 62 41Q52 47 42 52Q44 44 35 43Q39 38 31 35Q38 32 40 27Z;M56 24Q60 21 67 20Q52 16 37 14Q42 18 33 19Q37 21 30 23Q37 25 40 26Z;M56 24Q54 12 60 4Q52 -8 39 -17Q43 -4 33 -3Q38 6 30 10Q38 15 40 25Z' keyTimes='0;.25;.5;.75;1' calcMode='spline' keySplines='.4 0 .6 1;.4 0 .6 1;.4 0 .6 1;.4 0 .6 1' dur='1.2s' begin='-7s' repeatCount='indefinite'/%3E%3C/path%3E%3C/g%3E%3C/g%3E%3C/g%3E%3C/g%3E%3C/svg%3E"),
+    linear-gradient(180deg,#3E5361 0%,#2B3B46 260px,#1C2830 420px),
+    radial-gradient(circle at 50% 0,transparent 8px,rgba(180,210,225,.05) 9px,transparent 10.5px);
+  background-repeat:no-repeat,no-repeat,repeat;
+  background-size:100% auto,100% 100%,20px 12px;
+  background-attachment:local,local,local;
+}
+html[data-skin="dragon"] body[data-tab="profile"] #skinFx{display:block}
+.ember{position:absolute;bottom:-12px;width:5px;height:5px;border-radius:50%;background:#FFB15C;box-shadow:0 0 8px 2px rgba(255,120,40,.75);animation:rise linear infinite;opacity:0}
+@keyframes rise{0%{transform:translate(0,0);opacity:0}10%{opacity:.95}60%{transform:translate(14px,-55vh);opacity:.7}100%{transform:translate(-8px,-100vh);opacity:0}}
+html[data-skin="dragon"] .topbar.clean{background:transparent}
+html[data-skin="dragon"] .topbar{background:rgba(28,40,48,.9)}
+html[data-skin="dragon"] .topbar h1{font-weight:400;font-size:1.3rem;letter-spacing:.03em;text-shadow:0 2px 8px rgba(0,0,0,.5)}
+html[data-skin="dragon"] .me .uname,html[data-skin="dragon"] .creator-head .handle{font-family:"Uncial Antiqua",serif;font-weight:400;font-size:1.2rem}
+html[data-skin="dragon"] .stats small,html[data-skin="dragon"] .btn,html[data-skin="dragon"] .pill,html[data-skin="dragon"] .menu-list button{font-family:"Uncial Antiqua","Figtree",serif;font-weight:400}
+html[data-skin="dragon"] .stats>*+*{border-left:1px solid rgba(232,116,44,.35)}
+/* forged-ember primary buttons with iron rivets */
+html[data-skin="dragon"] .btn{
+  background:
+    radial-gradient(circle at 9px 50%,#C9D2D7 0 2.5px,#5C6F7A 3px,transparent 3.5px),
+    radial-gradient(circle at calc(100% - 9px) 50%,#C9D2D7 0 2.5px,#5C6F7A 3px,transparent 3.5px),
+    linear-gradient(#F08A3C,#C2531B);
+  color:#1A0E05;border:2px solid #0E1418;border-radius:6px;box-shadow:inset 0 0 0 2px rgba(255,220,180,.35),0 3px 0 #0E1418;padding:10px 26px}
+html[data-skin="dragon"] .btn:active{transform:translateY(2px);box-shadow:inset 0 0 0 2px rgba(255,220,180,.35),0 1px 0 #0E1418}
+/* iron-banded secondary buttons */
+html[data-skin="dragon"] .btn.ghost,html[data-skin="dragon"] .pill{
+  background:
+    radial-gradient(circle at 7px 7px,#AEB9BF 0 1.8px,transparent 2.3px),
+    radial-gradient(circle at calc(100% - 7px) 7px,#AEB9BF 0 1.8px,transparent 2.3px),
+    radial-gradient(circle at 7px calc(100% - 7px),#AEB9BF 0 1.8px,transparent 2.3px),
+    radial-gradient(circle at calc(100% - 7px) calc(100% - 7px),#AEB9BF 0 1.8px,transparent 2.3px),
+    linear-gradient(#3A4C57,#2A3842);
+  color:var(--ink);border:2px solid #5C6F7A;border-radius:6px;box-shadow:0 2px 0 #0E1418}
+/* round wooden shield frame around the profile picture */
+html[data-skin="dragon"] .me .av{background:#2F5A4A;box-shadow:0 0 0 4px #6B4A2B,0 0 0 6px #4A321C,0 0 0 9px #8C99A1,0 0 0 11px #3E4B53,0 6px 18px 8px rgba(0,0,0,.45)}
+html[data-skin="dragon"] .av-edit .pen{background:#E8742C;color:#1A0E05;border-color:#1C2830}
+html[data-skin="dragon"] .ptabs{background:rgba(28,40,48,.92)}
+html[data-skin="dragon"] .ptabs button[aria-selected="true"]{color:#F2A65A;border-bottom-color:#E8742C}
+html[data-skin="dragon"] .tile{border-radius:4px;box-shadow:inset 0 0 0 2px rgba(14,20,24,.6)}
+html[data-skin="dragon"] .grid{gap:3px}
+html[data-skin="dragon"] .new-tag{background:#E8742C;color:#1A0E05;font-family:"Uncial Antiqua",serif;font-weight:400}
+html[data-skin="dragon"] .note b{color:#F2A65A}
+html[data-skin="dragon"] .rail .keep[aria-pressed="true"] svg{fill:#F2A65A;stroke:#F2A65A}
+html[data-skin="dragon"] .caught .stage{background:radial-gradient(circle at 50% 38%,#3E5361,#0E1418 75%)}
+html[data-skin="dragon"] .caught-check{background:#E8742C;box-shadow:0 0 30px 6px rgba(232,116,44,.45)}
+html[data-skin="dragon"] .caught-card h2{font-family:"Uncial Antiqua",serif;font-weight:400}
+html[data-skin="dragon"] nav{background:linear-gradient(#18232A,#0E1418);border-top:2px solid #3E4B53}
+html[data-skin="dragon"] .frow,html[data-skin="dragon"] .shelf-row{border-bottom-color:rgba(160,185,198,.16)}
+@media (prefers-reduced-motion:reduce){.ember{display:none}}
+
+/* Themed nav icons */
+nav button.skinned{gap:0}
+nav .skin-ico{width:34px;height:34px;opacity:.62;transition:opacity .2s,transform .2s;overflow:visible}
+nav button.skinned[aria-current="page"] .skin-ico{opacity:1;transform:scale(1.1)}
+nav .smoke circle{transform-box:fill-box;transform-origin:center;animation:puff 2.8s ease-out infinite}
+nav .smoke circle:nth-child(2){animation-delay:-.9s}
+nav .smoke circle:nth-child(3){animation-delay:-1.8s}
+@keyframes puff{0%{opacity:0;transform:translate(0,3px) scale(.6)}25%{opacity:.85}100%{opacity:0;transform:translate(2px,-5px) scale(1.4)}}
+nav .nav-bulbs circle{animation:twinkle 2s ease-in-out infinite}
+nav .nav-bulbs circle:nth-child(2n){animation-delay:-1s}
+nav .nav-bulbs circle:nth-child(3n){animation-delay:-.5s}
+nav .star{transform-box:fill-box;transform-origin:center;animation:twinkle 3s ease-in-out infinite}
+nav .waves{animation:bob 2.4s ease-in-out infinite}
+nav button.skinned[aria-current="page"] .skin-ico g:not(.smoke),nav button.skinned[aria-current="page"] .skin-ico{filter:none}
+@keyframes bob{0%,100%{transform:translateX(0)}50%{transform:translateX(1.5px)}}
+@media (prefers-reduced-motion:reduce){nav .smoke circle,nav .nav-bulbs circle,nav .star,nav .waves{animation:none}}
+
+/* Theme picker cards */
+.theme-list{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+.theme-card{display:flex;align-items:center;gap:14px;border:2px solid var(--line);background:var(--surface2);border-radius:12px;padding:10px;text-align:left;color:var(--ink)}
+.theme-card[aria-pressed="true"]{border-color:var(--ink)}
+.theme-card .sw{width:64px;height:84px;border-radius:8px;flex:none;display:grid;place-items:center;font-size:1.8rem;position:relative;overflow:hidden}
+.theme-card b{display:block;font-size:1.05rem}
+.theme-card small{color:var(--muted);line-height:1.35;display:block}
+.theme-card .ck{margin-left:auto;width:24px;height:24px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:.8rem;font-weight:900;flex:none;color:transparent}
+.theme-card[aria-pressed="true"] .ck{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+@media (prefers-reduced-motion:reduce){.flake,.lights .bulb{animation:none!important}.flake{display:none}}
+.login .tree.rxlogo{width:96px;height:96px;margin:0 auto 16px;background:none;border-radius:24px;overflow:hidden;padding:0}.rxlogo svg{width:100%;height:100%;display:block}
+
+
+.ix-list{display:grid;gap:2px;margin-top:6px}
+.ix-row{display:flex;align-items:center;gap:12px;padding:12px 4px;border:0;border-bottom:1px solid var(--surface2);background:none;color:inherit;font:inherit;text-align:left;cursor:pointer;width:100%}
+.ix-av{width:52px;height:52px;border-radius:50%;overflow:hidden;display:grid;place-items:center;font-size:1.6rem;background:var(--surface2);flex:none}
+.ix-av img{width:100%;height:100%;object-fit:cover}
+.ix-mid{flex:1;min-width:0}.ix-mid b{display:block}.ix-mid small{display:block;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ix-fam{display:inline!important;font-weight:600;font-size:.75rem;color:var(--muted)}
+.ix-end{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:none}.ix-end small{color:var(--muted);font-size:.75rem}
+.ix-dot{min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:var(--accent);color:var(--accent-ink);font-size:.72rem;font-weight:800;display:grid;place-items:center}
+.ix-head{display:flex;align-items:center;gap:10px;margin:14px 0 6px}.ix-head .ix-av{width:40px;height:40px;font-size:1.2rem}.ix-head b{display:block}.ix-head small{color:var(--muted)}
+.ix-thread{display:flex;flex-direction:column;gap:14px;padding:8px 0 30px}
+.ix-msg{display:flex;flex-direction:column;max-width:82%}.ix-msg.them{align-self:flex-start;align-items:flex-start}.ix-msg.me{align-self:flex-end;align-items:flex-end}
+.ix-time{color:var(--muted);font-size:.72rem;margin:0 6px 4px}
+.ix-bubble{position:relative;display:flex;gap:10px;align-items:center;padding:8px 12px 8px 8px;border:0;border-radius:18px;background:var(--surface2);color:inherit;font:inherit;text-align:left;cursor:pointer}
+.ix-msg.me .ix-bubble{background:var(--accent);color:var(--accent-ink)}.ix-msg.me .ix-bubble small{color:inherit;opacity:.8}
+.ix-bubble[disabled]{cursor:default;opacity:.85}
+.ix-th{height:128px;border-radius:12px;display:grid;place-items:center;font-size:2.4rem;flex:none}
+.ix-tt b{display:block;font-size:.92rem;line-height:1.25}.ix-tt small{display:block;font-size:.75rem;color:var(--muted)}
+.ix-wait{margin-top:4px;font-weight:700}
+.ix-react-badge{position:absolute;left:-10px;bottom:-10px;width:30px;height:30px;border-radius:50%;background:var(--surface);display:grid;place-items:center;font-size:1rem;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.ix-reacts{display:flex;gap:4px;margin-top:6px}
+.ix-reacts button{width:38px;height:38px;border-radius:50%;border:1px solid var(--surface2);background:var(--surface);font-size:1.05rem;cursor:pointer;display:grid;place-items:center;padding:0}
+.ix-reacts button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);transform:scale(1.08)}
+.ptabs button{position:relative}.ptabs .ix-tabdot{position:absolute;top:6px;left:calc(50% + 8px);width:9px;height:9px;border-radius:50%;background:var(--accent)}
+.rx-sec{margin-top:6px}
+.rx-card{background:var(--surface);border-radius:14px;padding:14px;margin:8px 0}
+.rx-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--surface2)}
+.rx-row:last-child{border-bottom:0}
+.rx-row{flex-wrap:wrap}.rx-row .rx-acts{display:flex;flex-wrap:wrap;gap:8px;flex-basis:100%;padding-left:52px}.rx-row .rx-acts .btn.rx-sm{width:auto!important;display:inline-flex!important;align-items:center;justify-content:center;flex:0 0 auto!important;margin:0!important;min-width:0}
+.rx-row .av{width:40px;height:40px;font-size:1.3rem;flex:none}
+.rx-row .nm{flex:1;min-width:0}.rx-row .nm b{display:block}.rx-row .nm small{display:block;color:var(--muted);font-size:.82rem}
+.rx-tog{appearance:none;-webkit-appearance:none;width:48px;height:30px;border-radius:99px;background:var(--surface3,#333);position:relative;cursor:pointer;flex:none;border:0}
+.rx-tog::after{content:"";position:absolute;left:3px;top:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .15s}
+.rx-tog:checked{background:var(--green,#3BD17F)}.rx-tog:checked::after{transform:translateX(18px)}
+.rx-code{font:700 1.5rem/1 ui-monospace,Menlo,monospace;letter-spacing:.12em;background:var(--surface2);border-radius:10px;padding:10px 14px;display:inline-block}
+.rx-inline{display:flex;gap:8px}.rx-inline input{flex:1;min-width:0;text-transform:uppercase}
+.rx-sm{padding:8px 12px!important;font-size:.85rem!important;width:auto!important}
+.rx-tag{font-size:.72rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:99px;background:var(--surface2);color:var(--muted)}
+.rx-tag.wait{background:rgba(255,201,60,.18);color:#FFC93C}.rx-tag.ok{background:rgba(59,209,127,.16);color:#3BD17F}.rx-tag.no{background:rgba(255,79,110,.16);color:#FF4F6E}
+.rail .sendb .ico svg{fill:#fff}
+.rx-hit{display:block;width:100%;background:none;border:0;padding:0;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.rx-ahead{display:flex;align-items:center;gap:10px;margin:4px 0 6px}.rx-ahead h2{margin:0;font-size:1.25rem;flex:1}
+.rx-back{width:40px;height:40px;border-radius:50%;border:0;background:var(--surface2);color:inherit;font-size:1.3rem;display:grid;place-items:center;flex:none;cursor:pointer}
+.rx-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin:8px 0}
+.rx-tile{position:relative;aspect-ratio:3/4;border:0;border-radius:10px;overflow:hidden;display:grid;place-items:center;font-size:2.4rem;color:#fff;cursor:pointer;padding:0}
+.rx-tile small{position:absolute;left:6px;right:6px;bottom:5px;font-size:.68rem;font-weight:700;text-align:left;line-height:1.2;text-shadow:0 1px 3px rgba(0,0,0,.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rx-tile .sent{position:absolute;top:5px;left:5px;font-size:.62rem;font-weight:800;background:rgba(0,0,0,.55);padding:2px 6px;border-radius:99px}
+#rxFeed{position:fixed;inset:0;z-index:60;background:#000;display:flex;flex-direction:column}
+#rxFeed[hidden]{display:none}
+#rxFeed .top{position:absolute;top:0;left:0;right:0;z-index:3;display:flex;align-items:center;gap:10px;padding:12px 14px;background:linear-gradient(#000a,transparent)}
+#rxFeed .top b{flex:1;text-align:center;margin-right:40px}
+#rxFeed .scroller{flex:1;overflow-y:auto;scroll-snap-type:y mandatory}
+#rxFeed .sl{height:100%;scroll-snap-align:start;position:relative;display:grid;place-items:center;font-size:7rem;overflow:hidden}
+#rxFeed .sl .fake{position:absolute;inset:0}
+#rxFeed .sl iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+#rxFeed .cap{position:absolute;left:14px;right:84px;bottom:28px;z-index:2;font-size:.9rem;text-shadow:0 1px 3px #000}
+#rxFeed .cap b{display:block;font-size:1rem}
+#rxFeed .rr{position:absolute;right:10px;bottom:36px;z-index:2;display:flex;flex-direction:column;gap:18px}
+#rxFeed .rr button{border:0;background:none;color:#fff;display:flex;flex-direction:column;align-items:center;gap:3px;font:700 .72rem system-ui;cursor:pointer;filter:drop-shadow(0 1px 3px rgba(0,0,0,.5))}
+#rxFeed .rr .ic{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.16);display:grid;place-items:center}
+#rxFeed .rr .del .ic{background:rgba(255,79,110,.85)}
+.rx-feedopen .scrim{z-index:70}.rx-feedopen .sheet{z-index:71}
+.rx-badge{position:absolute;top:2px;left:calc(50% + 6px);min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:#FF3B4E;color:#fff;font-size:.68rem;font-weight:800;display:grid;place-items:center;line-height:1;border:2px solid #000}
+.live-hide,#reset{display:none!important}</style>
+</head>
+<body>
+<div id="banner" hidden></div>
+<main>
+  <section id="login" class="view page" aria-label="Sign in"></section>
+  <section id="feed" class="view" aria-label="Video feed"></section>
+  <div id="feedTop"></div>
+  <div id="skinFx" aria-hidden="true"></div>
+  <section id="profile" class="view page" aria-label="Profile"></section>
+  <section id="inbox" class="view page" aria-label="Messages"></section>
+  <section id="p-add" class="view page" aria-label="Add a video"></section>
+  <section id="p-library" class="view page" aria-label="Videos"></section>
+  <section id="p-creators" class="view page" aria-label="Trusted creators"></section>
+  <section id="p-kids" class="view page" aria-label="Children"></section>
+  <section id="p-settings" class="view page" aria-label="Settings"></section>
+</main>
+<nav aria-label="Sections" id="nav" hidden></nav>
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle"></div>
+<div class="toast" id="toast" role="status"></div>
+<script src="../shared/config.js"></script>
+<script src="../shared/vendor/supabase.js"></script>
+<script src="../shared/account.js"></script>
+<script>window.REMIX_LIVE=true;</script>
+<script>
+(function(){
+"use strict";
+const KEY="remix:v2";
+const SWATCHES=["#2F7D4F","#3B6EA8","#B4573A","#7A4FA0","#C08A1E","#2C8C8C","#A8435F"];
+const COL_EMOJI=["🌻","🐶","😂","🎨","⚽","🧪","🎵","🐾","🍪","🌈"];
+const KID_AV=["🦊","🐼","🦄","🐸","🐱","🐧","🦋","🌸","⭐","🐢","🐶","🐰","🦁","🐨","🐙","🦖","🚀","🍓","⚽","🎨"];
+const CREATOR_AV=["🎬","🌟","🎈","🍀","🎯","🪁"];
+const ALL="all";
+const defaultAccounts=()=>[
+  {id:"mom",role:"parent",name:"Dana",username:"dana",password:"tree",avatar:"🌷"},
+  {id:"dad",role:"parent",name:"Chris",username:"chris",password:"tree",avatar:"🌲",admin:true},
+  {id:"kid1",role:"child",name:"Maya",username:"maya",password:"tree",avatar:"🦊",photo:""},
+  {id:"kid2",role:"child",name:"Leo",username:"leo",password:"tree",avatar:"🦖",photo:""}
+];
+const blank=()=>{const o={families:[{id:"smith",name:"Smith",code:"SMITH7",approve:true}],fam:{smith:{videos:[],trusted:[],accounts:defaultAccounts(),kidData:{}}},links:[],shares:[],session:null,sessionFam:"smith"};Object.assign(o,{videos:o.fam.smith.videos,trusted:o.fam.smith.trusted,accounts:o.fam.smith.accounts,kidData:o.fam.smith.kidData});return o};
+
+/* ---------- Sample content (fake accounts + fake videos) ---------- */
+// "for": A = all children, D = daughter only, S = son only
+const SAMPLE_CREATORS=[
+  {handle:"pawsandpals",name:"Paws & Pals",avatar:"🐶",color:"#D9892B",bio:"Rescue pups doing their very best.",f:"A"},
+  {handle:"tinykitchenlab",name:"Tiny Kitchen Lab",avatar:"🧁",color:"#C9577A",bio:"Big bakes for small hands. Grown-up helper required.",f:"D"},
+  {handle:"skyschool",name:"Sky School",avatar:"🔭",color:"#3B4FA8",bio:"Space facts in 30 seconds or less.",f:"A"},
+  {handle:"doodle.daily",name:"Doodle Daily",avatar:"✏️",color:"#7A4FA0",bio:"One drawing a day. Draw along!",f:"D"},
+  {handle:"kickskills",name:"Kick Skills",avatar:"⚽",color:"#2F7D4F",bio:"Soccer footwork you can practice at home.",f:"S"},
+  {handle:"brickbuilds",name:"Brick Builds",avatar:"🧱",color:"#B4573A",bio:"Cool things to build with the bricks you already have.",f:"S"},
+  {handle:"tidepoolteam",name:"Tide Pool Team",avatar:"🐙",color:"#2C8C8C",bio:"Ocean critters, up close.",f:"A"}
+];
+const SAMPLE_VIDEOS=[
+  ["pawsandpals","Biscuit sees snow for the first time","🐕","m-bounce",["#9ED0F0","#5C8FD6"],"Dana","This one made me laugh so hard!"],
+  ["pawsandpals","Puppy vs. the vacuum","🐶","m-rock",["#F5C26B","#D9892B"],"",""],
+  ["tinykitchenlab","Rainbow pancakes in 5 steps","🥞","m-float",["#FFD27A","#F28B6B"],"",""],
+  ["kickskills","How to juggle a ball","🥅","m-pop",["#8FD0E0","#2C7A8C"],"",""],
+  ["skyschool","Why is the sky blue?","🌤️","m-float",["#7FB8F5","#3B4FA8"],"",""],
+  ["brickbuilds","A tiny brick rocket","🚀","m-float",["#B9C6F2","#4B5FA8"],"Chris","We could build this together"],
+  ["doodle.daily","Turn your name into a monster","👾","m-rock",["#9AE3C1","#2F9C77"],"",""],
+  ["tinykitchenlab","No-bake cookie bites","🍪","m-pop",["#E7C39C","#A86F43"],"Dana","Want to make these this weekend?"],
+  ["skyschool","How big is the Sun, really?","☀️","m-pop",["#FFC34D","#E8702A"],"Chris","Mind blown"],
+  ["tidepoolteam","Meet a hermit crab moving house","🦀","m-rock",["#F5A48F","#C24E3A"],"",""],
+  ["doodle.daily","Shading made easy","🎨","m-float",["#F2D0A4","#B5793F"],"",""],
+  ["kickskills","Three toe-tap drills","⚽","m-bounce",["#A9E08F","#2F7D4F"],"Chris","Try these before practice"],
+  ["brickbuilds","Build a marble run","🧱","m-rock",["#F5B88F","#B4573A"],"",""],
+  ["pawsandpals","Adoption day for Pickles","🏡","m-pop",["#F4A7B9","#D9577A"],"Chris","Happy ending alert"],
+  ["skyschool","A day on Mars","🪐","m-rock",["#E99A6C","#9C3F2A"],"",""],
+  ["tinykitchenlab","Frosting a cupcake like a pro","🧁","m-rock",["#F7B7D2","#C9577A"],"",""],
+  ["doodle.daily","Draw a sleepy cat in 30 seconds","🐱","m-bounce",["#C7B6F2","#7A4FA0"],"Dana","You could totally draw this!"],
+  ["tidepoolteam","Octopus color magic","🐙","m-float",["#7FD6D6","#2C8C8C"],"Dana","Octopuses are so weird and cool"],
+  ["funfarmfriends","Goats on a trampoline","🐐","m-bounce",["#C7E58F","#6E9C2F"],"Chris","Found this one for you"],
+  ["brickbuilds","Five-minute brick dragon","🐉","m-pop",["#A8E0B0","#2F7D4F"],"",""],
+  ["tidepoolteam","What lives in a tide pool?","🐚","m-pop",["#9CC6F0","#2F5FA8"],"",""],
+  ["sciencewithsam","Make a volcano with baking soda","🌋","m-pop",["#F5B08F","#C2412F"],"Dana","Science project idea?"]
+];
+
+let S=load();
+function load(){if(window.REMIX_LIVE)return {families:[],fam:{},links:[],shares:[],session:null,sessionFam:null,videos:[],trusted:[],accounts:[],kidData:{}};try{const r=localStorage.getItem(KEY);if(r){const o=JSON.parse(r);if(o.fam&&o.families){const f=o.fam[o.sessionFam]||Object.values(o.fam)[0];return Object.assign(o,{videos:f.videos,trusted:f.trusted,accounts:f.accounts,kidData:f.kidData})}}}catch(e){}return blank()}
+function save(){if(window.REMIX_LIVE){RXL.persistSoon();return}try{const {videos,trusted,accounts,kidData,...rest}=S;localStorage.setItem(KEY,JSON.stringify(rest))}catch(e){}try{window.WEBAPPS_SYNC&&window.WEBAPPS_SYNC(S)}catch(e){}}
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid=()=>Math.random().toString(36).slice(2,10);
+const hashN=s=>{let h=0;for(const c of String(s))h=(h*31+c.charCodeAt(0))>>>0;return h};
+const swatch=v=>SWATCHES[hashN(v.postId||v.id)%SWATCHES.length];
+const plural=(n,w)=>`${n} ${w}${n===1?"":"s"}`;
+function toast(t){const el=$("#toast");el.textContent=t;el.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove("on"),1800)}
+
+/* ---------- Children and who-sees-what ---------- */
+const kids=()=>S.accounts.filter(a=>a.role==="child");
+const kidById=id=>kids().find(k=>k.id===id);
+const kidName=k=>k?.name||"Child";
+const possessive=n=>n+(/s$/i.test(n)?"'":"'s");
+function KD(id){if(!S.kidData[id])S.kidData[id]={favorites:[],collections:[],seen:{}};return S.kidData[id]}
+const visibleTo=(item,kidId)=>item.for===ALL||(Array.isArray(item.for)&&item.for.includes(kidId));
+function forLabel(item){
+  if(item.for===ALL)return "All children";
+  const names=(item.for||[]).map(id=>kidById(id)).filter(Boolean).map(kidName);
+  return names.length?names.join(" & "):"No one yet";
+}
+const kidAv=k=>k?.photo?`<img src="${k.photo}" alt="">`:(k?.avatar||"🙂");
+
+function loadSamples(){
+  const now=Date.now(),[d,s]=kids();
+  const map=f=>f==="A"||!s||!d?ALL:f==="D"?[d.id]:[s.id];
+  const cf={};
+  SAMPLE_CREATORS.forEach(c=>{cf[c.handle]=c.f;if(!S.trusted.some(t=>t.handle===c.handle)){const {f,...rest}=c;S.trusted.push({...rest,for:map(f),demo:true,addedAt:now})}});
+  cf.funfarmfriends="A";cf.sciencewithsam="D";
+  const made=[];
+  SAMPLE_VIDEOS.forEach((r,i)=>{
+    const [handle,title,emoji,motion,bg,from,note]=r;
+    const v={id:uid(),demo:true,handle,title,note,from,for:map(cf[handle]||"A"),scene:{emoji,motion,bg},addedAt:now-(SAMPLE_VIDEOS.length-i)*3600e3};
+    S.videos.push(v);made.push(v);
+  });
+  // Mark the older videos each child can see as already watched, leaving the newest few as new.
+  kids().forEach((k,n)=>{const mine=made.filter(v=>visibleTo(v,k.id));const keepNew=n===0?6:4;mine.slice(0,Math.max(0,mine.length-keepNew)).forEach(v=>KD(k.id).seen[v.id]=now)});
+  save();
+}
+function purgeVideoIds(ids){
+  Object.values(S.kidData).forEach(d=>{d.favorites=d.favorites.filter(id=>!ids.has(id));ids.forEach(id=>delete d.seen[id]);d.collections.forEach(c=>c.videoIds=c.videoIds.filter(id=>!ids.has(id)))});
+}
+function clearSamples(){
+  const ids=new Set(S.videos.filter(v=>v.demo).map(v=>v.id));
+  S.videos=S.videos.filter(v=>!v.demo);S.trusted=S.trusted.filter(t=>!t.demo);
+  purgeVideoIds(ids);save();
+}
+const hasSamples=()=>S.videos.some(v=>v.demo);
+
+/* ---------- Helpers ---------- */
+function parseLink(raw){
+  const s=(raw||"").trim();
+  if(/^\d{15,22}$/.test(s))return{id:s};
+  let m=s.match(/tiktok\.com\/@([\w.]+)\/(?:video|photo)\/(\d{15,22})/i);
+  if(m)return{id:m[2],handle:m[1].toLowerCase()};
+  m=s.match(/tiktok\.com\/(?:player\/v1|embed(?:\/v2)?|v)\/(\d{15,22})/i);
+  if(m)return{id:m[1]};
+  if(/(vm|vt)\.tiktok\.com|tiktok\.com\/t\//i.test(s))return{short:true};
+  return{bad:true};
+}
+function cleanHandle(s){const m=String(s||"").trim().match(/(?:tiktok\.com\/)?@?([\w.]{2,24})\/?$/i);return m?m[1].toLowerCase():null}
+const creator=h=>S.trusted.find(t=>t.handle===h);
+function avatarFor(h){const c=creator(h);return c?{e:c.avatar||"🎬",bg:c.color||SWATCHES[hashN(h)%SWATCHES.length]}:{e:"👤",bg:"#5D7466"}}
+const sortNew=a=>a.slice().sort((x,y)=>y.addedAt-x.addedAt);
+
+let incoming=null;
+(function(){try{const sp=new URLSearchParams(location.search),hp=new URLSearchParams(location.hash.slice(1));const v=sp.get("add")||hp.get("add");if(v){incoming=v;history.replaceState(null,"",location.pathname)}}catch(e){}})();
+
+/* ---------- App shell, sign-in and roles ---------- */
+let tab="feed",feedMode="picks",feedFilter=null,previewKid=null;
+let profView={kind:"home",ptab:"following"};
+const me=()=>S.accounts.find(a=>a.id===S.session)||null;
+const isParent=()=>me()?.role==="parent";
+const mode=()=>!me()?"login":(isParent()&&!previewKid?"parent":"child");
+// The child whose app is on screen: the signed-in child, or the child a parent is previewing.
+const curKid=()=>previewKid?kidById(previewKid):(me()?.role==="child"?me():null);
+const D=()=>KD(curKid().id);
+const myVideos=()=>S.videos.filter(v=>visibleTo(v,curKid().id));
+const myCreators=()=>S.trusted.filter(t=>visibleTo(t,curKid().id));
+const isFollowing=h=>!!h&&!!curKid()&&myCreators().some(t=>t.handle===h);
+const videosBy=h=>sortNew(myVideos().filter(v=>v.handle===h));
+
+const ICONS={
+  feed:'<path d="M3.5 10.5L12 3.5l8.5 7V20a1 1 0 01-1 1h-5v-6h-5v6h-5a1 1 0 01-1-1z" stroke-linejoin="round"/>',
+  profile:'<circle cx="12" cy="8.5" r="4"/><path d="M4 21c1.2-4.2 4.2-6 8-6s6.8 1.8 8 6"/>',
+  "p-add":'<path d="M12 6v12M6 12h12"/>',
+  "p-library":'<rect x="4" y="3.5" width="16" height="17" rx="2.5"/><path d="M10 9.5l5 2.5-5 2.5z" fill="currentColor" stroke-linejoin="round"/>',
+  "p-creators":'<circle cx="9" cy="8.5" r="3.5"/><path d="M2.5 20c.9-3.6 3.4-5.3 6.5-5.3s5.6 1.7 6.5 5.3"/><path d="M15.5 8.5l2 2 4-4"/>',
+  "p-kids":'<circle cx="8" cy="8" r="3"/><circle cx="16.5" cy="9.5" r="2.5"/><path d="M2.5 19.5c.8-3.3 2.9-5 5.5-5s4.7 1.7 5.5 5M13.5 19.5c.5-2.6 1.6-4 3-4s3 1.4 4 4"/>',
+  "p-settings":'<circle cx="12" cy="8.5" r="4"/><path d="M4 21c1.2-4.2 4.2-6 8-6s6.8 1.8 8 6"/>'
+};
+const NAVS={
+  child:[["feed","Home"],["profile","Profile"]],
+  parent:[["p-library","Videos"],["p-creators","Creators"],["p-add","Add"],["p-kids","Family"],["p-settings","Me"]]
+};
+/* ---------- Themes ---------- */
+const THEMES=[
+  {id:"default",name:"Classic",desc:"Dark and simple. The original look.",emoji:"🎬",sw:"background:#000;color:#fff;box-shadow:inset 0 -18px 0 #FF3D7F"},
+  {id:"holiday",name:"Holiday",desc:"Red and white with falling snow and twinkly lights.",emoji:"🎄",sw:"background:repeating-linear-gradient(-45deg,#9E1523 0 10px,#B3202F 10px 20px);box-shadow:inset 0 -18px 0 #fff"},
+  {id:"dragon",name:"Dragon",desc:"Viking dragon riders: stormy skies, glowing embers and dragons gliding past.",emoji:"🐉",sw:"background:linear-gradient(#3E5361,#1C2830);box-shadow:inset 0 -18px 0 #E8742C"},
+  {id:"pirate",name:"Pirate",desc:"An old treasure map, wooden buttons and an X that marks the spot.",emoji:"🏴‍☠️",sw:"background:radial-gradient(circle,#F0DFB4,#C9A46A);box-shadow:inset 0 -18px 0 #6A4220"}
+];
+function applySkin(){
+  const k=mode()==="child"?curKid():null;
+  const skin=(k&&THEMES.some(t=>t.id===k.theme))?k.theme:"default";
+  document.documentElement.dataset.skin=skin;
+  const fx=$("#skinFx");
+  if(fx.dataset.kind!==skin){
+    let out="";
+    if(skin==="holiday"){const flakes=["❄","❅","❆","•"];for(let n=0;n<34;n++){const size=8+(n*7)%16,left=(n*37)%100,dur=7+(n*13)%9,delay=-((n*29)%14);out+=`<span class="flake" style="left:${left}%;font-size:${size}px;animation-duration:${dur}s;animation-delay:${delay}s">${flakes[n%4]}</span>`}}
+    if(skin==="dragon"){for(let n=0;n<22;n++){const size=3+(n*5)%4,left=(n*41)%100,dur=6+(n*11)%7,delay=-((n*23)%12);out+=`<span class="ember" style="left:${left}%;width:${size}px;height:${size}px;animation-duration:${dur}s;animation-delay:${delay}s"></span>`}}
+    fx.innerHTML=out;fx.dataset.kind=skin;
+  }
+  document.querySelector('meta[name="theme-color"]').setAttribute("content",skin==="holiday"?"#7E0F1A":skin==="pirate"?"#3A230E":skin==="dragon"?"#121A20":"#000000");
+}
+function lightsSVG(){
+  const cols=["#FFD447","#2BD46B","#4DA3FF","#FF5A5A","#FF9BE0"];
+  let bulbs="";
+  for(let n=0;n<11;n++){const x=18+n*36.4,y=14+Math.sin(n/10*Math.PI*2.2)*5+8;bulbs+=`<g><rect x="${x-2.5}" y="${y-4}" width="5" height="5" rx="1" fill="#1F4D2C"/><ellipse class="bulb" cx="${x}" cy="${y+7}" rx="5.5" ry="8" fill="${cols[n%5]}" style="animation-delay:${-(n*0.37).toFixed(2)}s;filter:drop-shadow(0 0 5px ${cols[n%5]})"/></g>`}
+  return `<svg class="lights" viewBox="0 0 400 46" preserveAspectRatio="none" aria-hidden="true"><path d="M0 14 Q 50 30 100 18 T 200 18 T 300 18 T 400 14" fill="none" stroke="#1F4D2C" stroke-width="2"/>${bulbs}</svg>`;
+}
+function openThemeSheet(k){
+  const draw=()=>{
+    $("#sheet").innerHTML=`<h3 id="sheetTitle">Pick a theme</h3><div class="theme-list">${THEMES.map(t=>`<button class="theme-card" data-theme-id="${t.id}" aria-pressed="${(k.theme||"default")===t.id}"><span class="sw" style="${t.sw}">${t.emoji}</span><span><b>${t.name}</b><small>${t.desc}</small></span><span class="ck">✓</span></button>`).join("")}</div><button class="btn ghost" id="themeDone" style="width:100%">Done</button>`;
+    document.querySelectorAll("[data-theme-id]").forEach(b=>b.onclick=()=>{k.theme=b.dataset.themeId;save();applySkin();renderNav();renderProfile();draw();toast(THEMES.find(t=>t.id===k.theme).name+" theme on")});
+    $("#themeDone").onclick=closeSheet;
+  };
+  draw();openSheet(null);
+}
+/* Themed bottom-bar icons for the child app */
+const SKIN_ICONS={
+  holiday:{
+    feed:`<svg class="skin-ico" viewBox="0 0 32 32" aria-hidden="true">
+      <g class="smoke" fill="currentColor"><circle cx="23" cy="5.5" r="1.7"/><circle cx="24.6" cy="2.6" r="1.2"/><circle cx="22.2" cy="1.2" r=".8"/></g>
+      <rect x="20.6" y="6.5" width="3.6" height="6.5" rx=".5" fill="#7E0F1A" stroke="currentColor" stroke-width="1.4"/>
+      <path d="M7 14.5V27h18V14.5" fill="#B3202F" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+      <rect x="13.6" y="19" width="4.8" height="8" rx="1" fill="#1F8A4C" stroke="currentColor" stroke-width="1.2"/>
+      <circle cx="17.3" cy="23.2" r=".6" fill="#FFD447"/>
+      <path d="M3.5 15.5L16 5l12.5 10.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M5.5 16.6Q8 15.6 9.5 13.4T13 10.5T16 8.4T19 10.5T22.5 13.4T26.5 16.6" fill="none" stroke="#1F4D2C" stroke-width=".9"/>
+      <g class="nav-bulbs"><circle cx="6.8" cy="16.6" r="1.25" fill="#FFD447"/><circle cx="10.2" cy="14" r="1.25" fill="#2BD46B"/><circle cx="13.3" cy="11.4" r="1.25" fill="#4DA3FF"/><circle cx="16" cy="9.6" r="1.25" fill="#FF5A5A"/><circle cx="18.7" cy="11.4" r="1.25" fill="#FF9BE0"/><circle cx="21.8" cy="14" r="1.25" fill="#FFD447"/><circle cx="25.2" cy="16.6" r="1.25" fill="#2BD46B"/></g>
+    </svg>`,
+    profile:`<svg class="skin-ico" viewBox="0 0 32 32" aria-hidden="true">
+      <rect x="14" y="22" width="4" height="5.5" rx=".6" fill="#8B5A2B" stroke="currentColor" stroke-width="1.2"/>
+      <path d="M16 5.5L22.5 14H19.2L25.5 22.5H6.5L12.8 14H9.5Z" fill="#1F8A4C" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M11.5 17.5Q16 19.5 21.5 16.5M12.5 12Q16 13.5 19.5 11.5" fill="none" stroke="#FFD447" stroke-width=".9" stroke-dasharray="1.2 1"/>
+      <g class="nav-bulbs"><circle cx="14" cy="11" r="1.2" fill="#FF5A5A"/><circle cx="18.2" cy="15.6" r="1.3" fill="#4DA3FF"/><circle cx="11.6" cy="19.6" r="1.3" fill="#FFD447"/><circle cx="20.6" cy="20.2" r="1.3" fill="#FF5A5A"/></g>
+      <path class="star" d="M16 1.2l1.2 2.5 2.7.3-2 1.9.5 2.7-2.4-1.3-2.4 1.3.5-2.7-2-1.9 2.7-.3z" fill="#FFD447" stroke="#B8860B" stroke-width=".5"/>
+    </svg>`
+  },
+  dragon:{
+    feed:`<svg class="skin-ico" viewBox="0 0 32 32" aria-hidden="true">
+      <g class="smoke" fill="currentColor"><circle cx="16" cy="5" r="1.5"/><circle cx="17.4" cy="2.6" r="1.1"/><circle cx="15.2" cy="1.2" r=".7"/></g>
+      <path d="M4 26V17l12-7 12 7v9z" fill="#5A3E24" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+      <path d="M2 18L16 9.5 30 18" fill="none" stroke="#8A6236" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M2 18L16 9.5 30 18" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M16 9.5L12.5 5.5Q11.5 3.5 13.5 3.2Q12.6 5 14.4 5.8M16 9.5L19.5 5.5Q20.5 3.5 18.5 3.2Q19.4 5 17.6 5.8" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="13.2" cy="4.4" r=".5" fill="#E8742C"/><circle cx="18.8" cy="4.4" r=".5" fill="#E8742C"/>
+      <path d="M13 26v-6.2a3 3 0 016 0V26" fill="#2A1A0E" stroke="currentColor" stroke-width="1.2"/>
+      <path d="M7 20.5h3M22 20.5h3M7 23h3M22 23h3" stroke="#E8742C" stroke-width="1.1" stroke-linecap="round"/>
+    </svg>`,
+    profile:`<svg class="skin-ico" viewBox="0 0 32 32" aria-hidden="true">
+      <path d="M9.5 9.5L7 3.5l5.5 4M22.5 9.5L25 3.5l-5.5 4" fill="#E2D9C6" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
+      <path d="M5 14c0-4.5 4.5-7.5 11-7.5S27 9.5 27 14c0 2.6-1.4 4.4-3.2 5.6L25 25c-2.6 2.4-5.8 3.4-9 3.4s-6.4-1-9-3.4l1.2-5.4C6.4 18.4 5 16.6 5 14z" fill="#2F7A63" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+      <path d="M16 6.5v3.2M12.5 7l.8 2.6M19.5 7l-.8 2.6" stroke="#1E5444" stroke-width="1.2" stroke-linecap="round"/>
+      <ellipse cx="11.3" cy="14.5" rx="2.6" ry="2.9" fill="#F3E9A8"/><ellipse cx="20.7" cy="14.5" rx="2.6" ry="2.9" fill="#F3E9A8"/>
+      <ellipse cx="11.7" cy="14.9" rx="1.1" ry="2" fill="#1A0E05"/><ellipse cx="20.3" cy="14.9" rx="1.1" ry="2" fill="#1A0E05"/>
+      <circle cx="12.1" cy="13.7" r=".45" fill="#fff"/><circle cx="20.7" cy="13.7" r=".45" fill="#fff"/>
+      <ellipse cx="16" cy="22.5" rx="5.5" ry="3.6" fill="#4FA585"/>
+      <circle cx="14.2" cy="21.6" r=".7" fill="#1E5444"/><circle cx="17.8" cy="21.6" r=".7" fill="#1E5444"/>
+      <path d="M12.8 24.6q3.2 1.8 6.4 0" fill="none" stroke="#1E5444" stroke-width="1" stroke-linecap="round"/>
+      <g class="nav-bulbs"><circle cx="9" cy="20.2" r=".9" fill="#E8742C"/><circle cx="23" cy="20.2" r=".9" fill="#E8742C"/></g>
+    </svg>`
+  },
+  pirate:{
+    feed:`<svg class="skin-ico" viewBox="0 0 32 32" aria-hidden="true">
+      <path d="M16 3.5v17M10 8.5v12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      <path d="M16 3.6h-4.4l1.1 1.4-1.1 1.4H16z" fill="#1A0F05" stroke="currentColor" stroke-width=".6"/>
+      <circle cx="13.7" cy="5" r=".7" fill="#F6E7C4"/>
+      <path d="M16.9 7h7.2q-1.4 4.3 0 8.6h-7.2q1.2-4.3 0-8.6z" fill="#F6E7C4" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+      <path d="M10.9 10.5h4.2q-1 3 0 6.2h-4.2q.9-3.1 0-6.2z" fill="#F6E7C4" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
+      <path d="M3.5 20.5h25l-3.6 6H7.2z" fill="#6A4220" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M6 23h20" stroke="#E0B45A" stroke-width=".9"/>
+      <circle cx="11" cy="24.6" r=".8" fill="#1A0F05"/><circle cx="16" cy="24.6" r=".8" fill="#1A0F05"/><circle cx="21" cy="24.6" r=".8" fill="#1A0F05"/>
+      <path class="waves" d="M1.5 29q2-1.6 4 0t4 0 4 0 4 0 4 0 4 0 4 0" fill="none" stroke="#6FB3C9" stroke-width="1.4" stroke-linecap="round"/>
+    </svg>`,
+    profile:`<svg class="skin-ico" viewBox="0 0 32 32" aria-hidden="true">
+      <path d="M8 17.5Q8.6 6.5 16 6.5T24 17.5z" fill="#1A0F05" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+      <path d="M2.5 17.8Q8 11.2 16 15.2Q24 11.2 29.5 17.8Q24 22.6 16 21.4Q8 22.6 2.5 17.8z" fill="#2A1808" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+      <path d="M5 17.9Q9.5 14.4 16 17.4Q22.5 14.4 27 17.9" fill="none" stroke="#E0B45A" stroke-width="1.1"/>
+      <path d="M13.2 15.6l5.6-3.4M13.2 12.2l5.6 3.4" stroke="#F6E7C4" stroke-width="1.2" stroke-linecap="round"/>
+      <circle cx="16" cy="10.6" r="2.6" fill="#F6E7C4"/><rect x="14.6" y="12.2" width="2.8" height="1.6" rx=".5" fill="#F6E7C4"/>
+      <circle cx="15" cy="10.5" r=".65" fill="#1A0F05"/><circle cx="17" cy="10.5" r=".65" fill="#1A0F05"/>
+    </svg>`
+  }
+};
+
+/* ===================== families and sharing ===================== */
+const famById=id=>S.families.find(f=>f.id===id);
+const myFam=()=>famById(S.sessionFam);
+function bindFam(fid){const f=S.fam[fid];if(!f)return;S.sessionFam=fid;S.videos=f.videos;S.trusted=f.trusted;S.accounts=f.accounts;S.kidData=f.kidData}
+function famKids(fid){return (S.fam[fid]?.accounts||[]).filter(a=>a.role==="child")}
+function famOf(accId){for(const [fid,f] of Object.entries(S.fam)) if(f.accounts.some(a=>a.id===accId)) return fid;return null}
+function findAccount(username){for(const [fid,f] of Object.entries(S.fam)){const a=f.accounts.find(x=>x.username===username);if(a)return {fid,a}}return null}
+const linked=(a,b)=>S.links.some(l=>l.status==="active"&&((l.from===a&&l.to===b)||(l.from===b&&l.to===a)));
+const isAdminAcct=()=>!!me()?.admin;
+function shareTargets(k){
+  if(!k||!k.allowSharing)return [];
+  const out=[];
+  famKids(S.sessionFam).forEach(x=>{if(x.id!==k.id&&x.allowSharing)out.push({...x,fid:S.sessionFam,same:true})});
+  S.families.forEach(f=>{if(f.id!==S.sessionFam&&linked(S.sessionFam,f.id))famKids(f.id).forEach(x=>{if(x.allowSharing)out.push({...x,fid:f.id,same:false})})});
+  return out;
+}
+function deliver(sh){
+  if(window.REMIX_LIVE)return;   /* the server delivers */
+  const f=S.fam[sh.toFam];if(!f)return;
+  const {id,for:_f,addedAt,from,note,...rest}=sh.video;
+  const nid=uid();sh.deliveredId=nid;
+  f.videos.push({...rest,id:nid,for:[sh.toId],from:sh.fromName,note:" sent you this",sentBy:sh.fromName,addedAt:Date.now()});
+}
+function sendVideo(videoId,t){
+  const k=curKid(),v=S.videos.find(x=>x.id===videoId);if(!k||!v)return;
+  if(S.shares.some(s=>s.videoKey===(v.postId||v.title)&&s.fromId===k.id&&s.toId===t.id)){toast(`Already sent to ${t.name}`);return}
+  const needsOk=!t.same&&famById(t.fid)?.approve;
+  const sh={id:uid(),videoKey:v.postId||v.title,video:JSON.parse(JSON.stringify(v)),fromId:k.id,fromName:k.name,fromFam:S.sessionFam,toId:t.id,toName:t.name,toFam:t.fid,status:needsOk?"waiting":"delivered",at:Date.now()};
+  if(!needsOk)deliver(sh);
+  S.shares.push(sh);save();
+  toast(needsOk?`Sent! ${t.name}'s parent will check it first.`:`Sent to ${t.name}`);
+}
+function openSend(videoId){
+  const sheet=$("#sheet"),k=curKid(),ts=shareTargets(k);
+  sheet.innerHTML=`<h3 id="sheetTitle">Send to</h3>
+    ${ts.length?ts.map(t=>`<button class="pick" data-to="${t.id}"><span class="em">${kidAv(t)}</span><span>${esc(t.name)}<small style="display:block;color:var(--muted);font-weight:500">${t.same?"Your family":"The "+esc(famById(t.fid).name)+" family"}</small></span><span class="ck">➜</span></button>`).join("")
+      :`<p class="hint">Nobody to send to yet. Kids can send to brothers and sisters, and to kids in families your parents connected, once their parents turn sharing on.</p>`}
+    <p style="margin:14px 0 0"><button class="btn ghost" id="doneBtn" style="width:100%">Close</button></p>`;
+  sheet.querySelectorAll("[data-to]").forEach(b=>b.addEventListener("click",()=>{const t=ts.find(x=>x.id===b.dataset.to);closeSheet();sendVideo(videoId,t)}));
+  $("#doneBtn").addEventListener("click",closeSheet);
+  openSheet();
+}
+function shareRow(s,actions){
+  const when=new Date(s.at).toLocaleDateString(undefined,{month:"short",day:"numeric"});
+  const tag=s.status==="waiting"?'<span class="rx-tag wait">Waiting</span>':s.status==="declined"?'<span class="rx-tag no">Not allowed</span>':'<span class="rx-tag ok">Delivered</span>';
+  const fromF=s.fromFam===S.sessionFam?"":" ("+esc(famById(s.fromFam)?.name||"")+")",toF=s.toFam===S.sessionFam?"":" ("+esc(famById(s.toFam)?.name||"")+")";
+  return `<div class="rx-row"><span class="av" style="background:${s.video.demo?`linear-gradient(160deg,${s.video.scene.bg[0]},${s.video.scene.bg[1]})`:"var(--surface2)"}">${s.video.demo?s.video.scene.emoji:"🎬"}</span>
+    <span class="nm"><b>${esc(s.video.title||"A video")}</b><small>${esc(s.fromName)}${fromF} → ${esc(s.toName)}${toF} · ${when}</small></span>${actions?`<div class="rx-acts">${actions}</div>`:tag}</div>`;
+}
+function familySection(){
+  const f=myFam(),mine=S.sessionFam;
+  const incoming=S.links.filter(l=>l.to===mine&&l.status==="pending"),outgoing=S.links.filter(l=>l.from===mine&&l.status==="pending");
+  const connected=S.families.filter(x=>x.id!==mine&&linked(mine,x.id));
+  const waiting=S.shares.filter(s=>s.toFam===mine&&s.status==="waiting");
+  const recent=S.shares.filter(s=>s.fromFam===mine||s.toFam===mine).sort((a,b)=>b.at-a.at).slice(0,12);
+  return `<h3 style="margin-top:22px">Family connections</h3>
+    <div class="rx-card"><p class="hint" style="margin:0 0 8px">Your family code. Share it with a family you trust so their kids and yours can send each other videos.</p>
+      <span class="rx-code">${esc(f.code)}</span>
+      <p class="hint" style="margin:14px 0 6px">Got a code from another family?</p>
+      <form class="rx-inline" id="rxConnect" novalidate><input id="rxCode" maxlength="8" placeholder="Their code" aria-label="Their family code"><button class="btn rx-sm" type="submit">Connect</button></form>
+      <p class="msg" id="rxMsg"></p></div>
+    ${incoming.length?`<h3>Families asking to connect</h3><div class="rx-card">${incoming.map(l=>`<div class="rx-row"><span class="av">🏡</span><span class="nm"><b>The ${esc(famById(l.from).name)} family</b><small>Wants to share videos between your kids</small></span><button class="btn rx-sm" data-acc="${l.from}">Accept</button><button class="btn ghost rx-sm" data-dec="${l.from}">No</button></div>`).join("")}</div>`:""}
+    <h3>Connected families</h3>
+    <div class="rx-card">${connected.length?connected.map(x=>`<div class="rx-row"><span class="av">🏡</span><span class="nm"><b>The ${esc(x.name)} family</b><small>${famKids(x.id).filter(k=>k.allowSharing).map(k=>esc(k.name)).join(", ")||"No kids with sharing on yet"}</small></span><button class="btn ghost rx-sm" data-disc="${x.id}">Disconnect</button></div>`).join(""):'<p class="hint" style="margin:0">None yet.</p>'}
+      ${outgoing.map(l=>`<div class="rx-row"><span class="av">⏳</span><span class="nm"><b>The ${esc(famById(l.to).name)} family</b><small>Waiting for them to accept</small></span></div>`).join("")}</div>
+    <div class="rx-card"><div class="rx-row"><span class="nm"><b>Check videos from other families</b><small>Videos sent by kids in connected families wait for a parent's OK before your kids see them.</small></span><input type="checkbox" class="rx-tog" id="rxApprove" ${f.approve?"checked":""} aria-label="Check videos from other families"></div></div>
+`;
+}
+const waitingShares=()=>S.shares.filter(s=>s.toFam===S.sessionFam&&s.status==="waiting");
+function reviewSection(){
+  const w=waitingShares(),recent=S.shares.filter(s=>s.fromFam===S.sessionFam||s.toFam===S.sessionFam);
+  return `${w.length?`<h3>To review (${w.length})</h3><p class="hint" style="margin-top:0">Sent to your kids by kids in connected families. Nothing reaches them until you allow it.</p>
+    <div class="rx-card">${w.map(s=>shareRow(s,`<button class="btn ghost rx-sm" data-look="${s.id}">Watch</button><button class="btn rx-sm" data-ok="${s.id}">Allow</button><button class="btn ghost rx-sm" data-no="${s.id}">No</button>`)).join("")}</div>`:""}
+`;
+}
+function lookSheet(s){
+  const sheet=$("#sheet"),v=s.video;
+  sheet.innerHTML=`<h3 id="sheetTitle">${esc(v.title||"Video")}</h3>
+    <div style="height:260px;border-radius:16px;display:grid;place-items:center;font-size:5rem;margin-bottom:12px;background:${v.demo?`linear-gradient(160deg,${v.scene.bg[0]},${v.scene.bg[1]})`:"var(--surface2)"}">${v.demo?v.scene.emoji:"🎬"}</div>
+    <p class="hint" style="margin:0 0 14px">${v.handle?"@"+esc(v.handle)+" · ":""}${esc(s.fromName)} (${esc(famById(s.fromFam)?.name||"")} family) sent this to ${esc(s.toName)}${s.status==="delivered"?" · delivered":s.status==="declined"?" · not allowed":""}</p>
+    ${s.status==="waiting"&&s.toFam===S.sessionFam?`<div class="row"><button class="btn ghost" id="lkNo">Don't send</button><button class="btn" id="lkOk">Allow</button></div>`
+      :`<p style="margin:0"><button class="btn ghost" id="lkClose" style="width:100%">Close</button></p>`}`;
+  openSheet();
+  if(!$("#lkOk")){$("#lkClose").onclick=closeSheet;return}
+  $("#lkOk").onclick=()=>{s.status="delivered";deliver(s);save();closeSheet();toast(`Sent on to ${s.toName}`);renderPLibrary();renderNav()};
+  $("#lkNo").onclick=()=>{s.status="declined";save();closeSheet();toast("Not sent");renderPLibrary();renderNav()};
+}
+function activitySheet(){
+  const sheet=$("#sheet"),recent=S.shares.filter(s=>s.fromFam===S.sessionFam||s.toFam===S.sessionFam).sort((a,b)=>b.at-a.at).slice(0,30);
+  sheet.innerHTML=`<h3 id="sheetTitle">Sharing activity</h3><div style="max-height:60vh;overflow:auto">${recent.map(s=>`<button class="rx-hit" data-act="${s.id}" aria-label="Watch ${esc(s.video.title||"video")}">${shareRow(s)}</button>`).join("")}</div>
+    <p style="margin:14px 0 0"><button class="btn ghost" id="doneBtn" style="width:100%">Close</button></p>`;
+  openSheet();$("#doneBtn").onclick=closeSheet;
+  sheet.querySelectorAll("[data-act]").forEach(b=>b.onclick=()=>lookSheet(S.shares.find(x=>x.id===b.dataset.act)));
+}
+function wireReview(root){
+  root.querySelectorAll("[data-look]").forEach(b=>b.onclick=()=>reviewFeed(b.dataset.look));
+  root.querySelectorAll("[data-ok]").forEach(b=>b.onclick=()=>{const s=S.shares.find(x=>x.id===b.dataset.ok);s.status="delivered";deliver(s);save();toast(`Sent on to ${s.toName}`);renderPLibrary();renderNav()});
+  root.querySelectorAll("[data-no]").forEach(b=>b.onclick=()=>{const s=S.shares.find(x=>x.id===b.dataset.no);s.status="declined";save();toast("Not sent");renderPLibrary();renderNav()});
+}
+/* Watch: the waiting videos full screen, the way a kid sees them, with Allow and No on the right */
+const OK_ICON='<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+const NO_ICON='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+function reviewFeed(startId){
+  let box=$("#rxFeed");if(!box){box=document.createElement("div");box.id="rxFeed";document.body.appendChild(box)}
+  const list=waitingShares().sort((a,b)=>b.at-a.at);
+  box.innerHTML=`<div class="top"><button class="rx-back" id="rfClose" aria-label="Close">‹</button><b>To review (${list.length})</b></div>
+    <div class="scroller">${list.map(s=>{const v=s.video;return `<section class="sl" data-s="${s.id}">
+      ${v.demo?fakeStage(v):(v.postId?`<iframe src="${playerSrc(v.postId)}" allow="autoplay; encrypted-media" title="${esc(v.title||"Video")}"></iframe>`:"🎬")}
+      <div class="cap">${v.handle?`<b>@${esc(v.handle)}</b>`:""}${esc(v.title||"")}<br><small>${esc(s.fromName)} (${esc(famById(s.fromFam)?.name||"")} family) sent this to ${esc(s.toName)}</small></div>
+      <div class="rr"><button class="ok" data-rok="${s.id}"><span class="ic" style="background:#3BD17F">${OK_ICON}</span>Allow</button><button class="del" data-rno="${s.id}"><span class="ic">${NO_ICON}</span>No</button></div></section>`}).join("")}</div>`;
+  box.hidden=false;document.body.style.overflow="hidden";document.body.classList.add("rx-feedopen");
+  const start=box.querySelector(`[data-s="${startId}"]`);if(start)start.scrollIntoView();
+  const close=()=>{box.hidden=true;box.innerHTML="";document.body.style.overflow="";document.body.classList.remove("rx-feedopen");renderPLibrary();renderNav()};
+  const done=(b,msg)=>{const sl=b.closest(".sl"),next=sl.nextElementSibling||sl.previousElementSibling;sl.remove();toast(msg);
+    const left=box.querySelectorAll(".sl").length;box.querySelector(".top b").textContent=`To review (${left})`;renderNav();if(!left)close();else next&&next.scrollIntoView({behavior:"smooth"})};
+  $("#rfClose").onclick=close;
+  box.querySelectorAll("[data-rok]").forEach(b=>b.onclick=()=>{const s=S.shares.find(x=>x.id===b.dataset.rok);s.status="delivered";deliver(s);save();done(b,`Sent on to ${s.toName}`)});
+  box.querySelectorAll("[data-rno]").forEach(b=>b.onclick=()=>{const s=S.shares.find(x=>x.id===b.dataset.rno);s.status="declined";save();done(b,"Not sent")});
+}
+/* ---- admin: one page per family ---- */
+let adminFam=null;
+const vKey=v=>v.postId||v.title;
+const audLabel=v=>v.for===ALL?"All kids":(v.for||[]).map(id=>(S.fam[adminFam]?.accounts.find(a=>a.id===id)||{}).name).filter(Boolean).join(", ")||"Nobody";
+function renderAdminFamily(){
+  const el=$("#p-settings"),f=famById(adminFam),F=S.fam[adminFam];if(!f||!F){adminFam=null;renderPSettings();return}
+  const people=[...F.accounts].sort((a,b)=>a.role===b.role?a.name.localeCompare(b.name):a.role==="parent"?-1:1);
+  const vids=[...F.videos].sort((a,b)=>b.addedAt-a.addedAt);
+  const links=S.families.filter(x=>x.id!==f.id&&linked(f.id,x.id)).map(x=>x.name);
+  el.innerHTML=`<div class="page-inner">
+    <div class="rx-ahead"><button class="rx-back" id="afBack" aria-label="Back to all families">‹</button><h2>The ${esc(f.name)} family</h2></div>
+    <p class="hint" style="margin-top:0">Code ${esc(f.code)} · connected to ${links.length?links.map(esc).join(", "):"no one"} · ${vids.length} videos</p>
+    <h3>People</h3>
+    <div class="rx-card">${people.map(a=>`<div class="rx-row"><span class="av">${kidAv(a)}</span><span class="nm"><b>${esc(a.name)}</b><small>${a.role==="parent"?"Parent":"Kid"} · @${esc(a.username)}${a.allowSharing?" · sharing on":""}</small></span>
+      <div class="rx-acts"><button class="btn ghost rx-sm" data-apw="${a.id}">Reset password</button>${a.id===S.session?"":`<button class="btn ghost rx-sm" data-arm="${a.id}" style="color:#FF4F6E">Remove</button>`}</div></div>`).join("")}</div>
+    <h3>Videos (${vids.length})</h3>
+    ${vids.length?`<p class="hint" style="margin-top:0">Tap a video to review them one after another.</p><div class="rx-grid">${vids.map(v=>`<button class="rx-tile" data-aplay="${v.id}" aria-label="${esc(v.title||"Video")}" style="background:${v.demo?`linear-gradient(160deg,${v.scene.bg[0]},${v.scene.bg[1]})`:"var(--surface2)"}">${v.demo?v.scene.emoji:"🎬"}${v.sentBy?`<span class="sent">from ${esc(v.sentBy)}</span>`:""}<small>${esc(v.title||"Video")}</small></button>`).join("")}</div>`:'<p class="hint">No videos yet.</p>'}
+    ${f.id===S.sessionFam?"":`<h3>Remove this family</h3><p class="hint" style="margin-top:0">Deletes the family, its accounts, videos and connections.</p><button class="btn danger" id="afRemove">Remove the ${esc(f.name)} family</button>`}</div>`;
+  $("#afBack").onclick=()=>{adminFam=null;renderPSettings()};
+  el.querySelectorAll("[data-apw]").forEach(b=>b.onclick=async()=>{const a=F.accounts.find(x=>x.id===b.dataset.apw);const pw=await ask({title:`New password for ${a.name}`,input:"",ok:"Set password"});
+    if(!pw)return;if(pw.length<6){toast("Use at least 6 characters.");return}a.password=pw;save();toast(`Password set for ${a.name}. Share it with them.`)});
+  el.querySelectorAll("[data-arm]").forEach(b=>b.onclick=async()=>{const a=F.accounts.find(x=>x.id===b.dataset.arm);
+    if(!await ask({title:`Remove ${a.name}?`,body:`Takes ${a.name} out of the ${f.name} family and deletes their favorites and collections.`,ok:"Remove",danger:true}))return;
+    F.accounts.splice(F.accounts.indexOf(a),1);delete F.kidData[a.id];F.videos.forEach(v=>{if(Array.isArray(v.for))v.for=v.for.filter(x=>x!==a.id)});
+    S.shares=S.shares.filter(x=>x.fromId!==a.id&&x.toId!==a.id);save();toast(`${a.name} removed`);renderAdminFamily()});
+  el.querySelectorAll("[data-aplay]").forEach(b=>b.onclick=()=>adminFeed(b.dataset.aplay));
+  el.querySelectorAll("[data-adel]").forEach(b=>b.onclick=async()=>{const v=F.videos.find(x=>x.id===b.dataset.adel),k=vKey(v);
+    const n=Object.values(S.fam).reduce((t,x)=>t+x.videos.filter(y=>vKey(y)===k).length,0);
+    if(!await ask({title:"Remove from Remix?",body:n>1?`Deletes "${v.title||"this video"}" from all ${n} families that have it.`:`Deletes "${v.title||"this video"}" for everyone.`,ok:"Remove",danger:true}))return;
+    Object.values(S.fam).forEach(x=>{const gone=x.videos.filter(y=>vKey(y)===k).map(y=>y.id);x.videos.splice(0,x.videos.length,...x.videos.filter(y=>vKey(y)!==k));
+      Object.values(x.kidData).forEach(d=>{d.favorites=(d.favorites||[]).filter(id=>!gone.includes(id));(d.collections||[]).forEach(c=>c.videoIds=c.videoIds.filter(id=>!gone.includes(id)))})});
+    save();toast("Video removed from Remix");renderAdminFamily()});
+  el.querySelectorAll("[data-aadd]").forEach(b=>b.onclick=()=>{const v=F.videos.find(x=>x.id===b.dataset.aadd),k=vKey(v),sheet=$("#sheet");
+    const others=S.families.filter(x=>x.id!==f.id);
+    sheet.innerHTML=`<h3 id="sheetTitle">Add "${esc(v.title||"video")}" to…</h3>${others.map(x=>{const has=S.fam[x.id].videos.some(y=>vKey(y)===k);
+      return `<button class="pick" data-tof="${x.id}" ${has?"disabled":""}><span class="em">🏡</span><span>The ${esc(x.name)} family${has?'<small style="display:block;color:var(--muted)">Already has it</small>':""}</span><span class="ck">${has?"✓":"+"}</span></button>`}).join("")||'<p class="hint">No other families yet.</p>'}
+      <p style="margin:14px 0 0"><button class="btn ghost" id="doneBtn" style="width:100%">Done</button></p>`;
+    openSheet();$("#doneBtn").onclick=closeSheet;
+    sheet.querySelectorAll("[data-tof]").forEach(t=>t.onclick=()=>{const T=S.fam[t.dataset.tof];const {id,for:_f,sentBy,note,from,...rest}=v;
+      T.videos.push({...rest,id:uid(),for:ALL,from:"Remix",addedAt:Date.now()});save();closeSheet();toast(`Added for every kid in the ${famById(t.dataset.tof).name} family`)});});
+  el.querySelector("#afRemove")?.addEventListener("click",async()=>{if(!await ask({title:`Remove the ${f.name} family?`,body:"Deletes the family, its accounts, videos and connections. This can't be undone.",ok:"Remove family",danger:true}))return;
+    delete S.fam[f.id];S.families=S.families.filter(x=>x.id!==f.id);S.links=S.links.filter(l=>l.from!==f.id&&l.to!==f.id);S.shares=S.shares.filter(x=>x.fromFam!==f.id&&x.toFam!==f.id);
+    save();adminFam=null;toast(`The ${f.name} family was removed`);renderPSettings()});
+}
+/* full-screen review feed for one family's videos (admins) */
+const FAMILY_ICON='<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3.3 2.8-5 5.5-5s4.9 1.7 5.5 5"/><circle cx="17" cy="9.5" r="2.4"/><path d="M15.5 14.4c2.3.2 4.1 1.8 4.6 4.6"/></svg>';
+const TRASH_ICON='<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>';
+function familyPicker(v,after){
+  const k=vKey(v),sheet=$("#sheet"),others=S.families.filter(x=>x.id!==adminFam);
+  sheet.innerHTML=`<h3 id="sheetTitle">Add "${esc(v.title||"video")}" to…</h3>${others.map(x=>{const has=S.fam[x.id].videos.some(y=>vKey(y)===k);
+    return `<button class="pick" data-tof="${x.id}" ${has?"disabled":""}><span class="em">🏡</span><span>The ${esc(x.name)} family${has?'<small style="display:block;color:var(--muted)">Already has it</small>':""}</span><span class="ck">${has?"✓":"+"}</span></button>`}).join("")||'<p class="hint">No other families yet.</p>'}
+    <p style="margin:14px 0 0"><button class="btn ghost" id="doneBtn" style="width:100%">Done</button></p>`;
+  openSheet();$("#doneBtn").onclick=closeSheet;
+  sheet.querySelectorAll("[data-tof]").forEach(t=>t.onclick=()=>{const T=S.fam[t.dataset.tof];const {id,for:_f,sentBy,note,from,...rest}=v;
+    T.videos.push({...rest,id:uid(),for:ALL,from:"Remix",addedAt:Date.now()});save();closeSheet();toast(`Added for every kid in the ${famById(t.dataset.tof).name} family`);after&&after()});
+}
+async function removeEverywhere(v){
+  const k=vKey(v),n=Object.values(S.fam).reduce((t,x)=>t+x.videos.filter(y=>vKey(y)===k).length,0);
+  if(!await ask({title:"Remove from Remix?",body:n>1?`Deletes "${v.title||"this video"}" from all ${n} families that have it.`:`Deletes "${v.title||"this video"}" for everyone.`,ok:"Remove",danger:true}))return false;
+  if(window.REMIX_LIVE){await RXL.removeVideoEverywhere(k);return true}
+  Object.values(S.fam).forEach(x=>{const gone=x.videos.filter(y=>vKey(y)===k).map(y=>y.id);x.videos.splice(0,x.videos.length,...x.videos.filter(y=>vKey(y)!==k));
+    Object.values(x.kidData).forEach(d=>{d.favorites=(d.favorites||[]).filter(id=>!gone.includes(id));(d.collections||[]).forEach(c=>c.videoIds=c.videoIds.filter(id=>!gone.includes(id)))})});
+  save();toast("Video removed from Remix");return true;
+}
+function adminFeed(startId){
+  let box=$("#rxFeed");if(!box){box=document.createElement("div");box.id="rxFeed";document.body.appendChild(box)}
+  const F=S.fam[adminFam],f=famById(adminFam),vids=[...F.videos].sort((a,b)=>b.addedAt-a.addedAt);
+  box.innerHTML=`<div class="top"><button class="rx-back" id="rfClose" aria-label="Close">‹</button><b>The ${esc(f.name)} family</b></div>
+    <div class="scroller">${vids.map(v=>`<section class="sl" data-v="${v.id}" style="background:${v.demo?`linear-gradient(160deg,${v.scene.bg[0]},${v.scene.bg[1]})`:"#111"}">
+      ${v.demo?v.scene.emoji:(v.postId?`<iframe src="${playerSrc(v.postId)}" allow="autoplay; encrypted-media" title="${esc(v.title||"Video")}"></iframe>`:"🎬")}
+      <div class="cap">${v.handle?`<b>@${esc(v.handle)}</b>`:""}${esc(v.title||"")}<br><small>${esc(audLabel(v))}${v.sentBy?" · sent by "+esc(v.sentBy):""}</small></div>
+      <div class="rr"><button class="fam" data-fam="${v.id}"><span class="ic">${FAMILY_ICON}</span>Families</button><button class="del" data-del="${v.id}"><span class="ic">${TRASH_ICON}</span>Delete</button></div></section>`).join("")}</div>`;
+  box.hidden=false;document.body.style.overflow="hidden";document.body.classList.add("rx-feedopen");
+  const start=box.querySelector(`[data-v="${startId}"]`);if(start)start.scrollIntoView();
+  const close=()=>{box.hidden=true;box.innerHTML="";document.body.style.overflow="";document.body.classList.remove("rx-feedopen");renderAdminFamily()};
+  $("#rfClose").onclick=close;
+  box.querySelectorAll("[data-fam]").forEach(b=>b.onclick=()=>familyPicker(F.videos.find(x=>x.id===b.dataset.fam)));
+  box.querySelectorAll("[data-del]").forEach(b=>b.onclick=async()=>{const v=F.videos.find(x=>x.id===b.dataset.del);if(!v)return;
+    if(await removeEverywhere(v)){const sl=b.closest(".sl"),next=sl.nextElementSibling||sl.previousElementSibling;sl.remove();if(!box.querySelector(".sl"))close();else next&&next.scrollIntoView()}});
+}
+function adminSection(){
+  if(!isAdminAcct())return "";
+  return `<h3>All families <span class="rx-tag">Admin</span></h3><div class="rx-card">${S.families.map(f=>{const a=S.fam[f.id].accounts;
+    return `<button class="rx-row" data-afam="${f.id}" style="width:100%;background:none;border:0;border-bottom:1px solid var(--surface2);color:inherit;text-align:left;font:inherit;cursor:pointer"><span class="av">🏠</span><span class="nm"><b>The ${esc(f.name)} family</b><small>${a.filter(x=>x.role==="parent").map(x=>esc(x.name)).join(", ")} · kids: ${a.filter(x=>x.role==="child").map(x=>esc(x.name)).join(", ")||"none"} · ${S.fam[f.id].videos.length} videos</small></span><span aria-hidden="true" style="color:var(--muted);font-size:1.3rem">›</span></button>`}).join("")}</div>
+    <p class="hint">Tap a family to manage its people and videos.</p>`;
+}
+function wireFamily(root,rerender){
+  root.querySelector("#rxConnect")?.addEventListener("submit",async e=>{e.preventDefault();const code=$("#rxCode").value.trim().toUpperCase(),m=$("#rxMsg"),mine=S.sessionFam;
+    if(window.REMIX_LIVE){if(!code){m.className="msg bad";m.textContent="Enter their family code.";return}const err=await RXL.connect(code);if(err){m.className="msg bad";m.textContent=RXL.msg(err)}return}
+    const o=S.families.find(x=>x.code===code);
+    if(!o){m.className="msg bad";m.textContent="No family has that code.";return}
+    if(o.id===mine){m.className="msg bad";m.textContent="That's your own code.";return}
+    if(linked(mine,o.id)){m.className="msg good";m.textContent=`Already connected to the ${o.name} family.`;return}
+    const back=S.links.find(l=>l.from===o.id&&l.to===mine);
+    if(back){back.status="active";save();toast(`Connected with the ${o.name} family`);rerender();return}
+    if(!S.links.some(l=>l.from===mine&&l.to===o.id))S.links.push({from:mine,to:o.id,status:"pending",at:Date.now()});
+    save();toast(`Request sent to the ${o.name} family`);rerender()});
+  root.querySelectorAll("[data-acc]").forEach(b=>b.onclick=()=>{const l=S.links.find(x=>x.from===b.dataset.acc&&x.to===S.sessionFam);l.status="active";save();toast("Connected");rerender()});
+  root.querySelectorAll("[data-dec]").forEach(b=>b.onclick=()=>{S.links=S.links.filter(x=>!(x.from===b.dataset.dec&&x.to===S.sessionFam));save();rerender()});
+  root.querySelectorAll("[data-disc]").forEach(b=>b.onclick=async()=>{const o=famById(b.dataset.disc);if(!await ask({title:`Disconnect from the ${o.name} family?`,body:"Videos already sent stay. Nobody can send new ones until you connect again.",ok:"Disconnect",danger:true}))return;
+    S.links=S.links.filter(l=>!((l.from===o.id&&l.to===S.sessionFam)||(l.to===o.id&&l.from===S.sessionFam)));save();rerender()});
+  root.querySelector("#rxApprove")?.addEventListener("change",e=>{myFam().approve=e.target.checked;save();toast(e.target.checked?"You'll check videos from other families":"Videos from connected families go straight through")});
+  root.querySelectorAll("[data-ok]").forEach(b=>b.onclick=()=>{const s=S.shares.find(x=>x.id===b.dataset.ok);s.status="delivered";deliver(s);save();toast(`Sent on to ${s.toName}`);rerender()});
+  root.querySelectorAll("[data-no]").forEach(b=>b.onclick=()=>{const s=S.shares.find(x=>x.id===b.dataset.no);s.status="declined";save();toast("Not sent");rerender()});
+}
+const _renderPLibrary=renderPLibrary;
+renderPLibrary=function(){_renderPLibrary();const el=$("#p-library"),h=el.querySelector(".page-inner");if(!h)return;
+  const box=document.createElement("div");box.innerHTML=reviewSection();const head=h.firstElementChild;head.after(box);wireReview(box)};
+ICONS.inbox='<path d="M4 5h16v11H9l-5 4z"/>';
+const _renderNav=renderNav;
+renderNav=function(){
+  const k=mode()==="child"?curKid():null;
+  NAVS.child=k&&k.allowSharing?[["feed","Home"],["inbox","Messages"],["profile","Profile"]]:[["feed","Home"],["profile","Profile"]];
+  _renderNav();
+  const u=k&&k.allowSharing?unreadFrom(k):0,ib=$('#nav [data-tab="inbox"]');
+  if(ib&&u){ib.style.position="relative";ib.insertAdjacentHTML("beforeend",`<span class="rx-badge" aria-label="${u} new">${u}</span>`)}const n=mode()==="parent"?waitingShares().length:0,b=$('#nav [data-tab="p-library"]');
+  if(b&&n){b.style.position="relative";b.insertAdjacentHTML("beforeend",`<span class="rx-badge" aria-label="${n} to review">${n}</span>`)}};
+
+/* ===================== "Sent to you": a chat-style inbox on a kid's profile ===================== */
+const IC_CHAT='<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg>';
+const REACTS=["❤️","😂","😮","👍","🎉"];
+let inboxPeer=null;
+function acctAny(id){for(const f of Object.values(S.fam)){const a=f.accounts.find(x=>x.id===id);if(a)return a}return null}
+const myShares=k=>S.shares.filter(s=>(s.toId===k.id&&s.status==="delivered")||s.fromId===k.id);
+const peerOf=(s,k)=>s.fromId===k.id?s.toId:s.fromId;
+const unreadFrom=(k,p)=>S.shares.filter(s=>s.toId===k.id&&s.status==="delivered"&&!s.seenAt&&(!p||s.fromId===p)).length;
+function stamp(t){const d=new Date(t),today=new Date(),y=new Date(Date.now()-864e5);
+  const day=d.toDateString()===today.toDateString()?"Today":d.toDateString()===y.toDateString()?"Yesterday":d.toLocaleDateString(undefined,{month:"short",day:"numeric"});
+  return day+" · "+d.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"})}
+function vThumb(v,w){return `<span class="ix-th" style="width:${w}px;background:${v.demo?`linear-gradient(160deg,${v.scene.bg[0]},${v.scene.bg[1]})`:"var(--surface2)"}">${v.demo?v.scene.emoji:"🎬"}</span>`}
+function playableId(s,k){
+  if(s.toId===k.id){if(s.deliveredId&&S.videos.some(v=>v.id===s.deliveredId))return s.deliveredId;
+    const v=S.videos.find(v=>v.sentBy===s.fromName&&(v.postId||v.title)===s.videoKey&&visibleTo(v,k.id));return v?.id}
+  return S.videos.some(v=>v.id===s.video.id)?s.video.id:null}
+function inboxBody(k){
+  if(inboxPeer){
+    const p=acctAny(inboxPeer),pf=famById(famOf(inboxPeer));
+    const thread=myShares(k).filter(s=>peerOf(s,k)===inboxPeer).sort((a,b)=>a.at-b.at);
+    thread.forEach(s=>{if(s.toId===k.id&&!s.seenAt)s.seenAt=Date.now()});save();
+    return `<div class="ix-head"><button class="rx-back" id="ixBack" aria-label="Back to all chats">‹</button><span class="ix-av">${kidAv(p)}</span><span><b>${esc(p?.name||"Friend")}</b><small>${pf&&pf.id!==S.sessionFam?"The "+esc(pf.name)+" family":"Your family"}</small></span></div>
+      <div class="ix-thread">${thread.map(s=>{const mine=s.fromId===k.id,id=playableId(s,k);
+        return `<div class="ix-msg ${mine?"me":"them"}"><small class="ix-time">${stamp(s.at)}</small>
+          <button class="ix-bubble" ${id?`data-ixplay="${s.id}"`:"disabled"} aria-label="Watch ${esc(s.video.title||"video")}">${vThumb(s.video,96)}<span class="ix-tt"><b>${esc(s.video.title||"A video")}</b>${s.video.handle?`<small>@${esc(s.video.handle)}</small>`:""}
+            ${mine&&s.status==="waiting"?`<small class="ix-wait">Waiting for a parent's OK</small>`:mine&&s.status==="declined"?`<small class="ix-wait">Not sent</small>`:""}</span>
+            ${mine&&s.reaction?`<span class="ix-react-badge" aria-label="${esc(p?.name||"")} reacted ${s.reaction}">${s.reaction}</span>`:""}</button>
+          ${mine?"":`<div class="ix-reacts" role="group" aria-label="React">${REACTS.map(e=>`<button data-react="${s.id}" data-e="${e}" aria-pressed="${s.reaction===e}">${e}</button>`).join("")}</div>`}</div>`}).join("")}</div>`;
+  }
+  const peers={};
+  myShares(k).forEach(s=>{const p=peerOf(s,k);if(!peers[p]||peers[p].at<s.at)peers[p]=s});
+  const rows=Object.entries(peers).sort((a,b)=>b[1].at-a[1].at);
+  if(!rows.length)return `<p class="hint" style="text-align:center;margin:28px 12px">When someone sends you a video, it shows up here.</p>`;
+  return `<div class="ix-list">${rows.map(([pid,s])=>{const p=acctAny(pid),pf=famById(famOf(pid)),n=unreadFrom(k,pid);
+    return `<button class="ix-row" data-peer="${pid}"><span class="ix-av">${kidAv(p)}</span><span class="ix-mid"><b>${esc(p?.name||"Friend")}${pf&&pf.id!==S.sessionFam?` <small class="ix-fam">${esc(pf.name)} family</small>`:""}</b>
+      <small>${s.fromId===k.id?"You sent: ":""}${esc(s.video.title||"A video")}</small></span><span class="ix-end"><small>${stamp(s.at).split(" · ")[0]}</small>${n?`<span class="ix-dot" aria-label="${n} new">${n}</span>`:""}</span></button>`}).join("")}</div>`;
+}
+function renderInbox(){
+  const el=$("#inbox"),k=curKid();if(!el||!k)return;
+  el.innerHTML=`<div class="page-inner">${inboxPeer?"":topbar("Messages","","",true)}${inboxBody(k)}</div>`;
+  wireInbox(el,k);renderNav();
+}
+function wireInbox(el,k){
+  el.querySelectorAll("[data-peer]").forEach(b=>b.onclick=()=>{inboxPeer=b.dataset.peer;renderInbox();el.scrollTop=0});
+  el.querySelector("#ixBack")?.addEventListener("click",()=>{inboxPeer=null;renderInbox()});
+  el.querySelectorAll("[data-react]").forEach(b=>b.onclick=()=>{const s=S.shares.find(x=>x.id===b.dataset.react);s.reaction=s.reaction===b.dataset.e?null:b.dataset.e;save();renderInbox()});
+  el.querySelectorAll("[data-ixplay]").forEach(b=>b.onclick=()=>{const thread=myShares(k).filter(s=>peerOf(s,k)===inboxPeer).sort((a,c)=>a.at-c.at);
+    const ids=thread.map(s=>playableId(s,k)).filter(Boolean),s=S.shares.find(x=>x.id===b.dataset.ixplay);
+    playFrom(ids,playableId(s,k),"From "+(acctAny(inboxPeer)?.name||"a friend"),true)});
+}
+const _go=go;
+go=function(t,fromNav){
+  if(t==="inbox"){if(fromNav){navStack=[];inboxPeer=null}tab=t;setNav(t);pauseAll();renderInbox();const v=$("#inbox");if(v&&fromNav)v.scrollTop=0;return}
+  _go(t,fromNav);
+};
+function seedFamilies(){
+  // the Smiths are already bound with the sample content; add the Jones family and connect them
+  const smith=famKids("smith");smith.forEach(k=>k.allowSharing=k.id==="kid1");S.families[0].approve=false;
+  S.families.push({id:"jones",name:"Jones",code:"JONES4",approve:false});
+  S.fam.jones={videos:[],trusted:[],kidData:{},accounts:[
+    {id:"marcus",role:"parent",name:"Marcus",username:"marcus",password:"tree",avatar:"🎸"},
+    {id:"kid3",role:"child",name:"Ava",username:"ava",password:"tree",avatar:"🐼",photo:"",allowSharing:true}]};
+  bindFam("jones");loadSamples();
+  S.links.push({from:"smith",to:"jones",status:"active",at:Date.now()-5*864e5});
+  const waitShare=(fromFam,fromId,fromName,toFam,toId,toName,v,ago)=>S.shares.push({id:uid(),videoKey:v.postId||v.title,video:JSON.parse(JSON.stringify(v)),
+    fromId,fromName,fromFam,toId,toName,toFam,status:"waiting",at:Date.now()-ago});
+  const sentShare=(fromFam,fromId,fromName,toFam,toId,toName,v,ago,reaction)=>{const sh={id:uid(),videoKey:v.postId||v.title,video:JSON.parse(JSON.stringify(v)),
+    fromId,fromName,fromFam,toId,toName,toFam,status:"delivered",at:Date.now()-ago,reaction:reaction||null};deliver(sh);S.shares.push(sh)};
+  sentShare("jones","kid3","Ava","smith","kid1","Maya",S.fam.jones.videos[S.fam.jones.videos.length-8],27*3600e3);
+  sentShare("smith","kid1","Maya","jones","kid3","Ava",S.fam.smith.videos[S.fam.smith.videos.length-13],26*3600e3,"😂");
+  sentShare("jones","kid3","Ava","smith","kid1","Maya",S.fam.jones.videos[S.fam.jones.videos.length-3],2*3600e3);
+  sentShare("smith","kid1","Maya","jones","kid3","Ava",S.fam.smith.videos[S.fam.smith.videos.length-5],5*3600e3);
+  bindFam("smith");save();
+}
+
+function renderNav(){
+  const m=mode(),nav=$("#nav");if(m==="login")return;
+  const skin=document.documentElement.dataset.skin,set=m==="child"?SKIN_ICONS[skin]:null;
+  nav.innerHTML=NAVS[m].map(([t,l])=>t==="p-add"
+    ?`<button data-tab="${t}" class="create" aria-label="Add a video"><span class="plus"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">${ICONS[t]}</svg></span></button>`
+    :set&&set[t]?`<button data-tab="${t}" class="skinned">${set[t]}${l}</button>`
+    :`<button data-tab="${t}"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">${ICONS[t]}</svg>${l}</button>`).join("");
+  nav.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>go(b.dataset.tab,true)));
+  nav.querySelectorAll("button").forEach(b=>{if(b.dataset.tab===tab)b.setAttribute("aria-current","page")});
+}
+function boot(){
+  const m=mode(),nav=$("#nav"),ban=$("#banner");
+  applySkin();
+  feedFilter=null;profView={kind:"home",ptab:"following"};feedMode="picks";navStack=[];
+  if(m==="login"){nav.hidden=true;ban.hidden=true;go("login");return}
+  nav.hidden=false;
+  renderNav();
+  if(previewKid){ban.hidden=false;ban.innerHTML=`<span>Previewing ${esc(possessive(kidName(curKid())))} app</span><button id="endPreview">Back to parent view</button>`;$("#endPreview").onclick=()=>{previewKid=null;pauseAll();stopAllPlayers();boot()}}
+  else ban.hidden=true;
+  go(m==="parent"?"p-library":"feed");
+}
+function setNav(t){document.body.dataset.tab=t;
+  $("#feedTop").style.display=t==="feed"?"":"none";
+  document.querySelectorAll("#nav button").forEach(b=>{if(b.dataset.tab===t)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
+  document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on",v.id===t));
+}
+/* ---------- Back history: the back arrow (and edge swipe) returns to the exact previous screen ---------- */
+let navStack=[];
+function snapshot(){
+  const cur=tab==="feed"?currentList[activeIdx]:null;
+  return {tab,feedMode,feedFilter:feedFilter?{...feedFilter}:null,videoId:cur&&!cur.divider?cur.id:(cur?.divider?"__caughtup":null),profView:{...profView},scroll:tab==="profile"?$("#profile").scrollTop:0};
+}
+function pushHistory(){navStack.push(snapshot());if(navStack.length>30)navStack.shift()}
+function goBack(){
+  const s=navStack.pop();
+  if(!s){profView={kind:"home",ptab:profView.ptab};tab="profile";setNav("profile");renderProfile();return}
+  feedMode=s.feedMode;feedFilter=s.feedFilter;profView=s.profView;tab=s.tab;
+  if(tab!=="feed")pauseAll();
+  setNav(tab);
+  if(tab==="feed")renderFeed(s.videoId);
+  else if(tab==="profile"){renderProfile();$("#profile").scrollTop=s.scroll||0}
+}
+function go(t,fromNav){
+  if(fromNav)navStack=[];
+  tab=t;setNav(t);
+  if(t!=="feed")pauseAll();
+  const R={feed:()=>renderFeed(),login:renderLogin,"p-add":renderPAdd,"p-library":renderPLibrary,"p-creators":renderPCreators,"p-settings":renderPSettings,"p-kids":renderPKids,
+    profile:()=>{if(fromNav)profView={kind:"home",ptab:profView.ptab};renderProfile()}};
+  R[t]&&R[t]();
+  const v=document.getElementById(t);if(v&&fromNav)v.scrollTop=0;
+}
+function signOut(){stopAllPlayers();previewKid=null;if(window.REMIX_LIVE){WebApps.signOut().then(()=>RXL.start());return}S.session=null;save();boot()}
+
+/* ---------- Sign in ---------- */
+function renderLoginDemo(msg){
+  const el=$("#login");
+  el.innerHTML=`<div class="login"><div class="tree rxlogo" aria-hidden="true"><svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="24" fill="#0B0B12"/><path d="M21 21 L60 41 L21 61 Z" fill="#FF3D7F" opacity=".85"/><path d="M31 30 L70 50 L31 70 Z" fill="#FFD60A" opacity=".8"/><path d="M41 39 L80 59 L41 79 Z" fill="#00D4FF" opacity=".8"/></svg></div><p class="mark">Remix</p>
+    <p class="lede">Videos picked by your family.</p>
+    <form class="stack" id="loginForm" novalidate>
+      <input id="lUser" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Username" aria-label="Username">
+      <input id="lPass" type="password" autocomplete="current-password" placeholder="Password" aria-label="Password">
+      <p class="msg bad" id="lMsg" style="min-height:1.2em">${msg?esc(msg):""}</p>
+      <button class="btn" type="submit">Log in</button>
+    </form>
+    <div class="demo-accts"><p class="hint">Prototype accounts. Tap one to sign in.</p>
+      <div class="row">${S.accounts.map(a=>`<button data-acct="${a.id}">${esc(a.name||"Child")}<small>${a.role==="parent"?"Parent":"Child"}</small><small>${esc(a.username)}</small></button>`).join("")}</div>
+      <p class="hint" style="margin:10px 0 0">The starting password for every account is "tree".</p></div></div>`;
+  const tryLogin=(u,pw)=>{
+    const a=S.accounts.find(x=>x.username.toLowerCase()===u.trim().toLowerCase()&&x.password===pw);
+    if(!a){$("#lMsg").textContent="That username and password don't match.";return}
+    S.session=a.id;save();boot();
+  };
+  $("#loginForm").onsubmit=e=>{e.preventDefault();tryLogin($("#lUser").value,$("#lPass").value)};
+  el.querySelectorAll("[data-acct]").forEach(b=>b.onclick=()=>{const a=S.accounts.find(x=>x.id===b.dataset.acct);S.session=a.id;save();boot()});
+}
+
+/* ---------- Feed ---------- */
+let soundOn=false,observer=null,activeIdx=-1,currentList=[];
+const players=new Map();
+function computeList(){
+  if(feedFilter)return feedFilter.ids.map(id=>S.videos.find(v=>v.id===id)).filter(Boolean);
+  const mine=myVideos(),seen=D().seen;
+  const base=feedMode==="following"?mine.filter(v=>isFollowing(v.handle)):mine;
+  if(!base.length)return [];
+  // Unwatched videos in the order they were added (oldest first), then the caught-up card, then watched videos newest first.
+  const fresh=base.filter(v=>!seen[v.id]).sort((a,b)=>a.addedAt-b.addedAt);
+  const old=sortNew(base.filter(v=>seen[v.id]));
+  return [...fresh,{divider:true,id:"__caughtup",fresh:fresh.length,old:old.length},...old];
+}
+function feedTop(){
+  if(feedFilter)return `<div class="feed-top"><button class="chip" id="exitFilter" aria-label="Close ${esc(feedFilter.label)}">‹&nbsp; ${esc(feedFilter.label)}</button></div>`;
+  return `<div class="feed-top"><button class="seg" data-mode="following" aria-pressed="${feedMode==="following"}">Following</button><button class="seg" data-mode="picks" aria-pressed="${feedMode==="picks"}">For You</button></div>`;
+}
+function renderFeed(startId){
+  const feed=$("#feed");
+  stopAllPlayers();
+  if(observer)observer.disconnect();
+  currentList=computeList();
+  const wire=()=>{
+    $("#exitFilter")?.addEventListener("click",()=>{if(navStack.length)goBack();else{feedFilter=null;renderFeed()}});
+    document.querySelectorAll("#feedTop .seg").forEach(b=>b.addEventListener("click",()=>{feedMode=b.dataset.mode;renderFeed()}));
+  };
+  $("#feedTop").innerHTML=feedTop();
+  if(!currentList.length){
+    feed.innerHTML=`<div class="empty"><div>${!myVideos().length
+      ?`<h2>Nothing here yet</h2><p>Mom and Dad haven't added any videos for you yet. Check back soon!</p>`
+      :feedMode==="following"&&!feedFilter
+        ?`<h2>No videos from accounts you follow</h2><p>When Mom or Dad add videos from accounts you follow, they'll show up here.</p>`
+        :`<h2>Nothing here yet</h2><p>This list is empty.</p>`}</div></div>`;
+    wire();return;
+  }
+  const d=D();
+  feed.innerHTML=currentList.map((v,i)=>{
+    if(v.divider)return dividerSlide(v,i);
+    const fav=d.favorites.includes(v.id),kept=d.collections.some(c=>c.videoIds.includes(v.id));
+    const a=avatarFor(v.handle),c=creator(v.handle),fol=isFollowing(v.handle);
+    return `<article class="slide" data-i="${i}" data-id="${v.id}">
+      <div class="stage">
+        ${v.demo?fakeStage(v):`<div class="slot"></div>`}
+        <div class="shield" aria-label="Tap to pause or play"></div>
+        <div class="paused-badge"><span><svg width="64" height="64" viewBox="0 0 24 24" fill="rgba(255,255,255,.85)"><path d="M8 5l11 7-11 7z"/></svg></span></div>
+        ${v.demo?"":`<div class="fail"><p>This video can't play right now. It may have been removed by its creator, or this preview is blocking the player.</p></div>`}
+        <div class="caption">
+          ${v.handle?`<button class="who" data-creator="${esc(v.handle)}">@${esc(v.handle)}</button>`:""}
+          ${feedFilter?"":`<div class="cap-tags">${d.seen[v.id]?`<span class="new-tag seen-tag">✓ Watched</span>`:`<span class="new-tag">New</span>`}</div>`}
+          ${v.title?`<h2>${esc(v.title)}</h2>`:""}
+          ${v.note?`<span class="note">${v.from?`<b>${esc(v.from)}</b>`:""}${esc(v.note)}</span>`:""}
+        </div>
+        <div class="rail">
+          ${v.handle?`<button class="creator-btn who" data-creator="${esc(v.handle)}" aria-label="${esc((fol&&c?.name)||"@"+v.handle)}"><span class="av" style="background:${a.bg}">${a.e}</span>${fol?`<span class="badge" aria-hidden="true">✓</span>`:""}</button>`:""}
+          <button class="fav" aria-pressed="${fav}" aria-label="Favorite"><span class="ico"><svg width="34" height="34" viewBox="0 0 24 24" fill="${fav?"#FF4F6E":"#fff"}" stroke="${fav?"#FF4F6E":"#fff"}" stroke-width="1"><path d="M12 20.5s-8-4.9-8-11a4.5 4.5 0 018-2.9 4.5 4.5 0 018 2.9c0 6.1-8 11-8 11z"/></svg></span>Favorite</button>
+          <button class="keep" aria-pressed="${kept}" aria-label="Save to a collection"><span class="ico"><svg width="30" height="30" viewBox="0 0 24 24" fill="${kept?"#FFC93C":"#fff"}" stroke="${kept?"#FFC93C":"#fff"}" stroke-width="1" stroke-linejoin="round"><path d="M6 3h12v18l-6-4.2L6 21z"/></svg></span>Save</button>
+          ${curKid()&&curKid().allowSharing&&!previewKid?`<button class="sendb" aria-label="Send to someone"><span class="ico"><svg width="30" height="30" viewBox="0 0 24 24"><path d="M3.4 11.2L20 4l-7.2 16.6-2.3-6.9z"/></svg></span>Send</button>`:""}
+          <button class="snd" aria-label="${soundOn?"Mute":"Turn sound on"}"><span class="ico">${soundIcon()}</span>${soundOn?"Sound":"Muted"}</button>
+        </div>
+        <div class="progress"><i></i></div>
+      </div></article>`}).join("");
+  wire();
+  feed.querySelectorAll(".slide:not(.caught)").forEach(wireSlide);
+  observer=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting&&e.intersectionRatio>.6)activate(+e.target.dataset.i)})},{root:feed,threshold:[.6]});
+  feed.querySelectorAll(".slide").forEach(sl=>observer.observe(sl));
+  let start=0;if(startId){const k=currentList.findIndex(v=>v.id===startId);if(k>=0)start=k}
+  feed.scrollTop=start*feed.clientHeight;
+  requestAnimationFrame(()=>activate(start));
+}
+function dividerSlide(d,i){
+  const sub=d.fresh?`You've watched all ${plural(d.fresh,"new video")}.`:"There's nothing new right now.";
+  const more=d.old?"Keep scrolling to rewatch older videos.":"Mom and Dad will add more soon.";
+  return `<article class="slide caught" data-i="${i}" data-id="${d.id}"><div class="stage"><div class="caught-card">
+    <span class="caught-check" aria-hidden="true"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#3A2A05" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+    <h2>You're all caught up</h2><p>${sub}<br>${more}</p>
+    ${d.old?`<span class="caught-arrow" aria-hidden="true">↓</span>`:""}
+  </div></div></article>`;
+}
+function fakeStage(v){
+  const s=v.scene,n=hashN(v.id);
+  const orbs=[0,1,2,3].map(k=>{const sz=60+((n>>k*3)&7)*22;return `<i class="orb" style="width:${sz}px;height:${sz}px;left:${(n>>k*2)%80}%;top:${(n>>(k+3))%85}%;animation-delay:-${k*2}s"></i>`}).join("");
+  return `<div class="fake" style="background:linear-gradient(160deg,${s.bg[0]},${s.bg[1]})">${orbs}<div class="big ${s.motion}">${s.emoji}</div><span class="sample">Sample video</span></div>`;
+}
+function soundIcon(){return soundOn
+  ?`<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="#fff"/><path d="M16 9a4 4 0 010 6M18.5 6.5a7.5 7.5 0 010 11"/></svg>`
+  :`<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="#fff"/><path d="M17 9l5 6M22 9l-5 6"/></svg>`}
+function wireSlide(sl){
+  const id=sl.dataset.id,i=+sl.dataset.i;
+  sl.querySelector(".shield").addEventListener("click",()=>{const p=players.get(i);if(p)p.playing?ctl(p,"pause"):ctl(p,"play")});
+  sl.querySelectorAll(".who").forEach(b=>b.addEventListener("click",e=>openCreator(e.currentTarget.dataset.creator)));
+  sl.querySelector(".fav").addEventListener("click",e=>{
+    const d=D(),b=e.currentTarget,on=!d.favorites.includes(id);
+    d.favorites=on?[...d.favorites,id]:d.favorites.filter(x=>x!==id);save();
+    b.setAttribute("aria-pressed",on);const sv=b.querySelector("svg");sv.setAttribute("fill",on?"#FF4F6E":"#fff");sv.setAttribute("stroke",on?"#FF4F6E":"#fff");
+    toast(on?"Added to favorites":"Removed from favorites");
+  });
+  sl.querySelector(".keep").addEventListener("click",()=>openPicker(id,sl));
+  sl.querySelector(".sendb")?.addEventListener("click",()=>openSend(id));
+  sl.querySelector(".snd").addEventListener("click",()=>{
+    soundOn=!soundOn;
+    document.querySelectorAll(".snd").forEach(b=>{b.innerHTML=`<span class="ico">${soundIcon()}</span>${soundOn?"Sound":"Muted"}`;b.setAttribute("aria-label",soundOn?"Mute":"Turn sound on")});
+    players.forEach(p=>{if(p.kind==="tt")send(p,soundOn?"unMute":"mute")});
+    if(currentList[activeIdx]?.demo)toast(soundOn?"Sound on (sample videos are silent)":"Muted");
+  });
+}
+function playerSrc(postId){
+  const q=new URLSearchParams({controls:"0",autoplay:"1",loop:"1",description:"0",music_info:"0",rel:"0",native_context_menu:"0",closed_caption:"0"});
+  return `https://www.tiktok.com/player/v1/${postId}?${q}`;
+}
+let seenTimer=null;
+function activate(i){
+  if(i===activeIdx)return;activeIdx=i;
+  clearTimeout(seenTimer);
+  const cur=currentList[i];
+  if(cur&&!cur.divider&&!feedFilter&&!previewKid&&me()?.role==="child"&&!D().seen[cur.id]){
+    seenTimer=setTimeout(()=>{if(currentList[activeIdx]!==cur)return;D().seen[cur.id]=Date.now();save()},3000);
+  }
+  const slides=[...document.querySelectorAll("#feed .slide")];
+  slides.forEach((sl,k)=>{const near=Math.abs(k-i)<=1;if(near&&!players.has(k))mount(sl,k);if(!near&&players.has(k))unmount(k)});
+  players.forEach((p,k)=>{p.want=k===i;if(p.kind==="demo"||p.ready){if(k===i){if(p.kind==="tt")send(p,soundOn?"unMute":"mute");ctl(p,"play")}else ctl(p,"pause")}});
+}
+function mount(sl,k){
+  const v=currentList[k];if(!v||v.divider)return;
+  if(v.demo){
+    const p={kind:"demo",slide:sl,t:0,playing:false,want:k===activeIdx,dur:12000};
+    p.timer=setInterval(()=>{if(!p.playing)return;p.t=(p.t+100)%p.dur;sl.querySelector(".progress i").style.width=(100*p.t/p.dur)+"%"},100);
+    sl.querySelector(".stage").classList.add("paused");
+    players.set(k,p);return;
+  }
+  const f=document.createElement("iframe");
+  f.src=playerSrc(v.postId);f.title=v.title||"Video";f.allow="autoplay; fullscreen; encrypted-media";
+  f.setAttribute("referrerpolicy","strict-origin-when-cross-origin");
+  sl.querySelector(".slot").appendChild(f);
+  const p={kind:"tt",iframe:f,ready:false,playing:false,want:k===activeIdx,slide:sl};
+  p.fail=setTimeout(()=>{if(!p.ready)sl.querySelector(".fail").classList.add("show")},9000);
+  players.set(k,p);
+}
+function unmount(k){const p=players.get(k);if(p.kind==="demo")clearInterval(p.timer);else{clearTimeout(p.fail);p.iframe.remove()}p.slide.querySelector(".progress i").style.width="0";players.delete(k)}
+function stopAllPlayers(){clearTimeout(seenTimer);[...players.keys()].forEach(unmount);activeIdx=-1}
+function ctl(p,action){
+  if(p.kind==="demo"){
+    p.playing=action==="play";
+    p.slide.querySelector(".stage").classList.toggle("paused",!p.playing);
+    p.slide.querySelector(".paused-badge").classList.toggle("show",!p.playing&&p.want);
+  }else send(p,action);
+}
+function send(p,type,value){try{p.iframe.contentWindow.postMessage({type,value,"x-tiktok-player":true},"*")}catch(e){}}
+function pauseAll(){players.forEach(p=>{p.want=false;if(p.kind==="demo"||p.ready)ctl(p,"pause")})}
+window.addEventListener("message",ev=>{
+  let d=ev.data;if(typeof d==="string"){try{d=JSON.parse(d)}catch(e){return}}
+  if(!d||d["x-tiktok-player"]!==true)return;
+  let p=null;players.forEach(x=>{if(x.kind==="tt"&&x.iframe.contentWindow===ev.source)p=x});if(!p)return;
+  const sl=p.slide;
+  switch(d.type){
+    case "onPlayerReady":p.ready=true;clearTimeout(p.fail);sl.querySelector(".fail").classList.remove("show");send(p,soundOn?"unMute":"mute");send(p,p.want&&tab==="feed"?"play":"pause");break;
+    case "onStateChange":p.playing=d.value===1;sl.querySelector(".paused-badge").classList.toggle("show",d.value===2&&p.want);break;
+    case "onCurrentTime":{const v=d.value||{};if(v.duration)sl.querySelector(".progress i").style.width=(100*v.currentTime/v.duration)+"%";break}
+    case "onPlayerError":{const code=d.value&&d.value.errorCode;if(code===3002){send(p,"mute");send(p,"play");break}sl.querySelector(".fail").classList.add("show");break}
+  }
+});
+function playFrom(ids,startId,label,back){
+  pushHistory();
+  feedFilter={ids,label,back};tab="feed";setNav("feed");renderFeed(startId);
+}
+
+/* ---------- Sheets ---------- */
+let onSheetClose=null;
+function openSheet(cb){onSheetClose=cb;$("#scrim").classList.add("on");$("#sheet").classList.add("on")}
+function closeSheet(){$("#scrim").classList.remove("on");$("#sheet").classList.remove("on");const cb=onSheetClose;onSheetClose=null;cb&&cb()}
+$("#scrim").addEventListener("click",closeSheet);
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("#sheet").classList.contains("on"))closeSheet()});
+/* In-app confirm/prompt (browser pop-ups are blocked in some viewers and home-screen apps) */
+function ask({title,body="",ok="OK",danger=false,input=null}){
+  return new Promise(resolve=>{
+    let done=false;const finish=v=>{if(done)return;done=true;resolve(v)};
+    const sheet=$("#sheet");
+    sheet.innerHTML=`<h3 id="sheetTitle">${esc(title)}</h3>${body?`<p class="hint" style="margin:0 0 16px">${esc(body)}</p>`:""}
+      ${input!==null?`<input id="askIn" maxlength="30" value="${esc(input)}" aria-label="${esc(title)}" style="margin-bottom:16px">`:""}
+      <div class="row"><button class="btn ghost" id="askNo">Cancel</button><button class="btn ${danger?"danger-fill":""}" id="askOk">${esc(ok)}</button></div>`;
+    openSheet(()=>finish(null));
+    $("#askNo").onclick=()=>closeSheet();
+    $("#askOk").onclick=()=>{const v=input!==null?$("#askIn").value.trim():true;if(input!==null&&!v)return;finish(v);closeSheet()};
+    if(input!==null){const f=$("#askIn");f.focus();f.select();f.onkeydown=e=>{if(e.key==="Enter")$("#askOk").click()}}
+    else $("#askOk").focus();
+  });
+}
+
+/* ---------- Collection picker ---------- */
+function openPicker(videoId,slide){
+  const sheet=$("#sheet"),d=D();
+  const draw=()=>{
+    sheet.innerHTML=`<h3 id="sheetTitle">Save to a collection</h3>
+      ${d.collections.length?d.collections.map(c=>`<button class="pick" role="checkbox" aria-checked="${c.videoIds.includes(videoId)}" data-c="${c.id}"><span class="em">${c.emoji}</span><span>${esc(c.name)}</span><span class="ck">✓</span></button>`).join(""):`<p class="hint">You don't have any collections yet. Make your first one below.</p>`}
+      <div class="newcol"><input id="newColName" placeholder="New collection name" maxlength="30" aria-label="New collection name"><button class="btn" id="newColBtn">Create</button></div>
+      <p style="margin:14px 0 0"><button class="btn ghost" id="doneBtn" style="width:100%">Done</button></p>`;
+    sheet.querySelectorAll(".pick").forEach(b=>b.addEventListener("click",()=>{const c=d.collections.find(x=>x.id===b.dataset.c);c.videoIds=c.videoIds.includes(videoId)?c.videoIds.filter(x=>x!==videoId):[...c.videoIds,videoId];save();draw()}));
+    $("#newColBtn").addEventListener("click",()=>{const n=$("#newColName").value.trim();if(!n)return;d.collections.push({id:uid(),name:n,emoji:COL_EMOJI[d.collections.length%COL_EMOJI.length],videoIds:[videoId]});save();draw()});
+    $("#doneBtn").addEventListener("click",closeSheet);
+  };
+  draw();openSheet(()=>{if(slide){const kept=d.collections.some(c=>c.videoIds.includes(videoId));const b=slide.querySelector(".keep");b.setAttribute("aria-pressed",kept);const sv=b.querySelector("svg");sv.setAttribute("fill",kept?"#FFC93C":"#fff");sv.setAttribute("stroke",kept?"#FFC93C":"#fff")}});
+}
+
+/* ---------- Profile pictures ---------- */
+function shrinkPhoto(file){
+  return new Promise((res,rej)=>{
+    if(!file||!/^image\//.test(file.type))return rej(new Error("type"));
+    const url=URL.createObjectURL(file),img=new Image();
+    img.onload=()=>{
+      const s=Math.min(img.naturalWidth,img.naturalHeight),size=320,c=document.createElement("canvas");
+      c.width=c.height=size;
+      c.getContext("2d").drawImage(img,(img.naturalWidth-s)/2,(img.naturalHeight-s)/2,s,s,0,0,size,size);
+      URL.revokeObjectURL(url);res(c.toDataURL("image/jpeg",.85));
+    };
+    img.onerror=()=>{URL.revokeObjectURL(url);rej(new Error("load"))};
+    img.src=url;
+  });
+}
+function openAvatarSheet(k,after){
+  const sheet=$("#sheet");
+  const draw=()=>{
+    sheet.innerHTML=`<div class="av-sheet-top"><span class="av">${kidAv(k)}</span><h3 id="sheetTitle" style="margin:0">Profile picture</h3></div>
+      <div class="photo-btns">
+        <label class="btn" style="text-align:center;cursor:pointer;flex-direction:row;justify-content:center">Use a photo<input type="file" id="photoIn" accept="image/*" hidden></label>
+        ${k.photo?`<button class="btn ghost" id="rmPhoto">Remove photo</button>`:""}
+      </div>
+      <p class="msg bad" id="photoMsg" style="min-height:1.2em;margin-top:8px"></p>
+      <p class="hint" style="margin:4px 0 0">Or pick a character:</p>
+      <div class="av-grid">${KID_AV.map(a=>`<button data-kav="${a}" aria-pressed="${!k.photo&&k.avatar===a}" aria-label="Character ${a}">${a}</button>`).join("")}</div>
+      <button class="btn ghost" id="avDone" style="width:100%">Done</button>`;
+    $("#photoIn").onchange=async e=>{
+      const f=e.target.files[0];if(!f)return;
+      try{k.photo=await shrinkPhoto(f);save();draw();toast("Photo added")}
+      catch(err){$("#photoMsg").textContent="That file couldn't be used. Try a JPG or PNG photo."}
+    };
+    $("#rmPhoto")&&($("#rmPhoto").onclick=()=>{k.photo="";save();draw()});
+    sheet.querySelectorAll("[data-kav]").forEach(b=>b.onclick=()=>{k.avatar=b.dataset.kav;k.photo="";save();draw()});
+    $("#avDone").onclick=closeSheet;
+  };
+  draw();openSheet(after);
+}
+
+/* ---------- Child profile ---------- */
+const IC={
+  back:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
+  menu:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>',
+  people:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8.5" r="3.5"/><path d="M2.5 20c.9-3.6 3.4-5.3 6.5-5.3s5.6 1.7 6.5 5.3"/><path d="M15.5 8.5l2 2 4-4"/></svg>',
+  heart:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z"/></svg>',
+  save:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 3h12v18l-6-4.2L6 21z"/></svg>',
+  out:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h4a2 2 0 012 2v12a2 2 0 01-2 2h-4M10 16l-4-4 4-4M6 12h10"/></svg>',
+  pic:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 8"/></svg>'
+};
+const topbar=(title,left,right,clean)=>`<div class="topbar${clean?" clean":""}">${left||"<span></span>"}<h1>${title}</h1>${right||"<span></span>"}</div>`;
+const backBtn=`<button class="icon-btn" id="back" aria-label="Back">${IC.back}</button>`;
+function tile(v){
+  if(v.demo)return `<button class="tile" data-play="${v.id}" style="background:linear-gradient(160deg,${v.scene.bg[0]},${v.scene.bg[1]})"><span class="te" aria-hidden="true">${v.scene.emoji}</span><span>${esc(v.title)}</span></button>`;
+  return `<button class="tile" data-play="${v.id}" style="background:${swatch(v)}"><span class="te" aria-hidden="true">▶</span><span>${esc(v.title||"Untitled video")}</span></button>`;
+}
+const grid=vs=>`<div class="grid">${vs.map(tile).join("")}</div>`;
+const ICONS_GRID='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="1.5"/><path d="M9.3 4v16M14.7 4v16M4 9.3h16M4 14.7h16"/></svg>';
+function openCreator(h){pushHistory();profView={kind:"creator",handle:h,ptab:profView.ptab};tab="profile";pauseAll();setNav("profile");renderProfile();$("#profile").scrollTop=0}
+function renderProfile(){
+  const el=$("#profile"),k=curKid(),d=D();
+  if(profView.kind==="creator"){
+    const h=profView.handle,fol=isFollowing(h),c=creator(h),a=avatarFor(h),vs=videosBy(h);
+    el.innerHTML=`<div class="page-inner">${topbar(esc((fol&&c?.name)||"@"+h),backBtn,"",true)}
+      <div class="creator-head"><span class="av" style="background:${a.bg}">${a.e}</span>
+        <p class="handle">@${esc(h)}</p>${fol&&c?.name?`<p class="cname">${esc(c.name)}</p>`:""}
+        <div class="stats"><div><b>${vs.length}</b><small>${vs.length===1?"Video":"Videos"}</small></div></div>
+        ${fol?`<span class="pill">Following</span>`:""}
+        ${fol&&c?.bio?`<p class="bio">${esc(c.bio)}</p>`:fol?"":`<p class="bio">Videos picked for you by this creator.</p>`}</div>
+      <div class="ptabs" style="margin-top:8px"><button aria-selected="true" tabindex="-1" aria-label="Videos">${ICONS_GRID}</button></div>
+      ${vs.length?grid(vs):`<p class="hint" style="text-align:center;margin-top:24px">No videos from this account yet.</p>`}</div>`;
+    $("#back").onclick=goBack;
+    el.querySelectorAll("[data-play]").forEach(b=>b.onclick=()=>playFrom(vs.map(v=>v.id),b.dataset.play,(fol&&c?.name)||"@"+h,true));
+    return;
+  }
+  if(profView.kind==="collection"){
+    const c=d.collections.find(x=>x.id===profView.id);if(!c){profView={kind:"home",ptab:"collections"};return renderProfile()}
+    const vs=c.videoIds.map(id=>myVideos().find(v=>v.id===id)).filter(Boolean);
+    el.innerHTML=`<div class="page-inner">${topbar(`${c.emoji} ${esc(c.name)}`,backBtn,`<button class="icon-btn right" id="colMenu" aria-label="Collection options">${IC.menu}</button>`)}
+      <p class="lede" style="text-align:center">${plural(vs.length,"video")}</p>
+      ${vs.length?grid(vs):`<p class="hint" style="text-align:center">Nothing saved here yet. Tap Save on any video to add it.</p>`}</div>`;
+    $("#back").onclick=goBack;
+    $("#colMenu").onclick=()=>{
+      $("#sheet").innerHTML=`<h3 id="sheetTitle">${esc(c.name)}</h3><div class="menu-list"><button id="rename">Rename collection</button><button id="delCol" class="danger-x">Delete collection</button></div>`;
+      openSheet(null);
+      $("#rename").onclick=async()=>{closeSheet();const n=await ask({title:"Rename collection",ok:"Save",input:c.name});if(n){c.name=n.slice(0,30);save();renderProfile()}};
+      $("#delCol").onclick=async()=>{closeSheet();if(await ask({title:`Delete "${c.name}"?`,body:"The videos stay in your feed.",ok:"Delete",danger:true})){d.collections=d.collections.filter(x=>x.id!==c.id);save();navStack=navStack.filter(s=>!(s.profView.kind==="collection"&&s.profView.id===c.id));goBack()}};
+    };
+    el.querySelectorAll("[data-play]").forEach(b=>b.onclick=()=>playFrom(vs.map(v=>v.id),b.dataset.play,c.name,true));
+    return;
+  }
+  const favs=sortNew(myVideos().filter(v=>d.favorites.includes(v.id)));
+  const fol=myCreators();
+  const pt=profView.ptab;
+  let body="";
+  if(pt==="following"){
+    body=fol.length?`<div class="follow-list">${fol.map(t=>{const n=myVideos().filter(v=>v.handle===t.handle).length;return `<button class="frow" data-creator="${esc(t.handle)}"><span class="av" style="background:${t.color||SWATCHES[hashN(t.handle)%SWATCHES.length]}">${t.avatar||"🎬"}</span><div><b>${esc(t.name||"@"+t.handle)}</b><small>@${esc(t.handle)}</small><small>${plural(n,"video")}</small></div><span class="pill">Following</span></button>`}).join("")}</div>`
+      :`<p class="hint">You're not following any accounts yet. Mom and Dad can add some.</p>`;
+  }else if(pt==="favorites"){
+    body=favs.length?grid(favs):`<p class="hint" style="text-align:center;margin-top:28px">Tap the heart on a video to keep it here.</p>`;
+  }else{
+    body=`<div class="follow-list">${d.collections.map(c=>`<button class="shelf-row" data-col="${c.id}"><span class="em">${c.emoji}</span><span><b>${esc(c.name)}</b><small>${plural(c.videoIds.length,"video")}</small></span></button>`).join("")}</div>
+      <div class="newcol"><input id="profNewCol" placeholder="Name a new collection" maxlength="30" aria-label="New collection name"><button class="btn" id="profNewBtn">Create</button></div>`;
+  }
+  el.innerHTML=`<div class="page-inner">${topbar(esc(k.name||"My profile"),"",`<button class="icon-btn right" id="kidMenu" aria-label="Menu">${IC.menu}</button>`,true)}${document.documentElement.dataset.skin==="holiday"?lightsSVG():""}
+    <div class="me"><button class="av-edit" id="editAv" aria-label="Change profile picture"><span class="av">${kidAv(k)}</span><span class="pen" aria-hidden="true"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></span></button>
+      <p class="uname">@${esc(k.username)}</p>
+      <div class="stats"><button data-ptab="following"><b>${fol.length}</b><small>Following</small></button><button data-ptab="favorites"><b>${favs.length}</b><small>Favorites</small></button><button data-ptab="collections"><b>${d.collections.length}</b><small>Collections</small></button></div>
+      <div class="prof-actions"><button class="btn ghost" id="editPic">Edit picture</button></div></div>
+    <div class="ptabs" role="tablist">${[["following",IC.people,"Following"],["favorites",IC.heart,"Favorites"],["collections",IC.save,"Collections"]].map(([key,ic,l])=>`<button role="tab" aria-selected="${pt===key}" data-ptab="${key}" aria-label="${l}">${ic}</button>`).join("")}</div>
+    ${body}</div>`;
+  $("#kidMenu").onclick=()=>{
+    $("#sheet").innerHTML=`<h3 id="sheetTitle">${esc(k.name||"Menu")}</h3><div class="menu-list"><button id="mTheme"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 100 18c1.4 0 2-1 2-2 0-1.4-1.3-1.8-1.3-3 0-1 .8-1.8 1.8-1.8H17a4 4 0 004-4C21 6.5 17 3 12 3z"/><circle cx="7.5" cy="11" r="1.2" fill="currentColor"/><circle cx="10" cy="7" r="1.2" fill="currentColor"/><circle cx="15" cy="7" r="1.2" fill="currentColor"/></svg> Pick theme</button><button id="mPic">${IC.pic} Change profile picture</button><button id="mOut" class="danger-x">${IC.out} Sign out</button></div>`;
+    openSheet(null);
+    $("#mPic").onclick=()=>{closeSheet();openAvatarSheet(k,renderProfile)};
+    $("#mTheme").onclick=()=>{closeSheet();setTimeout(()=>openThemeSheet(k),0)};
+    $("#mOut").onclick=async()=>{closeSheet();
+      if(previewKid){if(await ask({title:"Sign out?",body:"You're previewing this app. This ends the preview and signs you out of your parent account.",ok:"Sign out"}))signOut();return}
+      if(await ask({title:"Sign out of Remix?",ok:"Sign out"}))signOut()};
+  };
+  $("#editPic").onclick=()=>openAvatarSheet(k,renderProfile);
+  $("#editAv").onclick=()=>openAvatarSheet(k,renderProfile);
+  el.querySelectorAll("[data-ptab]").forEach(b=>b.onclick=()=>{profView.ptab=b.dataset.ptab;renderProfile()});
+  el.querySelectorAll("[data-creator]").forEach(b=>b.onclick=()=>openCreator(b.dataset.creator));
+  el.querySelectorAll("[data-col]").forEach(b=>b.onclick=()=>{pushHistory();profView={kind:"collection",id:b.dataset.col,ptab:"collections"};renderProfile();el.scrollTop=0});
+  el.querySelectorAll("[data-play]").forEach(b=>b.onclick=()=>playFrom(favs.map(v=>v.id),b.dataset.play,"Favorites",true));
+  $("#profNewBtn")&&($("#profNewBtn").onclick=()=>{const n=$("#profNewCol").value.trim();if(!n)return;d.collections.push({id:uid(),name:n,emoji:COL_EMOJI[d.collections.length%COL_EMOJI.length],videoIds:[]});save();renderProfile()});
+}
+
+/* Swipe in from the left edge on a creator or collection page to go back, like the back arrow */
+(function edgeSwipe(){
+  const el=$("#profile");let g=null;
+  const reset=(anim)=>{el.style.transition=anim?"transform .22s ease, box-shadow .22s ease":"none";el.style.transform="";el.style.boxShadow="";if(anim)setTimeout(()=>{el.style.transition=""},240)};
+  el.addEventListener("pointerdown",e=>{
+    if(profView.kind==="home"||e.clientX>32||(e.pointerType==="mouse"&&e.button!==0))return;
+    g={x:e.clientX,y:e.clientY,t:performance.now(),id:e.pointerId,dx:0,lock:false};
+  });
+  el.addEventListener("pointermove",e=>{
+    if(!g||e.pointerId!==g.id)return;
+    const dx=e.clientX-g.x,dy=Math.abs(e.clientY-g.y);
+    if(!g.lock){
+      if(dy>14&&dy>dx){g=null;return}
+      if(dx>10){g.lock=true;try{el.setPointerCapture(e.pointerId)}catch(_){}}else return;
+    }
+    g.dx=Math.max(0,dx);
+    el.style.transition="none";el.style.transform=`translateX(${g.dx}px)`;el.style.boxShadow="-12px 0 24px rgba(0,0,0,.35)";
+  });
+  const end=e=>{
+    if(!g||e.pointerId!==g.id)return;
+    const gg=g;g=null;if(!gg.lock)return;
+    const v=gg.dx/Math.max(1,performance.now()-gg.t);
+    if(gg.dx>el.clientWidth*.33||(gg.dx>50&&v>.45)){
+      el.style.transition="transform .18s ease-out";el.style.transform="translateX(100%)";
+      setTimeout(()=>{reset(false);goBack()},180);
+    }else reset(true);
+  };
+  el.addEventListener("pointerup",end);el.addEventListener("pointercancel",e=>{if(g&&e.pointerId===g.id){g=null;reset(true)}});
+})();
+
+/* ---------- Parent app ---------- */
+function parentHead(title,lede){
+  const a=me();
+  return `${topbar(title,"",`<span class="whoami right" title="Signed in as ${esc(a.name)}"><span class="av">${kidAv(a)}</span></span>`)}${lede?`<p class="lede">${lede}</p>`:""}`;
+}
+// Checkbox list of children with an "All children" box. "All children" also covers children added later.
+function forPicker(id,current,title){
+  const ks=kids(),all=current===ALL||current===undefined;
+  const on=k=>all||(Array.isArray(current)&&current.includes(k.id));
+  return `<div class="forbox" id="${id}">${title?`<span class="fb-title">${title}</span>`:""}
+    <div class="forlist">
+      <label class="all-box"><input type="checkbox" data-all ${all?"checked":""}><span class="av" style="background:var(--surface3)">👨‍👩‍👧‍👦</span>All children</label>
+      ${ks.map(k=>`<label><input type="checkbox" value="${k.id}" ${on(k)?"checked":""}><span class="av">${kidAv(k)}</span>${esc(kidName(k))}</label>`).join("")}</div>
+    <p class="hint" style="margin:0;font-size:.85rem" data-forhint></p></div>`;
+}
+function wireForPicker(id){
+  const box=document.getElementById(id);if(!box)return;
+  const allBox=box.querySelector("[data-all]"),kidBoxes=[...box.querySelectorAll("input[value]")];
+  const hint=box.querySelector("[data-forhint]");
+  const upd=()=>{const r=readFor(id);hint.textContent=r===ALL?"Every child gets this, including children you add later.":r.length?"Only the children checked. Children you add later won't get it.":"Check at least one child."};
+  allBox.addEventListener("change",()=>{kidBoxes.forEach(b=>b.checked=allBox.checked);upd()});
+  kidBoxes.forEach(b=>b.addEventListener("change",()=>{if(!b.checked)allBox.checked=false;upd()}));
+  upd();
+}
+function readFor(id){
+  const box=document.getElementById(id);
+  if(box.querySelector("[data-all]").checked)return ALL;
+  return [...box.querySelectorAll("input[value]")].filter(b=>b.checked).map(b=>b.value);
+}
+function editAudience(item,kind,after){
+  const sheet=$("#sheet");
+  sheet.innerHTML=`<h3 id="sheetTitle">${kind==="creator"?"Who follows "+esc(item.name||"@"+item.handle)+"?":"Who sees this video?"}</h3>
+    ${kind==="video"?`<p class="hint" style="margin:0 0 12px">${esc(item.title||"Untitled video")}</p>`:""}
+    ${forPicker("forEdit",item.for,"")}
+    <p class="msg bad" id="forMsg" style="min-height:1.2em"></p>
+    <div class="row"><button class="btn ghost" id="forNo">Cancel</button><button class="btn" id="forOk">Save</button></div>`;
+  wireForPicker("forEdit");
+  openSheet(null);
+  $("#forNo").onclick=closeSheet;
+  $("#forOk").onclick=()=>{const f=readFor("forEdit");if(f!==ALL&&!f.length){$("#forMsg").textContent="Check at least one child.";return}item.for=f;save();closeSheet();after&&after();toast("Saved")};
+}
+function renderPAdd(){
+  const el=$("#p-add");
+  el.innerHTML=`<div class="page-inner">${parentHead("Add a video","Paste a TikTok link. Only the video plays. No comments, captions or suggested accounts.")}
+    <form class="stack" id="addForm" novalidate>
+      <label>TikTok link<span class="row" style="gap:8px"><input id="fLink" inputmode="url" autocomplete="off" placeholder="https://www.tiktok.com/@creator/video/…" style="flex:1"><button class="btn" type="button" id="pasteBtn" style="flex:none">Paste</button></span></label>
+      <p class="msg" id="linkInfo" style="min-height:1.2em"></p>
+      ${forPicker("addFor",ALL,"Who is this for?")}
+      <label>Title they'll see<input id="fTitle" maxlength="60" placeholder="Golden retriever learns to skateboard"></label>
+      <label>Your note (optional)<input id="fNote" maxlength="90" placeholder="This made me think of you!"></label>
+      <p class="hint" style="margin:0">Your note will be signed "${esc(me().name)}".</p>
+      <p class="msg" id="addMsg"></p>
+      <button class="btn" type="submit">Add video</button>
+    </form>
+    <p class="hint">Links copied from TikTok's share button are short (tiktok.com/t/… or vm.tiktok.com/…). Remix expands them for you. On iPhone and iPad, the Shortcut below expands them for you; otherwise open the link in your browser and copy the full address. The hosted version will expand short links for you.</p>
+    <h3>Add from your phone's share menu</h3>
+    <details class="hint"><summary>iPhone and iPad: set up a Shortcut</summary>
+      <ol style="padding-left:20px;line-height:1.6"><li>Open the Shortcuts app and create a shortcut named "Add to Remix".</li><li>Turn on "Show in Share Sheet" and set it to receive URLs.</li><li>Add an "Expand URL" action on the Shortcut Input. This turns TikTok's short share link into the full video link.</li><li>Add a "URL Encode" action on the expanded URL.</li><li>Add "Open URL" with <code style="word-break:break-all">${esc(location.origin+location.pathname)}?add=</code> followed by the encoded text.</li></ol>
+      Then in TikTok, tap Share, then More, then "Add to Remix". If you're signed in as a parent, this page opens with the link filled in.</details>
+    <details class="hint" style="margin-top:8px"><summary>Android</summary><p>Once the app is hosted and installed to the home screen, Remix can appear directly in Android's share menu.</p></details></div>`;
+  wireForPicker("addFor");
+  const info=()=>{const r=parseLink($("#fLink").value),m=$("#linkInfo");
+    if(!$("#fLink").value.trim()){m.textContent="";return}
+    if(r.id){m.className="msg good";const c=r.handle&&creator(r.handle);m.textContent=r.handle?`Video from @${r.handle}${c?` (trusted for ${forLabel(c).toLowerCase()==="all children"?"all children":forLabel(c)})`:""}`:"Video link recognized"}
+    else if(r.short){m.className="msg bad";m.textContent="Short share link. Use the Remix Shortcut, or open it in your browser and copy the full address."}
+    else{m.className="msg bad";m.textContent="Not a TikTok video link yet."}};
+  $("#fLink").addEventListener("input",info);
+  $("#pasteBtn").onclick=async()=>{try{const t=await navigator.clipboard.readText();$("#fLink").value=t.trim();info();$("#fTitle").focus()}catch(e){const m=$("#linkInfo");m.className="msg bad";m.textContent="Your browser blocked pasting. Long-press the box and choose Paste.";$("#fLink").focus()}};
+  if(incoming){$("#fLink").value=incoming;incoming=null;info();$("#fTitle").focus()}
+  $("#addForm").onsubmit=e=>{
+    e.preventDefault();const msg=$("#addMsg");msg.className="msg bad";
+    const r=parseLink($("#fLink").value),f=readFor("addFor");
+    if(r.short){msg.className="msg";msg.textContent="Looking up that link…";
+      WebApps.client.functions.invoke("resolve-link",{body:{url:$("#fLink").value.trim()}}).then(({data,error})=>{
+        if(error||!data||!data.postId){msg.className="msg bad";msg.textContent="Couldn't open that link. Check it's a public TikTok video.";return}
+        $("#fLink").value=data.url||("https://www.tiktok.com/@"+(data.handle||"_")+"/video/"+data.postId);if(!$("#fTitle").value&&data.title)$("#fTitle").value=data.title.slice(0,60);msg.textContent="";$("#addForm").requestSubmit()});return}
+    if(r.bad){msg.textContent="That doesn't look like a TikTok video link. It should contain /video/ followed by a long number.";return}
+    if(f!==ALL&&!f.length){msg.textContent="Check at least one child.";return}
+    const dup=S.videos.find(v=>v.postId===r.id);
+    if(dup){msg.textContent=`That video is already added (for ${forLabel(dup)}). Change who sees it from the Videos tab.`;return}
+    const v={id:uid(),postId:r.id,handle:r.handle||"",title:$("#fTitle").value.trim(),note:$("#fNote").value.trim(),from:me().name,addedBy:me().id,for:f,addedAt:Date.now()};
+    S.videos.push(v);save();
+    renderPAdd();const m=$("#addMsg");m.className="msg good";m.textContent=`Added for ${forLabel(v).toLowerCase()==="all children"?"all children":forLabel(v)}.`;
+  };
+}
+let libKid="all",libFilter="all";
+function renderPLibrary(){
+  const el=$("#p-library"),ks=kids();
+  if(libKid!=="all"&&!kidById(libKid))libKid="all";
+  const k=libKid==="all"?null:kidById(libKid);
+  let list=sortNew(k?S.videos.filter(v=>visibleTo(v,k.id)):S.videos);
+  const seen=k?KD(k.id).seen:null;
+  const watched=k?list.filter(v=>seen[v.id]):[],fresh=k?list.filter(v=>!seen[v.id]):[];
+  if(k&&libFilter==="new")list=fresh;else if(k&&libFilter==="watched")list=watched;
+  const statusChips=v=>ks.filter(x=>visibleTo(v,x.id)).map(x=>{const w=KD(x.id).seen[v.id];return `<span class="status ${w?"w":"n"}">${esc(kidName(x))}: ${w?"✓ watched":"not yet"}</span>`}).join("");
+  el.innerHTML=`<div class="page-inner">${parentHead("Videos")}
+    <div class="filters" role="group" aria-label="Child">${[["all","Everyone"],...ks.map(x=>[x.id,kidName(x)])].map(([id,l])=>`<button data-lk="${id}" aria-pressed="${libKid===id}">${esc(l)}</button>`).join("")}</div>
+    ${k?`<div class="lib-sum"><div><b>${fresh.length+watched.length}</b><small>Total</small></div><div><b>${fresh.length}</b><small>Unwatched</small></div><div><b>${watched.length}</b><small>Watched</small></div></div>
+      <p><button class="btn sun" id="previewOne">Preview ${esc(possessive(kidName(k)))} app</button></p>
+      <div class="filters" role="group" aria-label="Show">${[["all","All"],["new","Unwatched"],["watched","Watched"]].map(([key,l])=>`<button data-lf="${key}" aria-pressed="${libFilter===key}">${l}</button>`).join("")}</div>`
+      :`<p class="lede">${plural(S.videos.length,"video")} across ${ks.length} ${ks.length===1?"child":"children"}.</p>`}
+    <div class="vlist">${list.map(v=>`<div class="vitem"><span class="sw" style="background:${v.demo?`linear-gradient(160deg,${v.scene.bg[0]},${v.scene.bg[1]})`:swatch(v)}">${v.demo?v.scene.emoji:""}</span><div><b>${esc(v.title||"Untitled video")}</b><small>${v.handle?"@"+esc(v.handle):""}${v.from?(v.handle?" · ":"")+"Added by "+esc(v.from):""}</small><span class="for-line">For: ${esc(forLabel(v))}</span>
+        ${k?`<span class="status ${seen[v.id]?"w":"n"}">${seen[v.id]?"✓ Watched":"Not watched yet"}</span>${KD(k.id).favorites.includes(v.id)?` <span class="status w">♥ favorite</span>`:""}`:`<div class="kidstat">${statusChips(v)}</div>`}</div>
+        <div class="acts"><button class="x" data-for="${v.id}">Who</button><button class="x danger-x" data-del="${v.id}" aria-label="Remove ${esc(v.title||"video")}">Remove</button></div></div>`).join("")||`<p class="hint">${S.videos.length?"Nothing in this list.":"No videos yet. Add one from the Add tab, or turn on sample content in Settings."}</p>`}</div></div>`;
+  el.querySelectorAll("[data-lk]").forEach(b=>b.onclick=()=>{libKid=b.dataset.lk;libFilter="all";renderPLibrary()});
+  el.querySelectorAll("[data-lf]").forEach(b=>b.onclick=()=>{libFilter=b.dataset.lf;renderPLibrary()});
+  $("#previewOne")&&($("#previewOne").onclick=()=>startPreview(k.id));
+  el.querySelectorAll("[data-for]").forEach(b=>b.onclick=()=>editAudience(S.videos.find(x=>x.id===b.dataset.for),"video",renderPLibrary));
+  el.querySelectorAll("[data-del]").forEach(b=>b.onclick=async()=>{
+    const v=S.videos.find(x=>x.id===b.dataset.del);if(!await ask({title:`Remove "${v.title||"this video"}"?`,body:"It will disappear from every child's feed, favorites and collections.",ok:"Remove",danger:true}))return;
+    S.videos=S.videos.filter(x=>x.id!==v.id);purgeVideoIds(new Set([v.id]));save();renderPLibrary()});
+}
+function renderPCreators(){
+  const el=$("#p-creators");
+  el.innerHTML=`<div class="page-inner">${parentHead("Trusted creators","Your kids see these as accounts they follow. Choose which children follow each one.")}
+    <div class="vlist">${S.trusted.map(t=>`<div class="vitem"><span class="av" style="background:${t.color||SWATCHES[hashN(t.handle)%SWATCHES.length]}">${t.avatar||"🎬"}</span><div><b>${esc(t.name||"@"+t.handle)}</b><small>@${esc(t.handle)} · ${plural(S.videos.filter(v=>v.handle===t.handle).length,"video")}${t.demo?" · sample":""}</small><span class="for-line">Followed by: ${esc(forLabel(t))}</span></div>
+      <div class="acts"><button class="x" data-for="${esc(t.handle)}">Who</button>${t.demo?"":`<a class="x" href="https://www.tiktok.com/@${encodeURIComponent(t.handle)}" target="_blank" rel="noopener">Open</a>`}<button class="x danger-x" data-untrust="${esc(t.handle)}" aria-label="Remove ${esc(t.handle)}">Remove</button></div></div>`).join("")||`<p class="hint">No trusted creators yet.</p>`}</div>
+    <h3>Add a trusted creator</h3>
+    <form class="stack" id="trustForm" novalidate>
+      <label>Username or profile link<input id="trustIn" autocomplete="off" autocapitalize="none" placeholder="@creatorname"></label>
+      <label>Name they'll see (optional)<input id="trustName" maxlength="30" placeholder="Paws & Pals"></label>
+      ${forPicker("trustFor",ALL,"Who follows this creator?")}
+      <p class="msg" id="trustMsg"></p><button class="btn" type="submit">Add trusted creator</button></form></div>`;
+  wireForPicker("trustFor");
+  $("#trustForm").onsubmit=e=>{e.preventDefault();const h=cleanHandle($("#trustIn").value),m=$("#trustMsg"),f=readFor("trustFor");
+    if(!h){m.className="msg bad";m.textContent="Enter a username like @creatorname.";return}
+    if(creator(h)){m.className="msg bad";m.textContent="That creator is already trusted. Tap Who to change which children follow them.";return}
+    if(f!==ALL&&!f.length){m.className="msg bad";m.textContent="Check at least one child.";return}
+    S.trusted.push({handle:h,name:$("#trustName").value.trim(),avatar:CREATOR_AV[S.trusted.length%CREATOR_AV.length],color:SWATCHES[hashN(h)%SWATCHES.length],for:f,addedAt:Date.now()});save();renderPCreators();toast("Creator added")};
+  el.querySelectorAll("[data-for]").forEach(b=>b.onclick=()=>editAudience(creator(b.dataset.for),"creator",renderPCreators));
+  el.querySelectorAll("[data-untrust]").forEach(b=>b.onclick=async()=>{if(!await ask({title:`Remove @${b.dataset.untrust}?`,body:"Their videos stay in Picks for you but leave everyone's Following list.",ok:"Remove",danger:true}))return;S.trusted=S.trusted.filter(t=>t.handle!==b.dataset.untrust);save();renderPCreators()});
+}
+function childSheet(k){
+  const isNew=!k,sheet=$("#sheet");
+  const tmp=k||{avatar:KID_AV[(kids().length*3)%KID_AV.length],photo:""};
+  sheet.innerHTML=`<h3 id="sheetTitle">${isNew?"Add a child":"Edit "+esc(kidName(k))}</h3>
+    <form class="stack" id="kidSheetForm" novalidate>
+      <div style="display:flex;align-items:center;gap:14px"><span class="av" style="width:56px;height:56px;font-size:1.8rem;background:var(--accent)">${kidAv(tmp)}</span>${isNew?`<p class="hint" style="margin:0">They can pick a picture or photo from their profile.</p>`:`<button type="button" class="btn ghost" id="kidPic">Change picture</button>`}</div>
+      <label>Name<input id="ksName" maxlength="24" value="${esc(k?.name||"")}" placeholder="First name or nickname"></label>
+      <label>Username<input id="ksUser" value="${esc(k?.username||"")}" autocapitalize="none" spellcheck="false" placeholder="3 to 20 letters or numbers"></label>
+      <label>${isNew?"Password":"New password"}<input id="ksPass" type="password" placeholder="${isNew?"At least 4 characters":"Leave blank to keep the current one"}"></label>
+      ${isNew?`<p class="hint" style="margin:0">They'll automatically get every video and creator shared with all children.</p>`:""}
+      <p class="msg bad" id="ksMsg" style="min-height:1.2em"></p>
+      <div class="row"><button type="button" class="btn ghost" id="ksCancel">Cancel</button><button class="btn" type="submit">${isNew?"Add child":"Save"}</button></div>
+      ${isNew?"":`<button type="button" class="btn danger" id="ksRemove">Remove ${esc(kidName(k))}</button>`}
+    </form>`;
+  openSheet(null);
+  $("#ksCancel").onclick=closeSheet;
+  $("#kidPic")&&($("#kidPic").onclick=()=>{closeSheet();openAvatarSheet(k,()=>{renderPKids();})});
+  $("#kidSheetForm").onsubmit=e=>{e.preventDefault();
+    const name=$("#ksName").value.trim(),u=$("#ksUser").value.trim().toLowerCase(),pw=$("#ksPass").value,m=$("#ksMsg");
+    if(!name){m.textContent="Enter a name.";return}
+    if(!/^[a-z0-9._-]{3,20}$/.test(u)){m.textContent="Usernames use 3 to 20 letters or numbers.";return}
+    if(S.accounts.some(a=>a!==k&&a.username.toLowerCase()===u)){m.textContent="That username is taken.";return}
+    if((isNew||pw)&&pw.length<6){m.textContent="Use at least 6 characters for the password.";return}
+    if(isNew){const nk={id:"kid"+uid(),role:"child",name,username:u,password:pw,avatar:tmp.avatar,photo:""};S.accounts.push(nk);KD(nk.id)}
+    else{k.name=name;k.username=u;if(pw)k.password=pw}
+    save();closeSheet();renderPKids();toast(isNew?`${name} added`:"Saved");
+  };
+  $("#ksRemove")&&($("#ksRemove").onclick=async()=>{
+    closeSheet();
+    if(!await ask({title:`Remove ${kidName(k)}?`,body:"Their sign-in, favorites, collections and watch history will be deleted. Videos stay for the other children.",ok:"Remove",danger:true}))return;
+    S.accounts.splice(S.accounts.indexOf(k),1);delete S.kidData[k.id];
+    [...S.videos,...S.trusted].forEach(it=>{if(Array.isArray(it.for))it.for=it.for.filter(id=>id!==k.id)});
+    save();renderPKids();toast("Removed");
+  });
+}
+function renderPKids(){
+  const el=$("#p-kids"),ks=kids();
+  el.innerHTML=`<div class="page-inner">${parentHead("Family")}
+    <div class="vlist">${ks.map(k=>{const n=S.videos.filter(v=>visibleTo(v,k.id)).length,un=S.videos.filter(v=>visibleTo(v,k.id)&&!KD(k.id).seen[v.id]).length;return `<div class="kidrow"><span class="av">${kidAv(k)}</span><div><b>${esc(kidName(k))}</b><small>@${esc(k.username)}</small><small>${plural(n,"video")} · ${un} unwatched</small></div><button class="mini" data-prev="${k.id}">Preview</button><button class="mini" data-edit="${k.id}">Edit</button></div>`}).join("")||`<p class="hint">No children yet.</p>`}</div>
+    <p style="margin-top:18px"><button class="btn" id="addKid" style="width:100%">Add a child</button></p>
+    <p class="hint">New children automatically get every video and creator shared with all children.</p>
+    <h3 style="margin-top:22px">Sharing</h3>
+    <p class="hint" style="margin-top:0">Lets a child send videos to brothers and sisters with sharing on, and to kids in families you've connected. Videos only, no messages.</p>
+    <div class="rx-card">${ks.map(k=>`<div class="rx-row"><span class="av">${kidAv(k)}</span><span class="nm"><b>${esc(kidName(k))}</b><small>${k.allowSharing?"Can send and get videos":"Sharing is off"}</small></span><input type="checkbox" class="rx-tog" data-share="${k.id}" ${k.allowSharing?"checked":""} aria-label="Allow sharing for ${esc(kidName(k))}"></div>`).join("")}</div>
+    ${familySection()}</div>`;
+  wireFamily(el,renderPKids);
+  el.querySelectorAll("[data-share]").forEach(t=>t.onchange=()=>{const k=kidById(t.dataset.share);k.allowSharing=t.checked;save();toast(t.checked?`${kidName(k)} can send videos now`:`Sharing is off for ${kidName(k)}`);renderPKids()});
+  el.querySelectorAll("[data-prev]").forEach(b=>b.onclick=()=>startPreview(b.dataset.prev));
+  el.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>childSheet(kidById(b.dataset.edit)));
+  $("#addKid").onclick=()=>childSheet(null);
+}
+function renderPSettings(){
+  if(adminFam&&isAdminAcct()){renderAdminFamily();return}
+  const el=$("#p-settings"),a=me();
+  el.innerHTML=`<div class="page-inner">${parentHead("Me")}
+    <div class="me" style="padding-bottom:6px"><span class="av" style="background:var(--surface2)">${kidAv(a)}</span><p class="uname">${esc(a.name)}</p><p class="rname">Parent · @${esc(a.username)}</p></div>
+    ${adminSection()}
+    ${window.WEBAPPS_SUITE?`<h3>Name, picture and password</h3><p class="hint" style="margin-top:0">They're shared by every app on Web Apps, so you change them in one place.</p><p><button class="btn ghost" id="rxHub" style="width:100%">Open your Web Apps account</button></p>`:`<h3>Your password</h3>
+    <form class="stack" id="myLogin" novalidate>
+      <input id="mCur" type="password" autocomplete="current-password" placeholder="Current password" aria-label="Current password"><input id="mPass" type="password" autocomplete="new-password" placeholder="New password" aria-label="New password">
+      <p class="msg" id="mMsg"></p><button class="btn ghost" type="submit">Change password</button></form>`}
+    <h3 class="live-hide">Sample content</h3>
+    <div class="sample-box live-hide"><p class="hint">${hasSamples()?"Sample accounts and videos are showing. Remove them before adding real videos, or keep them to explore.":"Fill the app with pretend accounts and videos to see how it looks. No real TikTok videos are used."}</p>
+      ${hasSamples()?`<button class="btn danger" id="clearSamples">Remove sample content</button>`:`<button class="btn" id="loadSamples">Show sample content</button>`}</div>
+    <h3>Account</h3>
+    <div class="menu-list"><button id="signOut">${IC.out} Sign out</button><button id="reset" class="danger-x">Reset everything</button></div></div>`;
+  el.querySelectorAll("[data-afam]").forEach(b=>b.onclick=()=>{adminFam=b.dataset.afam;renderAdminFamily();scrollTo(0,0)});
+  $("#rxHub")?.addEventListener("click",()=>{try{parent.SUITE.close("#account")}catch(e){}});
+  if($("#myLogin"))$("#myLogin").onsubmit=e=>{e.preventDefault();const pw=$("#mPass").value,m=$("#mMsg");
+    if(pw.length<6){m.className="msg bad";m.textContent="Use at least 6 characters.";return}
+    WebApps.changePassword($("#mCur").value,pw).then(()=>{$("#mPass").value="";$("#mCur").value="";m.className="msg good";m.textContent="Password changed for every app."}).catch(x=>{m.className="msg bad";m.textContent=x.message})};
+  $("#loadSamples")?.addEventListener("click",()=>{loadSamples();renderPSettings();toast("Sample content added")});
+  $("#clearSamples")?.addEventListener("click",()=>{clearSamples();renderPSettings();toast("Sample content removed")});
+  $("#signOut").onclick=async()=>{if(await ask({title:"Sign out of Remix?",ok:"Sign out"}))signOut()};
+  $("#reset").onclick=async()=>{if(await ask({title:"Reset everything?",body:"This clears all videos, accounts, favorites, collections and passwords, then signs you out.",ok:"Reset",danger:true})){S=blank();loadSamples();seedFamilies();save();previewKid=null;boot()}};
+}
+function startPreview(kidId){if(!kidById(kidId))return;previewKid=kidId;boot()}
+
+/* ---------- Start ---------- */
+
+/* ===================== live: load from and save to the database ===================== */
+const RXL={
+  gate:null, snap:null, busy:null, timer:null, isAppAdmin:false,
+  sb:()=>WebApps.client.schema("remix"),
+  msg(m){const k=(String(m).match(/rx:\w+/)||[])[0];return ({"rx:bad_code":"No family has that code.","rx:own_code":"That's your own family's code.","rx:cant_send_to":"You can't send to them right now.",
+    "rx:sharing_off":"Sharing is turned off for you.","rx:parents_only":"Only a parent can do that.","rx:not_found":"That video isn't available.","rx:family_name":"Enter your family name.",
+    "rx:already_in_family":"You're already in a family.","rx:not_member":"Join Remix first."})[k]||m},
+  async q(p){const {data,error}=await p;if(error)throw new Error(RXL.msg(error.message));return data},
+  rpc(n,a){return RXL.q(RXL.sb().rpc(n,a))},
+  async fn(body){const {data,error}=await WebApps.client.functions.invoke("remix-family",{body});
+    if(error){let m=error.message;try{const j=await error.context.json();if(j&&j.error)m=j.error}catch(e){}throw new Error(m)}
+    if(data&&data.error)throw new Error(data.error);return data},
+  empty(){return {families:[],fam:{},links:[],shares:[],session:null,sessionFam:null,videos:[],trusted:[],accounts:[],kidData:{}}},
+  async load(){
+    const [fams,profs,states,kids,links,shares]=await Promise.all(["families","profiles","family_state","kid_state","family_links","shares"].map(t=>RXL.q(RXL.sb().from(t).select("*"))));
+    const ids=[...new Set(profs.map(p=>p.id).concat(shares.flatMap(s=>[s.from_child,s.to_child])))];
+    const accts=ids.length?await RXL.q(WebApps.client.from("accounts").select("id,username,display_name,avatar").in("id",ids)):[];
+    const A=Object.fromEntries(accts.map(a=>[a.id,a]));
+    const n=RXL.empty();
+    n.families=fams.map(f=>({id:f.id,name:f.name,code:f.invite_code,approve:!!f.require_share_approval}));
+    const ensure=fid=>{if(!n.fam[fid]){if(!n.families.some(f=>f.id===fid))n.families.push({id:fid,name:"Another",code:"",approve:false});
+      const st=states.find(s=>s.family_id===fid);n.fam[fid]={videos:(st&&st.data&&st.data.videos)||[],trusted:(st&&st.data&&st.data.trusted)||[],kidData:{},accounts:[]}}return n.fam[fid]};
+    fams.forEach(f=>ensure(f.id));
+    const meAdmin=!!(WebApps.me.is_admin||RXL.isAppAdmin);
+    profs.forEach(p=>{const a=A[p.id]||{};ensure(p.family_id).accounts.push({id:p.id,role:p.role,name:a.display_name||"Someone",username:a.username||"",
+      avatar:p.avatar||"🙂",photo:a.avatar||"",theme:p.theme||"default",allowSharing:!!p.allow_sharing,admin:p.id===WebApps.me.id&&meAdmin})});
+    kids.forEach(k=>{const p=profs.find(x=>x.id===k.child_id);if(p)ensure(p.family_id).kidData[k.child_id]=Object.assign({favorites:[],collections:[],seen:{}},k.data||{})});
+    n.links=links.map(l=>({from:l.from_family,to:l.to_family,status:l.status}));
+    n.shares=shares.map(s=>({id:s.id,videoKey:s.video_key,video:s.video,fromId:s.from_child,fromName:(A[s.from_child]||{}).display_name||"Someone",fromFam:s.from_family,
+      toId:s.to_child,toName:(A[s.to_child]||{}).display_name||"Someone",toFam:s.to_family,status:s.status,at:Date.parse(s.created_at),reaction:s.reaction,
+      seenAt:s.seen_at?Date.parse(s.seen_at):null,deliveredId:s.delivered_id}));
+    S=n;const mine=profs.find(p=>p.id===WebApps.me.id);
+    if(mine){S.session=mine.id;bindFam(mine.family_id)}
+    RXL.snap=RXL.snapshot();
+  },
+  snapshot(){const fam={};
+    for(const [fid,F] of Object.entries(S.fam))fam[fid]={lib:JSON.stringify({v:F.videos,t:F.trusted}),kid:Object.fromEntries(Object.entries(F.kidData).map(([k,v])=>[k,JSON.stringify(v)])),
+      acc:Object.fromEntries(F.accounts.map(a=>[a.id,{name:a.name,photo:a.photo||"",avatar:a.avatar,theme:a.theme,allowSharing:!!a.allowSharing,role:a.role}]))};
+    return {fam,families:S.families.map(f=>({id:f.id,approve:f.approve})),links:JSON.parse(JSON.stringify(S.links)),
+      shares:Object.fromEntries(S.shares.map(s=>[s.id,{status:s.status,reaction:s.reaction||null,seen:!!s.seenAt}]))}},
+  async start(){
+    await WebApps.ready;
+    try{
+      if(!WebApps.me){RXL.gate="signin";S=RXL.empty()}
+      else{const app=(await WebApps.apps()).find(a=>a.slug==="remix");RXL.isAppAdmin=!!(app&&app.status==="active"&&app.role==="admin");
+        if(!app||app.status!=="active"){RXL.gate=app&&app.status==="pending"?"pending":"join";S=RXL.empty()}
+        else{await RXL.load();RXL.gate=S.session?null:"setup"}}
+    }catch(e){RXL.gate="error";RXL.err=e.message;S=RXL.empty()}
+    boot();
+  },
+  persistSoon(){clearTimeout(RXL.timer);RXL.timer=setTimeout(()=>RXL.persist(),400)},
+  async persist(){
+    if(RXL.busy){RXL.persistSoon();return}
+    if(!S.session||!RXL.snap)return;
+    RXL.busy=true;let reload=false;const old=RXL.snap,meA=me(),isP=meA&&meA.role==="parent",admin=!!(meA&&meA.admin);
+    try{
+      for(const [fid,F] of Object.entries(S.fam)){
+        const o=old.fam[fid];if(!o)continue;
+        const mineFam=fid===S.sessionFam;if(!mineFam&&!admin)continue;
+        if((isP||admin)&&JSON.stringify({v:F.videos,t:F.trusted})!==o.lib)
+          await RXL.q(RXL.sb().from("family_state").update({data:{videos:F.videos,trusted:F.trusted},updated_at:new Date().toISOString()}).eq("family_id",fid));
+        for(const a of F.accounts){
+          const p=o.acc[a.id];
+          if(!p){if(a.role==="child"&&(mineFam?isP:admin)){await RXL.fn({action:"create_child",display_name:a.name,username:a.username,password:a.password,family_id:fid});reload=true}continue}
+          if(a.avatar!==p.avatar||a.theme!==p.theme)await RXL.q(RXL.sb().from("profiles").update({avatar:a.avatar,theme:a.theme}).eq("id",a.id));
+          if(!!a.allowSharing!==p.allowSharing)await RXL.q(RXL.sb().from("profiles").update({allow_sharing:!!a.allowSharing}).eq("id",a.id));
+          if(a.name!==p.name){if(a.id===meA.id)await WebApps.updateProfile({display_name:a.name});else await RXL.fn({action:"rename",user_id:a.id,display_name:a.name})}
+          if((a.photo||"")!==p.photo){if(a.id===meA.id)await WebApps.updateProfile({avatar:a.photo||null});else await RXL.fn({action:"set_photo",user_id:a.id,photo:a.photo||null})}
+          if(a.password&&a.id!==meA.id){await RXL.fn({action:"set_password",user_id:a.id,password:a.password});delete a.password}
+        }
+        for(const id of Object.keys(o.acc))if(!F.accounts.some(a=>a.id===id)){await RXL.fn({action:"remove",user_id:id});reload=true}
+        for(const [kid,d] of Object.entries(F.kidData)){
+          if(!o.acc[kid])continue;                 /* a new kid: their record is made with their account */
+          if(JSON.stringify(d)===o.kid[kid])continue;
+          if(kid===meA.id||(mineFam&&isP))await RXL.q(RXL.sb().from("kid_state").upsert({child_id:kid,data:d,updated_at:new Date().toISOString()}));
+        }
+      }
+      for(const f of old.families){
+        const now=S.families.find(x=>x.id===f.id);
+        if(!now){if(admin){await RXL.q(RXL.sb().from("families").delete().eq("id",f.id));reload=true}continue}
+        if(now.approve!==f.approve&&(f.id===S.sessionFam?isP:admin))await RXL.q(RXL.sb().from("families").update({require_share_approval:!!now.approve}).eq("id",f.id));
+      }
+      const mine=S.sessionFam,key=l=>l.from+">"+l.to;
+      for(const l of old.links){const n=S.links.find(x=>key(x)===key(l));
+        if(!n){if(l.status==="pending"&&l.to===mine)await RXL.rpc("respond_link",{p_family:l.from,p_accept:false});else if(l.status==="active")await RXL.rpc("disconnect_family",{p_family:l.from===mine?l.to:l.from});reload=true}
+        else if(l.status==="pending"&&n.status==="active"&&l.to===mine){await RXL.rpc("respond_link",{p_family:l.from,p_accept:true});reload=true}}
+      for(const s of S.shares){const o=old.shares[s.id];
+        if(!o){const r=await RXL.rpc("send_video",{p_video:s.video,p_to:s.toId});reload=true;continue}
+        if(o.status==="waiting"&&s.status!=="waiting"){await RXL.rpc("decide_share",{p_share:s.id,p_approve:s.status==="delivered"});reload=true}
+        if((s.reaction||null)!==o.reaction)await RXL.rpc("react_share",{p_share:s.id,p_emoji:s.reaction||""});
+        if(s.seenAt&&!o.seen)await RXL.rpc("mark_seen",{p_share:s.id});
+      }
+      RXL.snap=RXL.snapshot();
+    }catch(e){toast(RXL.msg(e.message));reload=true}
+    RXL.busy=false;
+    if(reload)await RXL.reload();
+  },
+  async reload(){try{await RXL.load()}catch(e){toast(RXL.msg(e.message))}renderNav();try{go(tab)}catch(e){boot()}},
+  async connect(code){try{const st=await RXL.rpc("connect_family",{p_code:code});toast(st==="active"?"Connected":"Request sent. Their parent needs to accept.");await RXL.reload()}catch(e){return e.message}},
+  async removeVideoEverywhere(key){await RXL.rpc("admin_remove_video",{p_key:key});toast("Video removed from Remix");await RXL.reload()},
+};
+
+/* the sign-in screen is the way in: Web Apps sign-in, joining, and setting up a family */
+function renderLogin(msg){
+  const el=$("#login"),g=RXL.gate||"signin";
+  const logo=`<div class="tree rxlogo" aria-hidden="true"><svg viewBox="0 0 100 100"><rect width="100" height="100" rx="24" fill="#0B0B12"/><path d="M21 21 L60 41 L21 61 Z" fill="#FF3D7F" opacity=".85"/><path d="M31 30 L70 50 L31 70 Z" fill="#FFD60A" opacity=".8"/><path d="M41 39 L80 59 L41 79 Z" fill="#00D4FF" opacity=".8"/></svg></div>`;
+  const body={
+    signin:`<p class="lede">Sign in with your Web Apps account.</p>
+      <form class="stack" id="rxIn" novalidate><input id="rxU" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Username" aria-label="Username">
+      <input id="rxP" type="password" autocomplete="current-password" placeholder="Password" aria-label="Password"><p class="msg bad" id="rxMsg">${esc(msg||"")}</p><button class="btn" type="submit">Sign in</button></form>
+      <p class="hint">No account yet? <a href="../" style="color:var(--accent)">Create one on Web Apps</a>, then ask to join Remix.</p>`,
+    join:`<p class="lede">Remix is by request. An admin approves each family.</p><p><button class="btn" id="rxJoin" style="width:100%">Request to join Remix</button></p><p class="msg" id="rxMsg"></p><p><button class="btn ghost" id="rxOut" style="width:100%">Sign out</button></p>`,
+    pending:`<p class="lede">Your request to join Remix is waiting for an admin to approve it.</p><p><button class="btn ghost" id="rxCheck" style="width:100%">Check again</button></p><p><button class="btn ghost" id="rxOut" style="width:100%">Sign out</button></p>`,
+    setup:`<p class="lede">Welcome, ${esc(WebApps.me&&WebApps.me.display_name||"")}! Set up your family to get started.</p>
+      <form class="stack" id="rxSetup" novalidate><input id="rxFam" maxlength="40" placeholder="Your family's last name" aria-label="Family name"><p class="msg bad" id="rxMsg"></p>
+      <button class="btn" type="submit">Create family</button></form><p class="hint">You'll be the family's parent. Add your kids from the Family tab, and other parents from Me.</p>
+      <p><button class="btn ghost" id="rxOut" style="width:100%">Sign out</button></p>`,
+    error:`<p class="lede">Couldn't load Remix.</p><p class="msg bad">${esc(RXL.err||"")}</p><p><button class="btn" id="rxCheck" style="width:100%">Try again</button></p>`
+  }[g];
+  el.innerHTML=`<div class="login">${logo}<h1>Remix</h1>${body}</div>`;
+  $("#rxIn")?.addEventListener("submit",async e=>{e.preventDefault();const m=$("#rxMsg");m.textContent="";
+    try{await WebApps.signIn($("#rxU").value,$("#rxP").value);await RXL.start()}catch(x){m.textContent=x.message}});
+  $("#rxJoin")?.addEventListener("click",async()=>{try{await WebApps.join("remix");await RXL.start()}catch(x){$("#rxMsg").textContent=x.message}});
+  $("#rxCheck")?.addEventListener("click",()=>RXL.start());
+  $("#rxOut")?.addEventListener("click",async()=>{await WebApps.signOut();RXL.start()});
+  $("#rxSetup")?.addEventListener("submit",async e=>{e.preventDefault();const m=$("#rxMsg");
+    try{await RXL.rpc("create_family",{p_name:$("#rxFam").value});await RXL.start()}catch(x){m.textContent=RXL.msg(x.message)}});
+}
+
+window.__rx={RXL,get S(){return S},get tab(){return tab},me,kids,myFam,myVideos,shareTargets,curKid};
+RXL.start();
+})();
+</script>
+</body>
+</html>
