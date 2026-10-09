@@ -153,6 +153,13 @@ main{flex:1;min-height:0;position:relative}
 @media (min-width:600px){.grid{margin:0;border-radius:6px;overflow:hidden}}
 .tile{aspect-ratio:3/4;border:0;padding:6px;text-align:left;display:flex;flex-direction:column;justify-content:flex-end;color:#fff;font-weight:600;font-size:.72rem;line-height:1.25;position:relative;overflow:hidden;border-radius:0}
 .tile .te{position:absolute;top:28%;left:0;right:0;text-align:center;font-size:2.2rem}
+.tile::after{content:"";position:absolute;left:0;right:0;bottom:0;height:55%;background:linear-gradient(transparent,rgba(0,0,0,.6));z-index:1;pointer-events:none}
+.tile>span:not(.te){position:relative;z-index:2;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+.tile img.tt~.te{display:none}
+.av,.ix-th,.vitem .sw{position:relative;overflow:hidden}
+img.tt{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}
+.vitem .sw img.tt~.play{position:relative;z-index:1;text-shadow:0 1px 3px rgba(0,0,0,.7)}
+.ix-th img.tt~*{display:none}
 .tile span{position:relative;text-shadow:0 1px 3px rgba(0,0,0,.6);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .tile::after{content:"";position:absolute;inset:50% 0 0;background:linear-gradient(transparent,rgba(0,0,0,.45))}
 .tile span{z-index:1}
@@ -262,6 +269,10 @@ nav button.create[aria-current="page"] .plus{background:var(--accent)}
 .pick .ck{margin-left:auto;width:24px;height:24px;border-radius:50%;border:2px solid var(--surface3);display:grid;place-items:center;color:var(--accent-ink);font-size:.8rem;font-weight:900}
 .pick[aria-checked="true"] .ck{background:var(--accent);border-color:var(--accent)}
 .newcol{display:flex;gap:8px;margin-top:14px}
+.col-row{display:flex;align-items:center;border-bottom:1px solid var(--line)}.col-row .shelf-row{border-bottom:0;flex:1;min-width:0}
+.col-edit{flex:none;width:44px;height:44px;border-radius:50%;border:0;background:var(--surface2);color:var(--ink);display:grid;place-items:center;font-size:1.25rem;font-weight:800}
+.col-acts{display:flex;gap:8px;justify-content:center;margin:2px 0 14px}.col-acts .btn{min-height:38px;padding:8px 18px;font-size:.9rem}.col-acts .danger-x{color:var(--heart)}
+html[data-skin="pirate"] .col-row{border-bottom:1px dashed rgba(90,58,26,.4)}
 .newcol input{flex:1}
 .av-sheet-top{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:16px}
 .av-sheet-top .av{width:80px;height:80px;font-size:2.4rem;background:var(--accent)}
@@ -693,7 +704,32 @@ function parseLink(raw){
 }
 function cleanHandle(s){const m=String(s||"").trim().match(/(?:tiktok\.com\/)?@?([\w.]{2,24})\/?$/i);return m?m[1].toLowerCase():null}
 const creator=h=>S.trusted.find(t=>t.handle===h);
-function avatarFor(h){const c=creator(h);return c?{e:c.avatar||"🎬",bg:c.color||SWATCHES[hashN(h)%SWATCHES.length]}:{e:"👤",bg:"#5D7466"}}
+function avatarFor(h){const c=creator(h);return c?{e:c.avatar||"🎬",bg:c.color||SWATCHES[hashN(h)%SWATCHES.length]}:{e:esc(String(h||"?").replace(/[^a-z0-9]/gi,"").charAt(0).toUpperCase()||"?"),bg:SWATCHES[hashN(h)%SWATCHES.length]}}
+/* TikTok pictures: video thumbnails and creators' profile photos.
+   Remix asks its tiktok-meta function (TikTok's picture links expire), keeps answers for most of a day,
+   and drops them into any element marked data-tt="<video id>" or data-ttav="<handle>" data-ttsrc="<video id>". */
+const TTM={K:"rx-ttmeta",m:{},q:new Set(),bad:new Set(),timer:null,busy:false,
+  load(){try{this.m=JSON.parse(localStorage.getItem(this.K)||"{}")||{}}catch(e){this.m={}}const now=Date.now();
+    for(const k in this.m){const x=this.m[k];if(!x||now-x.at>(x.miss?3:20)*3600e3)delete this.m[k]}},
+  store(){try{localStorage.setItem(this.K,JSON.stringify(this.m))}catch(e){}},
+  av(h){h=String(h||"").toLowerCase();for(const k in this.m){const x=this.m[k];if(x.h===h&&x.a)return x.a}return ""},
+  name(h){h=String(h||"").toLowerCase();for(const k in this.m){const x=this.m[k];if(x.h===h&&x.n)return x.n}return ""},
+  want(id){if(!window.REMIX_LIVE||!/^\d{15,22}$/.test(String(id||""))||this.m[id])return;this.q.add(String(id));clearTimeout(this.timer);this.timer=setTimeout(()=>this.flush(),80)},
+  async flush(){if(this.busy)return;const ids=[...this.q].slice(0,40);ids.forEach(i=>this.q.delete(i));if(!ids.length)return;this.busy=true;
+    try{const {data,error}=await WebApps.client.functions.invoke("tiktok-meta",{body:{ids}});
+      if(!error){const it=(data&&data.items)||{},at=Date.now();
+        ids.forEach(id=>{const x=it[id];this.m[id]=x&&(x.thumb||x.avatar)?{t:x.thumb||"",a:x.avatar||"",n:x.nickname||"",h:x.handle||"",at}:{at,miss:1}});this.store();this.paint()}}catch(e){}
+    this.busy=false;if(this.q.size)this.flush()},
+  img(el,src){if(!src||el.querySelector(":scope>img.tt"))return;const i=new Image();i.className="tt";i.alt="";i.decoding="async";i.loading="lazy";
+    i.onerror=()=>{i.remove();if(this.bad.has(src))return;this.bad.add(src);for(const k in this.m)if(this.m[k].t===src||this.m[k].a===src)delete this.m[k];this.store()};i.src=src;el.prepend(i)},
+  paint(root=document){
+    root.querySelectorAll("[data-tt]").forEach(el=>{const x=this.m[el.dataset.tt];if(x)this.img(el,x.t);else this.want(el.dataset.tt)});
+    root.querySelectorAll("[data-ttav]").forEach(el=>{const a=this.av(el.dataset.ttav);if(a)this.img(el,a);else if(el.dataset.ttsrc)this.want(el.dataset.ttsrc)});
+    root.querySelectorAll("[data-ttname]").forEach(el=>{if(!el.textContent){const n=this.name(el.dataset.ttname);if(n){el.textContent=n;el.hidden=false}}})}
+};
+TTM.load();
+new MutationObserver(()=>{clearTimeout(TTM.pt);TTM.pt=setTimeout(()=>TTM.paint(),40)}).observe(document.documentElement,{childList:true,subtree:true});
+const ttSrcFor=h=>(S.videos.find(v=>v.handle===h&&v.postId)||{}).postId||"";
 const sortNew=a=>a.slice().sort((x,y)=>y.addedAt-x.addedAt);
 
 let incoming=null;
@@ -1092,7 +1128,7 @@ const unreadFrom=(k,p)=>S.shares.filter(s=>s.toId===k.id&&s.status==="delivered"
 function stamp(t){const d=new Date(t),today=new Date(),y=new Date(Date.now()-864e5);
   const day=d.toDateString()===today.toDateString()?"Today":d.toDateString()===y.toDateString()?"Yesterday":d.toLocaleDateString(undefined,{month:"short",day:"numeric"});
   return day+" · "+d.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"})}
-function vThumb(v,w){return `<span class="ix-th" style="width:${w}px;background:${v.demo?`linear-gradient(160deg,${v.scene.bg[0]},${v.scene.bg[1]})`:"var(--surface2)"}">${v.demo?v.scene.emoji:"🎬"}</span>`}
+function vThumb(v,w){return `<span class="ix-th"${!v.demo&&v.postId?` data-tt="${esc(v.postId)}"`:""} style="width:${w}px;background:${v.demo?`linear-gradient(160deg,${v.scene.bg[0]},${v.scene.bg[1]})`:"var(--surface2)"}">${v.demo?v.scene.emoji:"🎬"}</span>`}
 function playableId(s,k){
   if(s.toId===k.id){if(s.deliveredId&&S.videos.some(v=>v.id===s.deliveredId))return s.deliveredId;
     const v=S.videos.find(v=>v.sentBy===s.fromName&&(v.postId||v.title)===s.videoKey&&visibleTo(v,k.id));return v?.id}
@@ -1301,7 +1337,7 @@ function renderFeed(startId){
           ${v.note?`<span class="note">${v.from?`<b>${esc(v.from)}</b>`:""}${esc(v.note)}</span>`:""}
         </div>
         <div class="rail">
-          ${v.handle?`<button class="creator-btn who" data-creator="${esc(v.handle)}" aria-label="${esc((fol&&c?.name)||"@"+v.handle)}"><span class="av" style="background:${a.bg}">${a.e}</span>${fol?`<span class="badge" aria-hidden="true">✓</span>`:""}</button>`:""}
+          ${v.handle?`<button class="creator-btn who" data-creator="${esc(v.handle)}" aria-label="${esc((fol&&c?.name)||"@"+v.handle)}"><span class="av" data-ttav="${esc(v.handle)}" data-ttsrc="${esc(v.postId||"")}" style="background:${a.bg}">${a.e}</span>${fol?`<span class="badge" aria-hidden="true">✓</span>`:""}</button>`:""}
           <button class="fav" aria-pressed="${fav}" aria-label="Favorite"><span class="ico"><svg width="34" height="34" viewBox="0 0 24 24" fill="${fav?"#FF4F6E":"#fff"}" stroke="${fav?"#FF4F6E":"#fff"}" stroke-width="1"><path d="M12 20.5s-8-4.9-8-11a4.5 4.5 0 018-2.9 4.5 4.5 0 018 2.9c0 6.1-8 11-8 11z"/></svg></span>Favorite</button>
           <button class="keep" aria-pressed="${kept}" aria-label="Save to a collection"><span class="ico"><svg width="30" height="30" viewBox="0 0 24 24" fill="${kept?"#FFC93C":"#fff"}" stroke="${kept?"#FFC93C":"#fff"}" stroke-width="1" stroke-linejoin="round"><path d="M6 3h12v18l-6-4.2L6 21z"/></svg></span>Save</button>
           ${curKid()&&!previewKid?`<button class="sendb" aria-label="Send to someone"><span class="ico"><svg width="30" height="30" viewBox="0 0 24 24"><path d="M3.4 11.2L20 4l-7.2 16.6-2.3-6.9z"/></svg></span>Send</button>`:""}
@@ -1331,12 +1367,16 @@ function fakeStage(v){
   const orbs=[0,1,2,3].map(k=>{const sz=60+((n>>k*3)&7)*22;return `<i class="orb" style="width:${sz}px;height:${sz}px;left:${(n>>k*2)%80}%;top:${(n>>(k+3))%85}%;animation-delay:-${k*2}s"></i>`}).join("");
   return `<div class="fake" style="background:linear-gradient(160deg,${s.bg[0]},${s.bg[1]})">${orbs}<div class="big ${s.motion}">${s.emoji}</div><span class="sample">Sample video</span></div>`;
 }
-function soundIcon(){return soundOn
+function sndBtnHTML(on){return `<span class="ico">${soundIcon(on)}</span>${on?"Sound":"Muted"}`}
+function setSlideSnd(sl,on,label){const b=sl&&sl.querySelector(".snd");if(!b)return;b.innerHTML=sndBtnHTML(on);if(label)b.lastChild.textContent=label;b.setAttribute("aria-label",on?"Mute":"Turn sound on")}
+/* Phones block sound on a video that starts without a tap. When that happens the video plays muted and its button says so; one tap brings the sound back. */
+function restoreSound(p){if(!p||!p.autoMuted||!soundOn)return false;p.autoMuted=false;send(p,"unMute");setSlideSnd(p.slide,true);return true}
+function soundIcon(on=soundOn){return on
   ?`<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="#fff"/><path d="M16 9a4 4 0 010 6M18.5 6.5a7.5 7.5 0 010 11"/></svg>`
   :`<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="#fff"/><path d="M17 9l5 6M22 9l-5 6"/></svg>`}
 function wireSlide(sl){
   const id=sl.dataset.id,i=+sl.dataset.i;
-  sl.querySelector(".shield").addEventListener("click",()=>{const p=players.get(i);if(p)p.playing?ctl(p,"pause"):ctl(p,"play")});
+  sl.querySelector(".shield").addEventListener("click",()=>{const p=players.get(i);if(!p)return;if(p.autoMuted&&restoreSound(p)){if(!p.playing)ctl(p,"play");return}p.playing?ctl(p,"pause"):ctl(p,"play")});
   sl.querySelectorAll(".who").forEach(b=>b.addEventListener("click",e=>openCreator(e.currentTarget.dataset.creator)));
   sl.querySelector(".fav").addEventListener("click",e=>{
     const d=D(),b=e.currentTarget,on=!d.favorites.includes(id);
@@ -1347,9 +1387,10 @@ function wireSlide(sl){
   sl.querySelector(".keep").addEventListener("click",()=>openPicker(id,sl));
   sl.querySelector(".sendb")?.addEventListener("click",()=>openSend(id));
   sl.querySelector(".snd").addEventListener("click",()=>{
+    if(restoreSound(players.get(i)))return;
     soundOn=!soundOn;
     document.querySelectorAll(".snd").forEach(b=>{b.innerHTML=`<span class="ico">${soundIcon()}</span>${soundOn?"Sound":"Muted"}`;b.setAttribute("aria-label",soundOn?"Mute":"Turn sound on")});
-    players.forEach(p=>{if(p.kind==="tt")send(p,soundOn?"unMute":"mute")});
+    players.forEach(p=>{if(p.kind==="tt"){p.autoMuted=false;send(p,soundOn?"unMute":"mute")}});
     if(currentList[activeIdx]?.demo)toast(soundOn?"Sound on (sample videos are silent)":"Muted");
   });
 }
@@ -1405,7 +1446,8 @@ window.addEventListener("message",ev=>{
     case "onPlayerReady":p.ready=true;clearTimeout(p.fail);sl.querySelector(".fail").classList.remove("show");send(p,soundOn?"unMute":"mute");send(p,p.want&&tab==="feed"?"play":"pause");break;
     case "onStateChange":p.playing=d.value===1;sl.querySelector(".paused-badge").classList.toggle("show",d.value===2&&p.want);break;
     case "onCurrentTime":{const v=d.value||{};if(v.duration)sl.querySelector(".progress i").style.width=(100*v.currentTime/v.duration)+"%";break}
-    case "onPlayerError":{const code=d.value&&d.value.errorCode;if(code===3002){send(p,"mute");send(p,"play");break}sl.querySelector(".fail").classList.add("show");break}
+    case "onMute":{const m=d.value===true||d.value===1;if(m&&soundOn&&p.want&&!p.autoMuted){p.autoMuted=true;setSlideSnd(sl,false,"Tap for sound")}else if(!m&&p.autoMuted){p.autoMuted=false;setSlideSnd(sl,soundOn)}break}
+    case "onPlayerError":{const code=d.value&&d.value.errorCode;if(code===3002){p.autoMuted=true;send(p,"mute");send(p,"play");if(soundOn)setSlideSnd(sl,false,"Tap for sound");break}sl.querySelector(".fail").classList.add("show");break}
   }
 });
 function playFrom(ids,startId,label,back){
@@ -1504,18 +1546,30 @@ const topbar=(title,left,right,clean)=>`<div class="topbar${clean?" clean":""}">
 const backBtn=`<button class="icon-btn" id="back" aria-label="Back">${IC.back}</button>`;
 function tile(v){
   if(v.demo)return `<button class="tile" data-play="${v.id}" style="background:linear-gradient(160deg,${v.scene.bg[0]},${v.scene.bg[1]})"><span class="te" aria-hidden="true">${v.scene.emoji}</span><span>${esc(v.title)}</span></button>`;
-  return `<button class="tile" data-play="${v.id}" style="background:${swatch(v)}"><span class="te" aria-hidden="true">▶</span><span>${esc(v.title||"Untitled video")}</span></button>`;
+  return `<button class="tile" data-play="${v.id}"${v.postId?` data-tt="${esc(v.postId)}"`:""} style="background:${swatch(v)}"><span class="te" aria-hidden="true">▶</span><span>${esc(v.title||"Untitled video")}</span></button>`;
 }
 const grid=vs=>`<div class="grid">${vs.map(tile).join("")}</div>`;
 const ICONS_GRID='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="1.5"/><path d="M9.3 4v16M14.7 4v16M4 9.3h16M4 14.7h16"/></svg>';
+/* Collections: rename or delete, from the collection page or the list */
+function collectionMenu(c,onPage){if(!c)return;
+  $("#sheet").innerHTML=`<h3 id="sheetTitle">${c.emoji} ${esc(c.name)}</h3><div class="menu-list"><button id="rename">Rename collection</button><button id="delCol" class="danger-x">Delete collection</button></div>`;
+  openSheet(null);
+  $("#rename").onclick=()=>{closeSheet();renameCollection(c)};
+  $("#delCol").onclick=()=>{closeSheet();deleteCollection(c,onPage)};
+}
+async function renameCollection(c){const n=await ask({title:"Rename collection",ok:"Save",input:c.name});if(n&&n.trim()){c.name=n.trim().slice(0,30);save();renderProfile()}}
+async function deleteCollection(c,onPage){const d=D();
+  if(!await ask({title:`Delete "${c.name}"?`,body:"The videos stay in your feed.",ok:"Delete",danger:true}))return;
+  d.collections=d.collections.filter(x=>x.id!==c.id);save();toast("Collection deleted");
+  if(onPage){navStack=navStack.filter(s=>!(s.profView.kind==="collection"&&s.profView.id===c.id));goBack()}else renderProfile()}
 function openCreator(h){pushHistory();profView={kind:"creator",handle:h,ptab:profView.ptab};tab="profile";pauseAll();setNav("profile");renderProfile();$("#profile").scrollTop=0}
 function renderProfile(){
   const el=$("#profile"),k=curKid(),d=D();
   if(profView.kind==="creator"){
     const h=profView.handle,fol=isFollowing(h),c=creator(h),a=avatarFor(h),vs=videosBy(h);
     el.innerHTML=`<div class="page-inner">${topbar(esc((fol&&c?.name)||"@"+h),backBtn,"",true)}
-      <div class="creator-head"><span class="av" style="background:${a.bg}">${a.e}</span>
-        <p class="handle">@${esc(h)}</p>${fol&&c?.name?`<p class="cname">${esc(c.name)}</p>`:""}
+      <div class="creator-head"><span class="av" data-ttav="${esc(h)}" data-ttsrc="${esc((vs.find(v=>v.postId)||{}).postId||ttSrcFor(h))}" style="background:${a.bg}">${a.e}</span>
+        <p class="handle">@${esc(h)}</p>${fol&&c?.name?`<p class="cname">${esc(c.name)}</p>`:`<p class="cname" data-ttname="${esc(h)}"${TTM.name(h)?"":" hidden"}>${esc(TTM.name(h))}</p>`}
         <div class="stats"><div><b>${vs.length}</b><small>${vs.length===1?"Video":"Videos"}</small></div></div>
         <button class="btn ${fol?"ghost":""} follow-btn" id="folBtn" aria-pressed="${fol}">${fol?"Unfollow":"Follow"}</button>
         ${fol&&c?.bio?`<p class="bio">${esc(c.bio)}</p>`:fol?"":`<p class="bio">Videos picked for you by this creator.</p>`}</div>
@@ -1531,14 +1585,12 @@ function renderProfile(){
     const vs=c.videoIds.map(id=>myVideos().find(v=>v.id===id)).filter(Boolean);
     el.innerHTML=`<div class="page-inner">${topbar(`${c.emoji} ${esc(c.name)}`,backBtn,`<button class="icon-btn right" id="colMenu" aria-label="Collection options">${IC.menu}</button>`)}
       <p class="lede" style="text-align:center">${plural(vs.length,"video")}</p>
+      <div class="col-acts"><button class="btn ghost" id="colRename">Rename</button><button class="btn ghost danger-x" id="colDelete">Delete</button></div>
       ${vs.length?grid(vs):`<p class="hint" style="text-align:center">Nothing saved here yet. Tap Save on any video to add it.</p>`}</div>`;
     $("#back").onclick=goBack;
-    $("#colMenu").onclick=()=>{
-      $("#sheet").innerHTML=`<h3 id="sheetTitle">${esc(c.name)}</h3><div class="menu-list"><button id="rename">Rename collection</button><button id="delCol" class="danger-x">Delete collection</button></div>`;
-      openSheet(null);
-      $("#rename").onclick=async()=>{closeSheet();const n=await ask({title:"Rename collection",ok:"Save",input:c.name});if(n){c.name=n.slice(0,30);save();renderProfile()}};
-      $("#delCol").onclick=async()=>{closeSheet();if(await ask({title:`Delete "${c.name}"?`,body:"The videos stay in your feed.",ok:"Delete",danger:true})){d.collections=d.collections.filter(x=>x.id!==c.id);save();navStack=navStack.filter(s=>!(s.profView.kind==="collection"&&s.profView.id===c.id));goBack()}};
-    };
+    $("#colMenu").onclick=()=>collectionMenu(c,true);
+    $("#colRename").onclick=()=>renameCollection(c);
+    $("#colDelete").onclick=()=>deleteCollection(c,true);
     el.querySelectorAll("[data-play]").forEach(b=>b.onclick=()=>playFrom(vs.map(v=>v.id),b.dataset.play,c.name,true));
     return;
   }
@@ -1547,12 +1599,12 @@ function renderProfile(){
   const pt=profView.ptab;
   let body="";
   if(pt==="following"){
-    body=fol.length?`<div class="follow-list">${fol.map(t=>{const n=myVideos().filter(v=>v.handle===t.handle).length;return `<button class="frow" data-creator="${esc(t.handle)}"><span class="av" style="background:${t.color||SWATCHES[hashN(t.handle)%SWATCHES.length]}">${t.avatar||"🎬"}</span><div><b>${esc(t.name||"@"+t.handle)}</b><small>@${esc(t.handle)}</small><small>${plural(n,"video")}</small></div><span class="pill">Following</span></button>`}).join("")}</div>`
+    body=fol.length?`<div class="follow-list">${fol.map(t=>{const n=myVideos().filter(v=>v.handle===t.handle).length;return `<button class="frow" data-creator="${esc(t.handle)}"><span class="av" data-ttav="${esc(t.handle)}" data-ttsrc="${esc(ttSrcFor(t.handle))}" style="background:${t.color||avatarFor(t.handle).bg}">${t.avatar||avatarFor(t.handle).e}</span><div><b>${esc(t.name||TTM.name(t.handle)||"@"+t.handle)}</b><small>@${esc(t.handle)}</small><small>${plural(n,"video")}</small></div><span class="pill">Following</span></button>`}).join("")}</div>`
       :`<p class="hint">You're not following any accounts yet. Tap someone's name on a video, then tap Follow.</p>`;
   }else if(pt==="favorites"){
     body=favs.length?grid(favs):`<p class="hint" style="text-align:center;margin-top:28px">Tap the heart on a video to keep it here.</p>`;
   }else{
-    body=`<div class="follow-list">${d.collections.map(c=>`<button class="shelf-row" data-col="${c.id}"><span class="em">${c.emoji}</span><span><b>${esc(c.name)}</b><small>${plural(c.videoIds.length,"video")}</small></span></button>`).join("")}</div>
+    body=`<div class="follow-list">${d.collections.map(c=>`<div class="col-row"><button class="shelf-row" data-col="${c.id}"><span class="em">${c.emoji}</span><span><b>${esc(c.name)}</b><small>${plural(c.videoIds.length,"video")}</small></span></button><button class="col-edit" data-coledit="${c.id}" aria-label="Rename or delete ${esc(c.name)}">⋯</button></div>`).join("")}</div>
       <div class="newcol"><input id="profNewCol" placeholder="Name a new collection" maxlength="30" aria-label="New collection name"><button class="btn" id="profNewBtn">Create</button></div>`;
   }
   el.innerHTML=`<div class="page-inner">${topbar(esc(k.name||"My profile"),"",`<button class="icon-btn right" id="kidMenu" aria-label="Menu">${IC.menu}</button>`,true)}${document.documentElement.dataset.skin==="holiday"?lightsSVG():""}
@@ -1575,6 +1627,7 @@ function renderProfile(){
   $("#editAv").onclick=()=>openAvatarSheet(k,renderProfile);
   el.querySelectorAll("[data-ptab]").forEach(b=>b.onclick=()=>{profView.ptab=b.dataset.ptab;renderProfile()});
   el.querySelectorAll("[data-creator]").forEach(b=>b.onclick=()=>openCreator(b.dataset.creator));
+  el.querySelectorAll("[data-coledit]").forEach(b=>b.onclick=()=>collectionMenu(d.collections.find(x=>x.id===b.dataset.coledit),false));
   el.querySelectorAll("[data-col]").forEach(b=>b.onclick=()=>{pushHistory();profView={kind:"collection",id:b.dataset.col,ptab:"collections"};renderProfile();el.scrollTop=0});
   el.querySelectorAll("[data-play]").forEach(b=>b.onclick=()=>playFrom(favs.map(v=>v.id),b.dataset.play,"Favorites",true));
   $("#profNewBtn")&&($("#profNewBtn").onclick=()=>{const n=$("#profNewCol").value.trim();if(!n)return;d.collections.push({id:uid(),name:n,emoji:COL_EMOJI[d.collections.length%COL_EMOJI.length],videoIds:[]});save();renderProfile()});
@@ -1711,7 +1764,7 @@ function renderPLibrary(){
       <p><button class="btn sun" id="previewOne">Preview ${esc(possessive(kidName(k)))} app</button></p>
       <div class="filters" role="group" aria-label="Show">${[["all","All"],["new","Unwatched"],["watched","Watched"]].map(([key,l])=>`<button data-lf="${key}" aria-pressed="${libFilter===key}">${l}</button>`).join("")}</div>`
       :`<p class="lede">${plural(S.videos.length,"video")} across ${ks.length} ${ks.length===1?"child":"children"}.</p>`}
-    <div class="vlist">${list.map(v=>`<div class="vitem"><button class="sw watch" data-watch="${v.id}" aria-label="Watch ${esc(v.title||"video")}" style="background:${v.demo?`linear-gradient(160deg,${v.scene.bg[0]},${v.scene.bg[1]})`:swatch(v)}">${v.demo?v.scene.emoji:`<span class="play" aria-hidden="true">▶</span>`}</button><div><b class="watch-t" data-watch="${v.id}">${esc(v.title||"Untitled video")}</b><small>${v.handle?"@"+esc(v.handle):""}${v.from?(v.handle?" · ":"")+"Added by "+esc(v.from):""}</small><span class="for-line">For: ${esc(forLabel(v))}</span>
+    <div class="vlist">${list.map(v=>`<div class="vitem"><button class="sw watch" data-watch="${v.id}"${!v.demo&&v.postId?` data-tt="${esc(v.postId)}"`:""} aria-label="Watch ${esc(v.title||"video")}" style="background:${v.demo?`linear-gradient(160deg,${v.scene.bg[0]},${v.scene.bg[1]})`:swatch(v)}">${v.demo?v.scene.emoji:`<span class="play" aria-hidden="true">▶</span>`}</button><div><b class="watch-t" data-watch="${v.id}">${esc(v.title||"Untitled video")}</b><small>${v.handle?"@"+esc(v.handle):""}${v.from?(v.handle?" · ":"")+"Added by "+esc(v.from):""}</small><span class="for-line">For: ${esc(forLabel(v))}</span>
         ${k?`<span class="status ${seen[v.id]?"w":"n"}">${seen[v.id]?"✓ Watched":"Not watched yet"}</span>${KD(k.id).favorites.includes(v.id)?` <span class="status w">♥ favorite</span>`:""}`:`<div class="kidstat">${statusChips(v)}</div>`}</div>
         <div class="acts"><button class="x" data-for="${v.id}">Who</button><button class="x danger-x" data-del="${v.id}" aria-label="Remove ${esc(v.title||"video")}">Remove</button></div></div>`).join("")||`<p class="hint">${S.videos.length?"Nothing in this list.":"No videos yet. Add one from the Add tab, or turn on sample content in Settings."}</p>`}</div></div>`;
   el.querySelectorAll("[data-watch]").forEach(b=>b.onclick=()=>libFeed(list,b.dataset.watch));
