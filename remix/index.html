@@ -536,7 +536,17 @@ nav button.skinned[aria-current="page"] .skin-ico g:not(.smoke),nav button.skinn
 #rxFeed .rr .del .ic{background:rgba(255,79,110,.85)}
 .rx-feedopen .scrim{z-index:70}.rx-feedopen .sheet{z-index:71}
 .rx-badge{position:absolute;top:2px;left:calc(50% + 6px);min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:#FF3B4E;color:#fff;font-size:.68rem;font-weight:800;display:grid;place-items:center;line-height:1;border:2px solid #000}
-.live-hide,#reset{display:none!important}</style>
+.live-hide,#reset{display:none!important}.av-init{display:grid;place-items:center;width:100%;height:100%;border-radius:inherit;color:#14110b;font-weight:800;font-size:1.05em;line-height:1}
+.follow-btn{min-width:140px;margin:10px auto 0;display:block}
+.vitem .sw.watch{border:0;padding:0;cursor:pointer;color:#fff}.vitem .sw .play{font-size:1rem;opacity:.9}.watch-t{cursor:pointer}.vitem .sw.watch:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.ix-sec{margin:22px 0 4px;font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.ix-go{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--surface2);font-weight:800}
+.ix-compose{position:sticky;bottom:0;padding:10px 0 14px;background:linear-gradient(transparent,var(--bg,#000) 35%)}.ix-compose .btn{width:100%}
+.ix-pick{display:grid;gap:8px;max-height:56vh;overflow:auto}
+.ix-pv{display:flex;align-items:center;gap:12px;padding:6px;border:0;border-radius:14px;background:var(--surface2);color:inherit;font:inherit;text-align:left;cursor:pointer}
+.ix-pv .ix-th{height:96px}.ix-pv b{display:block}.ix-pv small{color:var(--muted)}
+.kid-follows{color:var(--muted);white-space:normal}
+</style>
 </head>
 <body>
 <div id="banner" hidden></div>
@@ -630,14 +640,19 @@ const kids=()=>S.accounts.filter(a=>a.role==="child");
 const kidById=id=>kids().find(k=>k.id===id);
 const kidName=k=>k?.name||"Child";
 const possessive=n=>n+(/s$/i.test(n)?"'":"'s");
-function KD(id){if(!S.kidData[id])S.kidData[id]={favorites:[],collections:[],seen:{}};return S.kidData[id]}
+function KD(id){if(!S.kidData[id])S.kidData[id]={favorites:[],collections:[],seen:{}};const d=S.kidData[id];if(!d.follows)d.follows=[];if(!d.unfollowed)d.unfollowed=[];return d}
 const visibleTo=(item,kidId)=>item.for===ALL||(Array.isArray(item.for)&&item.for.includes(kidId));
 function forLabel(item){
   if(item.for===ALL)return "All children";
   const names=(item.for||[]).map(id=>kidById(id)).filter(Boolean).map(kidName);
   return names.length?names.join(" & "):"No one yet";
 }
-const kidAv=k=>k?.photo?`<img src="${k.photo}" alt="">`:(k?.avatar||"🙂");
+const AV_COLORS=['#E8B04B','#FF5C62','#4ED08E','#3FC4D8','#9B8CFF','#D9822B','#4FA3FF','#FF8FB1'];
+const avColor=n=>{let x=0;for(const c of String(n||"?"))x=(x*31+c.charCodeAt(0))>>>0;return AV_COLORS[x%AV_COLORS.length]};
+/* Same picture as Web Apps: the account's photo, or its first letter on a colour. */
+const kidAv=k=>k?.photo?`<img src="${k.photo}" alt="">`:`<span class="av-init" style="background:${avColor(k?.name||k?.username)}">${esc(([...String(k?.name||k?.username||"?").trim()][0]||"?").toUpperCase())}</span>`;
+/* A character picked in Remix becomes the account's picture everywhere. */
+const emojiPic=e=>"data:image/svg+xml;utf8,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#2A2A33"/><text x="50" y="70" text-anchor="middle" font-size="58">'+e+'</text></svg>');
 
 function loadSamples(){
   const now=Date.now(),[d,s]=kids();
@@ -660,7 +675,7 @@ function purgeVideoIds(ids){
 }
 function clearSamples(){
   const ids=new Set(S.videos.filter(v=>v.demo).map(v=>v.id));
-  S.videos=S.videos.filter(v=>!v.demo);S.trusted=S.trusted.filter(t=>!t.demo);
+  S.videos.splice(0,S.videos.length,...S.videos.filter(v=>!v.demo));S.trusted.splice(0,S.trusted.length,...S.trusted.filter(t=>!t.demo));
   purgeVideoIds(ids);save();
 }
 const hasSamples=()=>S.videos.some(v=>v.demo);
@@ -694,7 +709,15 @@ const mode=()=>!me()?"login":(isParent()&&!previewKid?"parent":"child");
 const curKid=()=>previewKid?kidById(previewKid):(me()?.role==="child"?me():null);
 const D=()=>KD(curKid().id);
 const myVideos=()=>S.videos.filter(v=>visibleTo(v,curKid().id));
-const myCreators=()=>S.trusted.filter(t=>visibleTo(t,curKid().id));
+/* Who a kid follows: creators parents added for them (unless the kid unfollowed), plus creators the kid followed. */
+const myCreators=()=>{const d=D(),added=S.trusted.filter(t=>visibleTo(t,curKid().id)&&!d.unfollowed.includes(t.handle));
+  return added.concat(d.follows.filter(h=>!added.some(t=>t.handle===h)).map(h=>S.trusted.find(t=>t.handle===h)||{handle:h,mine:true}))};
+function toggleFollow(h){const d=D(),parentAdded=S.trusted.some(t=>t.handle===h&&visibleTo(t,curKid().id));
+  if(isFollowing(h)){d.follows=d.follows.filter(x=>x!==h);if(parentAdded&&!d.unfollowed.includes(h))d.unfollowed.push(h);toast(`Unfollowed @${h}`)}
+  else{d.unfollowed=d.unfollowed.filter(x=>x!==h);if(!parentAdded&&!d.follows.includes(h))d.follows.push(h);toast(`Following @${h}`)}
+  save()}
+function followsOf(k){const d=KD(k.id),added=S.trusted.filter(t=>visibleTo(t,k.id)&&!d.unfollowed.includes(t.handle)).map(t=>t.handle);
+  return added.concat(d.follows.filter(h=>!added.includes(h)))}
 const isFollowing=h=>!!h&&!!curKid()&&myCreators().some(t=>t.handle===h);
 const videosBy=h=>sortNew(myVideos().filter(v=>v.handle===h));
 
@@ -709,7 +732,7 @@ const ICONS={
 };
 const NAVS={
   child:[["feed","Home"],["profile","Profile"]],
-  parent:[["p-library","Videos"],["p-creators","Creators"],["p-add","Add"],["p-kids","Family"],["p-settings","Me"]]
+  parent:[["p-library","Videos"],["inbox","Messages"],["p-add","Add"],["p-kids","Family"],["p-settings","Me"]]
 };
 /* ---------- Themes ---------- */
 const THEMES=[
@@ -822,9 +845,15 @@ function famOf(accId){for(const [fid,f] of Object.entries(S.fam)) if(f.accounts.
 function findAccount(username){for(const [fid,f] of Object.entries(S.fam)){const a=f.accounts.find(x=>x.username===username);if(a)return {fid,a}}return null}
 const linked=(a,b)=>S.links.some(l=>l.status==="active"&&((l.from===a&&l.to===b)||(l.from===b&&l.to===a)));
 const isAdminAcct=()=>!!me()?.admin;
+const inboxMe=()=>mode()==="parent"?me():mode()==="child"?curKid():null;
+const famParents=fid=>(S.fam[fid]?.accounts||[]).filter(a=>a.role==="parent");
+/* Who can get a video: parents and their own kids always message each other;
+   kids with sharing on can also send to brothers and sisters, and to kids in connected families. */
 function shareTargets(k){
-  if(!k||!k.allowSharing)return [];
-  const out=[];
+  if(!k)return [];
+  if(k.role==="parent")return famKids(S.sessionFam).map(x=>({...x,fid:S.sessionFam,same:true}));
+  const out=famParents(S.sessionFam).map(x=>({...x,fid:S.sessionFam,same:true}));
+  if(!k.allowSharing)return out;
   famKids(S.sessionFam).forEach(x=>{if(x.id!==k.id&&x.allowSharing)out.push({...x,fid:S.sessionFam,same:true})});
   S.families.forEach(f=>{if(f.id!==S.sessionFam&&linked(S.sessionFam,f.id))famKids(f.id).forEach(x=>{if(x.allowSharing)out.push({...x,fid:f.id,same:false})})});
   return out;
@@ -832,12 +861,14 @@ function shareTargets(k){
 function deliver(sh){
   if(window.REMIX_LIVE)return;   /* the server delivers */
   const f=S.fam[sh.toFam];if(!f)return;
+  if(sh.toFam===sh.fromFam){const v=f.videos.find(x=>x.id===sh.video.id);
+    if(v){sh.deliveredId=v.id;if(Array.isArray(v.for)&&!v.for.includes(sh.toId)&&f.accounts.find(a=>a.id===sh.toId)?.role==="child")v.for.push(sh.toId);return}}
   const {id,for:_f,addedAt,from,note,...rest}=sh.video;
   const nid=uid();sh.deliveredId=nid;
   f.videos.push({...rest,id:nid,for:[sh.toId],from:sh.fromName,note:" sent you this",sentBy:sh.fromName,addedAt:Date.now()});
 }
 function sendVideo(videoId,t){
-  const k=curKid(),v=S.videos.find(x=>x.id===videoId);if(!k||!v)return;
+  const k=inboxMe(),v=S.videos.find(x=>x.id===videoId);if(!k||!v)return;
   if(S.shares.some(s=>s.videoKey===(v.postId||v.title)&&s.fromId===k.id&&s.toId===t.id)){toast(`Already sent to ${t.name}`);return}
   const needsOk=!t.same&&famById(t.fid)?.approve;
   const sh={id:uid(),videoKey:v.postId||v.title,video:JSON.parse(JSON.stringify(v)),fromId:k.id,fromName:k.name,fromFam:S.sessionFam,toId:t.id,toName:t.name,toFam:t.fid,status:needsOk?"waiting":"delivered",at:Date.now()};
@@ -846,10 +877,10 @@ function sendVideo(videoId,t){
   toast(needsOk?`Sent! ${t.name}'s parent will check it first.`:`Sent to ${t.name}`);
 }
 function openSend(videoId){
-  const sheet=$("#sheet"),k=curKid(),ts=shareTargets(k);
+  const sheet=$("#sheet"),k=inboxMe(),ts=shareTargets(k);
   sheet.innerHTML=`<h3 id="sheetTitle">Send to</h3>
-    ${ts.length?ts.map(t=>`<button class="pick" data-to="${t.id}"><span class="em">${kidAv(t)}</span><span>${esc(t.name)}<small style="display:block;color:var(--muted);font-weight:500">${t.same?"Your family":"The "+esc(famById(t.fid).name)+" family"}</small></span><span class="ck">➜</span></button>`).join("")
-      :`<p class="hint">Nobody to send to yet. Kids can send to brothers and sisters, and to kids in families your parents connected, once their parents turn sharing on.</p>`}
+    ${ts.length?ts.map(t=>`<button class="pick" data-to="${t.id}"><span class="em">${kidAv(t)}</span><span>${esc(t.name)}<small style="display:block;color:var(--muted);font-weight:500">${t.role==="parent"?"Parent":t.same?"Your family":"The "+esc(famById(t.fid).name)+" family"}</small></span><span class="ck">➜</span></button>`).join("")
+      :`<p class="hint">Nobody to send to yet.</p>`}
     <p style="margin:14px 0 0"><button class="btn ghost" id="doneBtn" style="width:100%">Close</button></p>`;
   sheet.querySelectorAll("[data-to]").forEach(b=>b.addEventListener("click",()=>{const t=ts.find(x=>x.id===b.dataset.to);closeSheet();sendVideo(videoId,t)}));
   $("#doneBtn").addEventListener("click",closeSheet);
@@ -1043,10 +1074,10 @@ renderPLibrary=function(){_renderPLibrary();const el=$("#p-library"),h=el.queryS
 ICONS.inbox='<path d="M4 5h16v11H9l-5 4z"/>';
 const _renderNav=renderNav;
 renderNav=function(){
-  const k=mode()==="child"?curKid():null;
-  NAVS.child=k&&k.allowSharing?[["feed","Home"],["inbox","Messages"],["profile","Profile"]]:[["feed","Home"],["profile","Profile"]];
+  const k=inboxMe();
+  NAVS.child=[["feed","Home"],["inbox","Messages"],["profile","Profile"]];
   _renderNav();
-  const u=k&&k.allowSharing?unreadFrom(k):0,ib=$('#nav [data-tab="inbox"]');
+  const u=k?unreadFrom(k):0,ib=$('#nav [data-tab="inbox"]');
   if(ib&&u){ib.style.position="relative";ib.insertAdjacentHTML("beforeend",`<span class="rx-badge" aria-label="${u} new">${u}</span>`)}const n=mode()==="parent"?waitingShares().length:0,b=$('#nav [data-tab="p-library"]');
   if(b&&n){b.style.position="relative";b.insertAdjacentHTML("beforeend",`<span class="rx-badge" aria-label="${n} to review">${n}</span>`)}};
 
@@ -1077,18 +1108,21 @@ function inboxBody(k){
           <button class="ix-bubble" ${id?`data-ixplay="${s.id}"`:"disabled"} aria-label="Watch ${esc(s.video.title||"video")}">${vThumb(s.video,96)}<span class="ix-tt"><b>${esc(s.video.title||"A video")}</b>${s.video.handle?`<small>@${esc(s.video.handle)}</small>`:""}
             ${mine&&s.status==="waiting"?`<small class="ix-wait">Waiting for a parent's OK</small>`:mine&&s.status==="declined"?`<small class="ix-wait">Not sent</small>`:""}</span>
             ${mine&&s.reaction?`<span class="ix-react-badge" aria-label="${esc(p?.name||"")} reacted ${s.reaction}">${s.reaction}</span>`:""}</button>
-          ${mine?"":`<div class="ix-reacts" role="group" aria-label="React">${REACTS.map(e=>`<button data-react="${s.id}" data-e="${e}" aria-pressed="${s.reaction===e}">${e}</button>`).join("")}</div>`}</div>`}).join("")}</div>`;
+          ${mine?"":`<div class="ix-reacts" role="group" aria-label="React">${REACTS.map(e=>`<button data-react="${s.id}" data-e="${e}" aria-pressed="${s.reaction===e}">${e}</button>`).join("")}</div>`}</div>`}).join("")||`<p class="hint" style="text-align:center;margin:20px 0">No videos yet. Send ${esc(p?.name||"them")} one.</p>`}</div>
+      ${shareTargets(k).some(t=>t.id===inboxPeer)?`<div class="ix-compose"><button class="btn" id="ixSend">Send a video</button></div>`:""}`;
   }
   const peers={};
   myShares(k).forEach(s=>{const p=peerOf(s,k);if(!peers[p]||peers[p].at<s.at)peers[p]=s});
   const rows=Object.entries(peers).sort((a,b)=>b[1].at-a[1].at);
-  if(!rows.length)return `<p class="hint" style="text-align:center;margin:28px 12px">When someone sends you a video, it shows up here.</p>`;
+  const fresh=shareTargets(k).filter(t=>!peers[t.id]);
+  const startRows=fresh.length?`<h3 class="ix-sec">Send a video to</h3><div class="ix-list">${fresh.map(t=>`<button class="ix-row" data-peer="${t.id}"><span class="ix-av">${kidAv(t)}</span><span class="ix-mid"><b>${esc(t.name)}</b><small>${t.role==="parent"?"Parent":t.same?"Your family":"The "+esc(famById(t.fid)?.name||"")+" family"}</small></span><span class="ix-end"><span class="ix-go" aria-hidden="true">＋</span></span></button>`).join("")}</div>`:"";
+  if(!rows.length)return `<p class="hint" style="text-align:center;margin:22px 12px 6px">When someone sends you a video, it shows up here.</p>`+startRows;
   return `<div class="ix-list">${rows.map(([pid,s])=>{const p=acctAny(pid),pf=famById(famOf(pid)),n=unreadFrom(k,pid);
     return `<button class="ix-row" data-peer="${pid}"><span class="ix-av">${kidAv(p)}</span><span class="ix-mid"><b>${esc(p?.name||"Friend")}${pf&&pf.id!==S.sessionFam?` <small class="ix-fam">${esc(pf.name)} family</small>`:""}</b>
-      <small>${s.fromId===k.id?"You sent: ":""}${esc(s.video.title||"A video")}</small></span><span class="ix-end"><small>${stamp(s.at).split(" · ")[0]}</small>${n?`<span class="ix-dot" aria-label="${n} new">${n}</span>`:""}</span></button>`}).join("")}</div>`;
+      <small>${s.fromId===k.id?"You sent: ":""}${esc(s.video.title||"A video")}</small></span><span class="ix-end"><small>${stamp(s.at).split(" · ")[0]}</small>${n?`<span class="ix-dot" aria-label="${n} new">${n}</span>`:""}</span></button>`}).join("")}</div>${startRows}`;
 }
 function renderInbox(){
-  const el=$("#inbox"),k=curKid();if(!el||!k)return;
+  const el=$("#inbox"),k=inboxMe();if(!el||!k)return;
   el.innerHTML=`<div class="page-inner">${inboxPeer?"":topbar("Messages","","",true)}${inboxBody(k)}</div>`;
   wireInbox(el,k);renderNav();
 }
@@ -1098,7 +1132,20 @@ function wireInbox(el,k){
   el.querySelectorAll("[data-react]").forEach(b=>b.onclick=()=>{const s=S.shares.find(x=>x.id===b.dataset.react);s.reaction=s.reaction===b.dataset.e?null:b.dataset.e;save();renderInbox()});
   el.querySelectorAll("[data-ixplay]").forEach(b=>b.onclick=()=>{const thread=myShares(k).filter(s=>peerOf(s,k)===inboxPeer).sort((a,c)=>a.at-c.at);
     const ids=thread.map(s=>playableId(s,k)).filter(Boolean),s=S.shares.find(x=>x.id===b.dataset.ixplay);
+    if(mode()==="parent"){libFeed(ids.map(id=>S.videos.find(v=>v.id===id)).filter(Boolean),playableId(s,k));return}
     playFrom(ids,playableId(s,k),"From "+(acctAny(inboxPeer)?.name||"a friend"),true)});
+  el.querySelector("#ixSend")?.addEventListener("click",()=>pickVideoFor(inboxPeer));
+}
+/* "Send a video" in a conversation: pick from the videos you can see */
+function pickVideoFor(peerId){
+  const k=inboxMe(),t=shareTargets(k).find(x=>x.id===peerId);if(!t)return;
+  const list=sortNew(mode()==="parent"?S.videos:myVideos()),sheet=$("#sheet");
+  sheet.innerHTML=`<h3 id="sheetTitle">Send ${esc(t.name)} a video</h3>
+    ${k.role==="parent"?`<p class="hint" style="margin-top:0">If ${esc(t.name)} can't see a video yet, sending it adds them to it.</p>`:""}
+    <div class="ix-pick">${list.map(v=>`<button class="ix-pv" data-pick="${v.id}" aria-label="Send ${esc(v.title||"video")}">${vThumb(v,72)}<span><b>${esc(v.title||"Untitled video")}</b>${v.handle?`<small>@${esc(v.handle)}</small>`:""}</span></button>`).join("")||`<p class="hint">No videos yet.</p>`}</div>
+    <p style="margin:12px 0 0"><button class="btn ghost" id="doneBtn" style="width:100%">Close</button></p>`;
+  openSheet();$("#doneBtn").onclick=closeSheet;
+  sheet.querySelectorAll("[data-pick]").forEach(b=>b.onclick=()=>{closeSheet();sendVideo(b.dataset.pick,t);renderInbox();const ib=$("#inbox");if(ib)ib.scrollTop=ib.scrollHeight});
 }
 const _go=go;
 go=function(t,fromNav){
@@ -1232,7 +1279,7 @@ function renderFeed(startId){
     feed.innerHTML=`<div class="empty"><div>${!myVideos().length
       ?`<h2>Nothing here yet</h2><p>Mom and Dad haven't added any videos for you yet. Check back soon!</p>`
       :feedMode==="following"&&!feedFilter
-        ?`<h2>No videos from accounts you follow</h2><p>When Mom or Dad add videos from accounts you follow, they'll show up here.</p>`
+        ?`<h2>No videos from accounts you follow</h2><p>Tap someone's name on a video, then tap Follow. Their videos will show up here.</p>`
         :`<h2>Nothing here yet</h2><p>This list is empty.</p>`}</div></div>`;
     wire();return;
   }
@@ -1257,7 +1304,7 @@ function renderFeed(startId){
           ${v.handle?`<button class="creator-btn who" data-creator="${esc(v.handle)}" aria-label="${esc((fol&&c?.name)||"@"+v.handle)}"><span class="av" style="background:${a.bg}">${a.e}</span>${fol?`<span class="badge" aria-hidden="true">✓</span>`:""}</button>`:""}
           <button class="fav" aria-pressed="${fav}" aria-label="Favorite"><span class="ico"><svg width="34" height="34" viewBox="0 0 24 24" fill="${fav?"#FF4F6E":"#fff"}" stroke="${fav?"#FF4F6E":"#fff"}" stroke-width="1"><path d="M12 20.5s-8-4.9-8-11a4.5 4.5 0 018-2.9 4.5 4.5 0 018 2.9c0 6.1-8 11-8 11z"/></svg></span>Favorite</button>
           <button class="keep" aria-pressed="${kept}" aria-label="Save to a collection"><span class="ico"><svg width="30" height="30" viewBox="0 0 24 24" fill="${kept?"#FFC93C":"#fff"}" stroke="${kept?"#FFC93C":"#fff"}" stroke-width="1" stroke-linejoin="round"><path d="M6 3h12v18l-6-4.2L6 21z"/></svg></span>Save</button>
-          ${curKid()&&curKid().allowSharing&&!previewKid?`<button class="sendb" aria-label="Send to someone"><span class="ico"><svg width="30" height="30" viewBox="0 0 24 24"><path d="M3.4 11.2L20 4l-7.2 16.6-2.3-6.9z"/></svg></span>Send</button>`:""}
+          ${curKid()&&!previewKid?`<button class="sendb" aria-label="Send to someone"><span class="ico"><svg width="30" height="30" viewBox="0 0 24 24"><path d="M3.4 11.2L20 4l-7.2 16.6-2.3-6.9z"/></svg></span>Send</button>`:""}
           <button class="snd" aria-label="${soundOn?"Mute":"Turn sound on"}"><span class="ico">${soundIcon()}</span>${soundOn?"Sound":"Muted"}</button>
         </div>
         <div class="progress"><i></i></div>
@@ -1316,7 +1363,7 @@ function activate(i){
   clearTimeout(seenTimer);
   const cur=currentList[i];
   if(cur&&!cur.divider&&!feedFilter&&!previewKid&&me()?.role==="child"&&!D().seen[cur.id]){
-    seenTimer=setTimeout(()=>{if(currentList[activeIdx]!==cur)return;D().seen[cur.id]=Date.now();save()},3000);
+    seenTimer=setTimeout(()=>{if(!curKid()||currentList[activeIdx]!==cur)return;D().seen[cur.id]=Date.now();save()},3000);
   }
   const slides=[...document.querySelectorAll("#feed .slide")];
   slides.forEach((sl,k)=>{const near=Math.abs(k-i)<=1;if(near&&!players.has(k))mount(sl,k);if(!near&&players.has(k))unmount(k)});
@@ -1424,11 +1471,12 @@ function openAvatarSheet(k,after){
     sheet.innerHTML=`<div class="av-sheet-top"><span class="av">${kidAv(k)}</span><h3 id="sheetTitle" style="margin:0">Profile picture</h3></div>
       <div class="photo-btns">
         <label class="btn" style="text-align:center;cursor:pointer;flex-direction:row;justify-content:center">Use a photo<input type="file" id="photoIn" accept="image/*" hidden></label>
-        ${k.photo?`<button class="btn ghost" id="rmPhoto">Remove photo</button>`:""}
+        ${k.photo?`<button class="btn ghost" id="rmPhoto">Remove picture</button>`:""}
       </div>
       <p class="msg bad" id="photoMsg" style="min-height:1.2em;margin-top:8px"></p>
       <p class="hint" style="margin:4px 0 0">Or pick a character:</p>
-      <div class="av-grid">${KID_AV.map(a=>`<button data-kav="${a}" aria-pressed="${!k.photo&&k.avatar===a}" aria-label="Character ${a}">${a}</button>`).join("")}</div>
+      <div class="av-grid">${KID_AV.map(a=>`<button data-kav="${a}" aria-pressed="${k.photo===emojiPic(a)}" aria-label="Character ${a}">${a}</button>`).join("")}</div>
+      <p class="hint" style="margin:0 0 10px">Your picture is the same in every app on Web Apps.</p>
       <button class="btn ghost" id="avDone" style="width:100%">Done</button>`;
     $("#photoIn").onchange=async e=>{
       const f=e.target.files[0];if(!f)return;
@@ -1436,7 +1484,7 @@ function openAvatarSheet(k,after){
       catch(err){$("#photoMsg").textContent="That file couldn't be used. Try a JPG or PNG photo."}
     };
     $("#rmPhoto")&&($("#rmPhoto").onclick=()=>{k.photo="";save();draw()});
-    sheet.querySelectorAll("[data-kav]").forEach(b=>b.onclick=()=>{k.avatar=b.dataset.kav;k.photo="";save();draw()});
+    sheet.querySelectorAll("[data-kav]").forEach(b=>b.onclick=()=>{k.avatar=b.dataset.kav;k.photo=emojiPic(b.dataset.kav);save();draw()});
     $("#avDone").onclick=closeSheet;
   };
   draw();openSheet(after);
@@ -1469,11 +1517,12 @@ function renderProfile(){
       <div class="creator-head"><span class="av" style="background:${a.bg}">${a.e}</span>
         <p class="handle">@${esc(h)}</p>${fol&&c?.name?`<p class="cname">${esc(c.name)}</p>`:""}
         <div class="stats"><div><b>${vs.length}</b><small>${vs.length===1?"Video":"Videos"}</small></div></div>
-        ${fol?`<span class="pill">Following</span>`:""}
+        <button class="btn ${fol?"ghost":""} follow-btn" id="folBtn" aria-pressed="${fol}">${fol?"Unfollow":"Follow"}</button>
         ${fol&&c?.bio?`<p class="bio">${esc(c.bio)}</p>`:fol?"":`<p class="bio">Videos picked for you by this creator.</p>`}</div>
       <div class="ptabs" style="margin-top:8px"><button aria-selected="true" tabindex="-1" aria-label="Videos">${ICONS_GRID}</button></div>
       ${vs.length?grid(vs):`<p class="hint" style="text-align:center;margin-top:24px">No videos from this account yet.</p>`}</div>`;
     $("#back").onclick=goBack;
+    $("#folBtn").onclick=()=>{toggleFollow(h);renderProfile()};
     el.querySelectorAll("[data-play]").forEach(b=>b.onclick=()=>playFrom(vs.map(v=>v.id),b.dataset.play,(fol&&c?.name)||"@"+h,true));
     return;
   }
@@ -1499,7 +1548,7 @@ function renderProfile(){
   let body="";
   if(pt==="following"){
     body=fol.length?`<div class="follow-list">${fol.map(t=>{const n=myVideos().filter(v=>v.handle===t.handle).length;return `<button class="frow" data-creator="${esc(t.handle)}"><span class="av" style="background:${t.color||SWATCHES[hashN(t.handle)%SWATCHES.length]}">${t.avatar||"🎬"}</span><div><b>${esc(t.name||"@"+t.handle)}</b><small>@${esc(t.handle)}</small><small>${plural(n,"video")}</small></div><span class="pill">Following</span></button>`}).join("")}</div>`
-      :`<p class="hint">You're not following any accounts yet. Mom and Dad can add some.</p>`;
+      :`<p class="hint">You're not following any accounts yet. Tap someone's name on a video, then tap Follow.</p>`;
   }else if(pt==="favorites"){
     body=favs.length?grid(favs):`<p class="hint" style="text-align:center;margin-top:28px">Tap the heart on a video to keep it here.</p>`;
   }else{
@@ -1625,7 +1674,7 @@ function renderPAdd(){
   const info=()=>{const r=parseLink($("#fLink").value),m=$("#linkInfo");
     if(!$("#fLink").value.trim()){m.textContent="";return}
     if(r.id){m.className="msg good";const c=r.handle&&creator(r.handle);m.textContent=r.handle?`Video from @${r.handle}${c?` (trusted for ${forLabel(c).toLowerCase()==="all children"?"all children":forLabel(c)})`:""}`:"Video link recognized"}
-    else if(r.short){m.className="msg bad";m.textContent="Short share link. Use the Remix Shortcut, or open it in your browser and copy the full address."}
+    else if(r.short){m.className="msg good";m.textContent="Short share link. Remix looks up the full video when you add it."}
     else{m.className="msg bad";m.textContent="Not a TikTok video link yet."}};
   $("#fLink").addEventListener("input",info);
   $("#pasteBtn").onclick=async()=>{try{const t=await navigator.clipboard.readText();$("#fLink").value=t.trim();info();$("#fTitle").focus()}catch(e){const m=$("#linkInfo");m.className="msg bad";m.textContent="Your browser blocked pasting. Long-press the box and choose Paste.";$("#fLink").focus()}};
@@ -1662,16 +1711,28 @@ function renderPLibrary(){
       <p><button class="btn sun" id="previewOne">Preview ${esc(possessive(kidName(k)))} app</button></p>
       <div class="filters" role="group" aria-label="Show">${[["all","All"],["new","Unwatched"],["watched","Watched"]].map(([key,l])=>`<button data-lf="${key}" aria-pressed="${libFilter===key}">${l}</button>`).join("")}</div>`
       :`<p class="lede">${plural(S.videos.length,"video")} across ${ks.length} ${ks.length===1?"child":"children"}.</p>`}
-    <div class="vlist">${list.map(v=>`<div class="vitem"><span class="sw" style="background:${v.demo?`linear-gradient(160deg,${v.scene.bg[0]},${v.scene.bg[1]})`:swatch(v)}">${v.demo?v.scene.emoji:""}</span><div><b>${esc(v.title||"Untitled video")}</b><small>${v.handle?"@"+esc(v.handle):""}${v.from?(v.handle?" · ":"")+"Added by "+esc(v.from):""}</small><span class="for-line">For: ${esc(forLabel(v))}</span>
+    <div class="vlist">${list.map(v=>`<div class="vitem"><button class="sw watch" data-watch="${v.id}" aria-label="Watch ${esc(v.title||"video")}" style="background:${v.demo?`linear-gradient(160deg,${v.scene.bg[0]},${v.scene.bg[1]})`:swatch(v)}">${v.demo?v.scene.emoji:`<span class="play" aria-hidden="true">▶</span>`}</button><div><b class="watch-t" data-watch="${v.id}">${esc(v.title||"Untitled video")}</b><small>${v.handle?"@"+esc(v.handle):""}${v.from?(v.handle?" · ":"")+"Added by "+esc(v.from):""}</small><span class="for-line">For: ${esc(forLabel(v))}</span>
         ${k?`<span class="status ${seen[v.id]?"w":"n"}">${seen[v.id]?"✓ Watched":"Not watched yet"}</span>${KD(k.id).favorites.includes(v.id)?` <span class="status w">♥ favorite</span>`:""}`:`<div class="kidstat">${statusChips(v)}</div>`}</div>
         <div class="acts"><button class="x" data-for="${v.id}">Who</button><button class="x danger-x" data-del="${v.id}" aria-label="Remove ${esc(v.title||"video")}">Remove</button></div></div>`).join("")||`<p class="hint">${S.videos.length?"Nothing in this list.":"No videos yet. Add one from the Add tab, or turn on sample content in Settings."}</p>`}</div></div>`;
+  el.querySelectorAll("[data-watch]").forEach(b=>b.onclick=()=>libFeed(list,b.dataset.watch));
   el.querySelectorAll("[data-lk]").forEach(b=>b.onclick=()=>{libKid=b.dataset.lk;libFilter="all";renderPLibrary()});
   el.querySelectorAll("[data-lf]").forEach(b=>b.onclick=()=>{libFilter=b.dataset.lf;renderPLibrary()});
   $("#previewOne")&&($("#previewOne").onclick=()=>startPreview(k.id));
   el.querySelectorAll("[data-for]").forEach(b=>b.onclick=()=>editAudience(S.videos.find(x=>x.id===b.dataset.for),"video",renderPLibrary));
   el.querySelectorAll("[data-del]").forEach(b=>b.onclick=async()=>{
     const v=S.videos.find(x=>x.id===b.dataset.del);if(!await ask({title:`Remove "${v.title||"this video"}"?`,body:"It will disappear from every child's feed, favorites and collections.",ok:"Remove",danger:true}))return;
-    S.videos=S.videos.filter(x=>x.id!==v.id);purgeVideoIds(new Set([v.id]));save();renderPLibrary()});
+    S.videos.splice(0,S.videos.length,...S.videos.filter(x=>x.id!==v.id));purgeVideoIds(new Set([v.id]));save();renderPLibrary()});
+}
+/* Parents: watch the family's videos full screen, swiping through the list on screen. */
+function libFeed(list,startId){
+  let box=$("#rxFeed");if(!box){box=document.createElement("div");box.id="rxFeed";document.body.appendChild(box)}
+  box.innerHTML=`<div class="top"><button class="rx-back" id="lfClose" aria-label="Close">‹</button><b>Videos</b></div>
+    <div class="scroller">${list.map(v=>`<section class="sl" data-v="${v.id}" style="background:#111">
+      ${v.demo?fakeStage(v):(v.postId?`<iframe src="${playerSrc(v.postId)}" allow="autoplay; encrypted-media; fullscreen" title="${esc(v.title||"Video")}"></iframe>`:"🎬")}
+      <div class="cap">${v.handle?`<b>@${esc(v.handle)}</b>`:""}${esc(v.title||"")}<br><small>For ${esc(forLabel(v))}${v.sentBy?" · sent by "+esc(v.sentBy):""}</small></div></section>`).join("")}</div>`;
+  box.hidden=false;document.body.style.overflow="hidden";document.body.classList.add("rx-feedopen");
+  const start=box.querySelector(`[data-v="${startId}"]`);if(start)start.scrollIntoView();
+  $("#lfClose").onclick=()=>{box.hidden=true;box.innerHTML="";document.body.style.overflow="";document.body.classList.remove("rx-feedopen")};
 }
 function renderPCreators(){
   const el=$("#p-creators");
@@ -1691,7 +1752,7 @@ function renderPCreators(){
     if(f!==ALL&&!f.length){m.className="msg bad";m.textContent="Check at least one child.";return}
     S.trusted.push({handle:h,name:$("#trustName").value.trim(),avatar:CREATOR_AV[S.trusted.length%CREATOR_AV.length],color:SWATCHES[hashN(h)%SWATCHES.length],for:f,addedAt:Date.now()});save();renderPCreators();toast("Creator added")};
   el.querySelectorAll("[data-for]").forEach(b=>b.onclick=()=>editAudience(creator(b.dataset.for),"creator",renderPCreators));
-  el.querySelectorAll("[data-untrust]").forEach(b=>b.onclick=async()=>{if(!await ask({title:`Remove @${b.dataset.untrust}?`,body:"Their videos stay in Picks for you but leave everyone's Following list.",ok:"Remove",danger:true}))return;S.trusted=S.trusted.filter(t=>t.handle!==b.dataset.untrust);save();renderPCreators()});
+  el.querySelectorAll("[data-untrust]").forEach(b=>b.onclick=async()=>{if(!await ask({title:`Remove @${b.dataset.untrust}?`,body:"Their videos stay in Picks for you but leave everyone's Following list.",ok:"Remove",danger:true}))return;S.trusted.splice(0,S.trusted.length,...S.trusted.filter(t=>t.handle!==b.dataset.untrust));save();renderPCreators()});
 }
 function childSheet(k){
   const isNew=!k,sheet=$("#sheet");
@@ -1731,11 +1792,11 @@ function childSheet(k){
 function renderPKids(){
   const el=$("#p-kids"),ks=kids();
   el.innerHTML=`<div class="page-inner">${parentHead("Family")}
-    <div class="vlist">${ks.map(k=>{const n=S.videos.filter(v=>visibleTo(v,k.id)).length,un=S.videos.filter(v=>visibleTo(v,k.id)&&!KD(k.id).seen[v.id]).length;return `<div class="kidrow"><span class="av">${kidAv(k)}</span><div><b>${esc(kidName(k))}</b><small>@${esc(k.username)}</small><small>${plural(n,"video")} · ${un} unwatched</small></div><button class="mini" data-prev="${k.id}">Preview</button><button class="mini" data-edit="${k.id}">Edit</button></div>`}).join("")||`<p class="hint">No children yet.</p>`}</div>
+    <div class="vlist">${ks.map(k=>{const n=S.videos.filter(v=>visibleTo(v,k.id)).length,un=S.videos.filter(v=>visibleTo(v,k.id)&&!KD(k.id).seen[v.id]).length;return `<div class="kidrow"><span class="av">${kidAv(k)}</span><div><b>${esc(kidName(k))}</b><small>@${esc(k.username)}</small><small>${plural(n,"video")} · ${un} unwatched</small><small class="kid-follows">${(()=>{const f=followsOf(k);return f.length?"Follows "+f.map(h=>"@"+esc(h)).join(", "):"Not following anyone yet"})()}</small></div><button class="mini" data-prev="${k.id}">Preview</button><button class="mini" data-edit="${k.id}">Edit</button></div>`}).join("")||`<p class="hint">No children yet.</p>`}</div>
     <p style="margin-top:18px"><button class="btn" id="addKid" style="width:100%">Add a child</button></p>
-    <p class="hint">New children automatically get every video and creator shared with all children.</p>
+    <p class="hint">New children automatically get every video shared with all children. Kids choose who they follow.</p>
     <h3 style="margin-top:22px">Sharing</h3>
-    <p class="hint" style="margin-top:0">Lets a child send videos to brothers and sisters with sharing on, and to kids in families you've connected. Videos only, no messages.</p>
+    <p class="hint" style="margin-top:0">Kids can always send videos to you. Sharing also lets a child send to brothers and sisters with sharing on, and to kids in families you've connected. Videos only, no typed messages.</p>
     <div class="rx-card">${ks.map(k=>`<div class="rx-row"><span class="av">${kidAv(k)}</span><span class="nm"><b>${esc(kidName(k))}</b><small>${k.allowSharing?"Can send and get videos":"Sharing is off"}</small></span><input type="checkbox" class="rx-tog" data-share="${k.id}" ${k.allowSharing?"checked":""} aria-label="Allow sharing for ${esc(kidName(k))}"></div>`).join("")}</div>
     ${familySection()}</div>`;
   wireFamily(el,renderPKids);
@@ -1747,8 +1808,11 @@ function renderPKids(){
 function renderPSettings(){
   if(adminFam&&isAdminAcct()){renderAdminFamily();return}
   const el=$("#p-settings"),a=me();
+  setTimeout(()=>{["#pEditAv","#pEditPic"].forEach(id=>{const b=$(id);if(b)b.onclick=()=>openAvatarSheet(me(),renderPSettings)})},0);
   el.innerHTML=`<div class="page-inner">${parentHead("Me")}
-    <div class="me" style="padding-bottom:6px"><span class="av" style="background:var(--surface2)">${kidAv(a)}</span><p class="uname">${esc(a.name)}</p><p class="rname">Parent · @${esc(a.username)}</p></div>
+    <div class="me" style="padding-bottom:6px"><button class="av-edit" id="pEditAv" aria-label="Change your picture"><span class="av" style="background:var(--surface2)">${kidAv(a)}</span><span class="pen" aria-hidden="true"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></span></button>
+      <p class="uname">${esc(a.name)}</p><p class="rname">Parent · @${esc(a.username)}</p>
+      <div class="prof-actions"><button class="btn ghost" id="pEditPic">Edit picture</button></div></div>
     ${adminSection()}
     ${window.WEBAPPS_SUITE?`<h3>Name, picture and password</h3><p class="hint" style="margin-top:0">They're shared by every app on Web Apps, so you change them in one place.</p><p><button class="btn ghost" id="rxHub" style="width:100%">Open your Web Apps account</button></p>`:`<h3>Your password</h3>
     <form class="stack" id="myLogin" novalidate>
@@ -1799,7 +1863,7 @@ const RXL={
     const meAdmin=!!(WebApps.me.is_admin||RXL.isAppAdmin);
     profs.forEach(p=>{const a=A[p.id]||{};ensure(p.family_id).accounts.push({id:p.id,role:p.role,name:a.display_name||"Someone",username:a.username||"",
       avatar:p.avatar||"🙂",photo:a.avatar||"",theme:p.theme||"default",allowSharing:!!p.allow_sharing,admin:p.id===WebApps.me.id&&meAdmin})});
-    kids.forEach(k=>{const p=profs.find(x=>x.id===k.child_id);if(p)ensure(p.family_id).kidData[k.child_id]=Object.assign({favorites:[],collections:[],seen:{}},k.data||{})});
+    kids.forEach(k=>{const p=profs.find(x=>x.id===k.child_id);if(p)ensure(p.family_id).kidData[k.child_id]=Object.assign({favorites:[],collections:[],seen:{},follows:[],unfollowed:[]},k.data||{})});
     n.links=links.map(l=>({from:l.from_family,to:l.to_family,status:l.status}));
     n.shares=shares.map(s=>({id:s.id,videoKey:s.video_key,video:s.video,fromId:s.from_child,fromName:(A[s.from_child]||{}).display_name||"Someone",fromFam:s.from_family,
       toId:s.to_child,toName:(A[s.to_child]||{}).display_name||"Someone",toFam:s.to_family,status:s.status,at:Date.parse(s.created_at),reaction:s.reaction,
