@@ -54,6 +54,24 @@ main{flex:1;min-height:0;position:relative}
 .stage iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}
 .shield{position:absolute;inset:0;z-index:2}
 .paused-badge{position:absolute;inset:0;display:grid;place-items:center;z-index:3;pointer-events:none;opacity:0;transition:opacity .15s}
+/* "Tap for sound": shown in the middle of a video the device started muted */
+.snd-cta{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:5;border:0;background:none;padding:0;cursor:pointer;display:flex;--cta-bg:#FF3D7F;--cta-ink:#fff;--cta-glow:rgba(255,61,127,.45)}
+.snd-cta[hidden]{display:none}
+.snd-cta .pulse{position:absolute;inset:0;border-radius:999px;background:var(--cta-bg);animation:ctaPulse 1.6s ease-out infinite}
+.snd-cta .in{position:relative;display:flex;align-items:center;gap:10px;white-space:nowrap;border-radius:999px;padding:16px 26px 16px 20px;background:var(--cta-bg);color:var(--cta-ink);font:800 19px/1 Figtree,system-ui,sans-serif;box-shadow:0 8px 26px var(--cta-glow)}
+.snd-cta .in svg{display:block;animation:ctaWiggle 1.6s ease-in-out infinite}
+.snd-cta .in svg *{stroke:var(--cta-ink)}.snd-cta .in svg path:first-child{fill:var(--cta-ink)}
+.snd-cta:focus-visible .in{outline:3px solid #FFD60A;outline-offset:3px}
+@keyframes ctaPulse{0%{transform:scale(1);opacity:.55}100%{transform:scale(1.35);opacity:0}}
+@keyframes ctaWiggle{0%,100%{transform:rotate(0)}20%{transform:rotate(-10deg)}40%{transform:rotate(9deg)}60%{transform:rotate(-6deg)}80%{transform:rotate(3deg)}}
+@media (prefers-reduced-motion:reduce){.snd-cta .pulse,.snd-cta .in svg{animation:none}.snd-cta .pulse{opacity:0}}
+html[data-skin="holiday"] .snd-cta{--cta-bg:#FFFFFF;--cta-ink:#9E1523;--cta-glow:rgba(0,0,0,.4)}
+html[data-skin="holiday"] .snd-cta .in{border:3px solid #D72638;box-shadow:0 0 0 4px #fff,0 10px 28px rgba(0,0,0,.4);font:700 24px/1 "Mountains of Christmas",Figtree,cursive;padding:12px 26px 12px 18px}
+html[data-skin="pirate"] .snd-cta{--cta-bg:#E0B45A;--cta-ink:#F6E7C4;--cta-glow:rgba(0,0,0,.45)}
+html[data-skin="pirate"] .snd-cta .pulse{border-radius:14px}
+html[data-skin="pirate"] .snd-cta .in{border-radius:14px;border:3px solid #2A1808;background:linear-gradient(#94622F,#6A4220 55%,#5A3718);font:400 26px/1 "Pirata One","IM Fell English SC",serif;letter-spacing:.02em;text-shadow:0 2px 0 #2A1808;box-shadow:inset 0 2px 0 rgba(255,230,180,.35),inset 0 -3px 0 rgba(0,0,0,.25),0 10px 26px rgba(0,0,0,.45);padding:11px 24px 11px 16px}
+html[data-skin="dragon"] .snd-cta{--cta-bg:#E8742C;--cta-ink:#1A0E05;--cta-glow:rgba(232,116,44,.7)}
+html[data-skin="dragon"] .snd-cta .in{border:2px solid #FFB36B;background:linear-gradient(#F08A3A,#C9561C);font:400 19px/1 "Uncial Antiqua",Figtree,serif;box-shadow:0 0 22px rgba(232,116,44,.7),0 10px 26px rgba(0,0,0,.45)}
 .paused-badge.show{opacity:1}
 .paused-badge span{width:72px;height:72px;display:grid;place-items:center;opacity:.85}
 .caption{position:absolute;left:0;right:0;bottom:0;z-index:3;padding:80px 84px 18px 14px;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.55));pointer-events:none;text-shadow:0 1px 3px rgba(0,0,0,.45)}
@@ -1328,6 +1346,7 @@ function renderFeed(startId){
       <div class="stage">
         ${v.demo?fakeStage(v):`<div class="slot"></div>`}
         <div class="shield" aria-label="Tap to pause or play"></div>
+        ${v.demo?"":`<button class="snd-cta" hidden aria-label="Tap for sound"><span class="pulse" aria-hidden="true"></span><span class="in"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9a4 4 0 010 6M18.5 6.5a7.5 7.5 0 010 11"/></svg>Tap for sound</span></button>`}
         <div class="paused-badge"><span><svg width="64" height="64" viewBox="0 0 24 24" fill="rgba(255,255,255,.85)"><path d="M8 5l11 7-11 7z"/></svg></span></div>
         ${v.demo?"":`<div class="fail"><p>This video can't play right now. It may have been removed by its creator, or this preview is blocking the player.</p></div>`}
         <div class="caption">
@@ -1368,7 +1387,7 @@ function fakeStage(v){
   return `<div class="fake" style="background:linear-gradient(160deg,${s.bg[0]},${s.bg[1]})">${orbs}<div class="big ${s.motion}">${s.emoji}</div><span class="sample">Sample video</span></div>`;
 }
 function sndBtnHTML(on){return `<span class="ico">${soundIcon(on)}</span>${on?"Sound":"Muted"}`}
-function setSlideSnd(sl,on,label){const b=sl&&sl.querySelector(".snd");if(!b)return;b.innerHTML=sndBtnHTML(on);if(label)b.lastChild.textContent=label;b.setAttribute("aria-label",on?"Mute":"Turn sound on")}
+function setSlideSnd(sl,on,prompt){if(!sl)return;const b=sl.querySelector(".snd");if(b){b.innerHTML=sndBtnHTML(on);b.setAttribute("aria-label",on?"Mute":"Turn sound on")}const c=sl.querySelector(".snd-cta");if(c)c.hidden=!prompt}
 /* Phones block sound on a video that starts without a tap. When that happens the video plays muted and its button says so; one tap brings the sound back. */
 function restoreSound(p){if(!p||!p.autoMuted||!soundOn)return false;p.autoMuted=false;send(p,"unMute");setSlideSnd(p.slide,true);return true}
 function soundIcon(on=soundOn){return on
@@ -1376,6 +1395,7 @@ function soundIcon(on=soundOn){return on
   :`<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="#fff"/><path d="M17 9l5 6M22 9l-5 6"/></svg>`}
 function wireSlide(sl){
   const id=sl.dataset.id,i=+sl.dataset.i;
+  sl.querySelector(".snd-cta")?.addEventListener("click",()=>{const p=players.get(i);if(p&&restoreSound(p)&&!p.playing)ctl(p,"play")});
   sl.querySelector(".shield").addEventListener("click",()=>{const p=players.get(i);if(!p)return;if(p.autoMuted&&restoreSound(p)){if(!p.playing)ctl(p,"play");return}p.playing?ctl(p,"pause"):ctl(p,"play")});
   sl.querySelectorAll(".who").forEach(b=>b.addEventListener("click",e=>openCreator(e.currentTarget.dataset.creator)));
   sl.querySelector(".fav").addEventListener("click",e=>{
@@ -1390,6 +1410,7 @@ function wireSlide(sl){
     if(restoreSound(players.get(i)))return;
     soundOn=!soundOn;
     document.querySelectorAll(".snd").forEach(b=>{b.innerHTML=`<span class="ico">${soundIcon()}</span>${soundOn?"Sound":"Muted"}`;b.setAttribute("aria-label",soundOn?"Mute":"Turn sound on")});
+    document.querySelectorAll(".snd-cta").forEach(c=>c.hidden=true);
     players.forEach(p=>{if(p.kind==="tt"){p.autoMuted=false;send(p,soundOn?"unMute":"mute")}});
     if(currentList[activeIdx]?.demo)toast(soundOn?"Sound on (sample videos are silent)":"Muted");
   });
@@ -1426,7 +1447,7 @@ function mount(sl,k){
   p.fail=setTimeout(()=>{if(!p.ready)sl.querySelector(".fail").classList.add("show")},9000);
   players.set(k,p);
 }
-function unmount(k){const p=players.get(k);if(p.kind==="demo")clearInterval(p.timer);else{clearTimeout(p.fail);p.iframe.remove()}p.slide.querySelector(".progress i").style.width="0";players.delete(k)}
+function unmount(k){const p=players.get(k);{const c=p.slide&&p.slide.querySelector(".snd-cta");if(c)c.hidden=true}if(p.kind==="demo")clearInterval(p.timer);else{clearTimeout(p.fail);p.iframe.remove()}p.slide.querySelector(".progress i").style.width="0";players.delete(k)}
 function stopAllPlayers(){clearTimeout(seenTimer);[...players.keys()].forEach(unmount);activeIdx=-1}
 function ctl(p,action){
   if(p.kind==="demo"){
