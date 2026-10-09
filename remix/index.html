@@ -1748,12 +1748,7 @@ function renderPAdd(){
       <p class="msg" id="addMsg"></p>
       <button class="btn" type="submit">Add video</button>
     </form>
-    <p class="hint">Links copied from TikTok's share button are short (tiktok.com/t/… or vm.tiktok.com/…). Remix expands them for you. On iPhone and iPad, the Shortcut below expands them for you; otherwise open the link in your browser and copy the full address. The hosted version will expand short links for you.</p>
-    <h3>Add from your phone's share menu</h3>
-    <details class="hint"><summary>iPhone and iPad: set up a Shortcut</summary>
-      <ol style="padding-left:20px;line-height:1.6"><li>Open the Shortcuts app and create a shortcut named "Add to Remix".</li><li>Turn on "Show in Share Sheet" and set it to receive URLs.</li><li>Add an "Expand URL" action on the Shortcut Input. This turns TikTok's short share link into the full video link.</li><li>Add a "URL Encode" action on the expanded URL.</li><li>Add "Open URL" with <code style="word-break:break-all">${esc(location.origin+location.pathname)}?add=</code> followed by the encoded text.</li></ol>
-      Then in TikTok, tap Share, then More, then "Add to Remix". If you're signed in as a parent, this page opens with the link filled in.</details>
-    <details class="hint" style="margin-top:8px"><summary>Android</summary><p>Once the app is hosted and installed to the home screen, Remix can appear directly in Android's share menu.</p></details></div>`;
+</div>`;
   wireForPicker("addFor");
   const info=()=>{const r=parseLink($("#fLink").value),m=$("#linkInfo");
     if(!$("#fLink").value.trim()){m.textContent="";return}
