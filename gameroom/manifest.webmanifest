@@ -1,0 +1,28 @@
+{
+ "name": "GameRoom",
+ "short_name": "GameRoom",
+ "description": "Family games and game-night tools.",
+ "start_url": "./",
+ "scope": "./",
+ "display": "standalone",
+ "background_color": "#6C4CE0",
+ "theme_color": "#6C4CE0",
+ "icons": [
+  {
+   "src": "icons/icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "icons/icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "any maskable"
+  },
+  {
+   "src": "icons/icon.svg",
+   "sizes": "any",
+   "type": "image/svg+xml"
+  }
+ ]
+}
