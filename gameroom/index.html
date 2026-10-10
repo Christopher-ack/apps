@@ -5235,11 +5235,15 @@ if(typeof module !== 'undefined' && module.exports) module.exports = CHESS;
   let resignArmed = 0;
   function drawBar(){
     const over = finished();
-    $$('#ch-undo').disabled = !canUndo();
+    const und = $$('#ch-undo');
+    und.hidden = G.mode === 'online';       /* online: just Nudge and Resign */
+    und.disabled = !canUndo();
     const hint = $$('#ch-hint');
     hint.hidden = G.mode !== 'solo';
     hint.disabled = busy || over || G.pos.turn !== G.myColor;
-    $$('#ch-flip').disabled = busy;
+    const flip = $$('#ch-flip');
+    flip.hidden = G.mode === 'online';      /* online games keep each player's side; Nudge takes its place */
+    flip.disabled = busy;
     $$('#ch-nudge').hidden = !(G.mode === 'online' && !over && G.pos.turn !== G.myColor);
     const r = $$('#ch-resign');
     r.disabled = over || (G.mode === 'online' && !G.match);
