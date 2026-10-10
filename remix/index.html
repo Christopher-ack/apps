@@ -1277,13 +1277,13 @@ function goBack(){
 }
 function go(t,fromNav){
   if(fromNav)navStack=[];
-  if(t==="feed"&&fromNav)shuffleSeed=Math.random();
+  if(t==="feed"&&fromNav&&tab==="feed")delete feedPos[feedKey()];   /* tapping Home while on Home: back to the top */
   tab=t;setNav(t);
   if(t!=="feed")pauseAll();
   const R={feed:()=>renderFeed(),login:renderLogin,"p-add":renderPAdd,"p-library":renderPLibrary,"p-creators":renderPCreators,"p-settings":renderPSettings,"p-kids":renderPKids,
     profile:()=>{if(fromNav)profView={kind:"home",ptab:profView.ptab};renderProfile()}};
   R[t]&&R[t]();
-  const v=document.getElementById(t);if(v&&fromNav)v.scrollTop=0;
+  const v=document.getElementById(t);if(v&&fromNav&&t!=="feed")v.scrollTop=0;   /* the feed keeps its own place */
 }
 function signOut(){stopAllPlayers();previewKid=null;if(window.REMIX_LIVE){WebApps.signOut().then(()=>RXL.start());return}S.session=null;save();boot()}
 
@@ -1312,6 +1312,12 @@ function renderLoginDemo(msg){
 
 /* ---------- Feed ---------- */
 let soundOn=false,observer=null,activeIdx=-1,currentList=[],shuffleSeed=Math.random();
+/* The feed's order and the video you're on are kept for as long as Remix stays
+   open: going to your profile and back, or a refresh of the family's data,
+   puts you back on the same video with the ones you just watched still behind
+   you. Only reopening Remix builds a fresh order. */
+let feedOrder={},feedPos={};
+const feedKey=()=>feedMode+"|"+(curKid()?.id||me()?.id||"");
 const players=new Map();
 function seededShuffle(list,seed){let t=Math.floor(seed*4294967296)>>>0;const rnd=()=>{t=(t+0x6D2B79F5)>>>0;let r=Math.imul(t^(t>>>15),1|t);r^=r+Math.imul(r^(r>>>7),61|r);return((r^(r>>>14))>>>0)/4294967296};
   const out=list.slice();for(let i=out.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[out[i],out[j]]=[out[j],out[i]]}return out}
@@ -1321,10 +1327,24 @@ function computeList(){
   const base=feedMode==="following"?mine.filter(v=>isFollowing(v.handle)):mine;
   if(!base.length)return [];
   // Unwatched videos in the order they were added (oldest first), then the caught-up card, then watched videos shuffled.
-  // The shuffle changes each time Remix opens or Home is tapped, but stays put while you scroll.
-  const fresh=base.filter(v=>!seen[v.id]).sort((a,b)=>a.addedAt-b.addedAt);
-  const old=seededShuffle(base.filter(v=>seen[v.id]).sort((a,b)=>a.id<b.id?-1:1),shuffleSeed);
-  return [...fresh,{divider:true,id:"__caughtup",fresh:fresh.length,old:old.length},...old];
+  // Built once per app session; after that videos stay where they are, even once watched.
+  const key=feedKey(),byId=new Map(base.map(v=>[v.id,v]));
+  let order=feedOrder[key];
+  if(!order){
+    const fresh=base.filter(v=>!seen[v.id]).sort((a,b)=>a.addedAt-b.addedAt);
+    const old=seededShuffle(base.filter(v=>seen[v.id]).sort((a,b)=>a.id<b.id?-1:1),shuffleSeed);
+    order=[...fresh.map(v=>v.id),"__caughtup",...old.map(v=>v.id)];
+  }else{
+    order=order.filter(id=>id==="__caughtup"||byId.has(id));          /* anything taken away goes */
+    const known=new Set(order),added=base.filter(v=>!known.has(v.id)).sort((a,b)=>a.addedAt-b.addedAt);
+    if(added.length){                                                 /* new videos: with the new ones, or just ahead of you */
+      const d=order.indexOf("__caughtup"),at=order.indexOf(feedPos[key]);
+      order.splice(Math.max(d,at+1),0,...added.map(v=>v.id));
+    }
+  }
+  feedOrder[key]=order;
+  const d=order.indexOf("__caughtup");
+  return order.map(id=>id==="__caughtup"?{divider:true,id,fresh:d,old:order.length-d-1}:byId.get(id));
 }
 function feedTop(){
   if(feedFilter)return `<div class="feed-top"><button class="chip" id="exitFilter" aria-label="Close ${esc(feedFilter.label)}">‹&nbsp; ${esc(feedFilter.label)}</button></div>`;
@@ -1335,6 +1355,7 @@ function renderFeed(startId){
   stopAllPlayers();
   if(observer)observer.disconnect();
   currentList=computeList();
+  if(!startId&&!feedFilter)startId=feedPos[feedKey()];      /* back to the video you were on */
   const wire=()=>{
     $("#exitFilter")?.addEventListener("click",()=>{if(navStack.length)goBack();else{feedFilter=null;renderFeed()}});
     document.querySelectorAll("#feedTop .seg").forEach(b=>b.addEventListener("click",()=>{feedMode=b.dataset.mode;renderFeed()}));
@@ -1437,6 +1458,7 @@ function activate(i){
   if(i===activeIdx)return;activeIdx=i;
   clearTimeout(seenTimer);
   const cur=currentList[i];
+  if(cur&&!feedFilter)feedPos[feedKey()]=cur.id;
   if(cur&&!cur.divider&&!feedFilter&&!previewKid&&me()?.role==="child"&&!D().seen[cur.id]){
     seenTimer=setTimeout(()=>{if(!curKid()||currentList[activeIdx]!==cur)return;D().seen[cur.id]=Date.now();save()},3000);
   }
