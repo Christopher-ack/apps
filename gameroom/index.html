@@ -535,7 +535,7 @@ textarea::placeholder{color:var(--ink3)}
   --coord-on-light:rgba(226,214,255,.65);--coord-on-dark:rgba(190,164,255,.6);
   --pc-filter:drop-shadow(0 0 5px var(--glow)) drop-shadow(0 2px 3px rgba(0,0,0,.55));
   --atmo:radial-gradient(ellipse at 50% 42%, rgba(0,0,0,0) 34%, rgba(9,4,26,.6) 100%)}
-.theme-arcane .light{background-color:#463C6B;
+.theme-arcane .light{background-color:#4E4478;
   background-image:
     radial-gradient(circle at 74% 24%, rgba(190,160,255,.16), transparent 52%),
     radial-gradient(circle at 26% 78%, rgba(0,0,0,.22), transparent 54%),
@@ -547,13 +547,13 @@ textarea::placeholder{color:var(--ink3)}
     radial-gradient(circle at 74% 76%, rgba(0,0,0,.4), transparent 58%),
     repeating-linear-gradient(62deg, rgba(190,160,255,.07) 0 1px, rgba(190,160,255,0) 1px 9px),
     repeating-linear-gradient(152deg, rgba(0,0,0,.2) 0 1px, rgba(0,0,0,0) 1px 13px)}
-.theme-arcane .pcsvg.w{--pf:#D9E8F8;--ps:#42608C;--ph:#FFFFFF;--pl:#7FA6D0;--pb:#B9CFE6;
-  --glow:rgba(130,200,255,.75)}
-.theme-arcane .pcsvg.b{--pf:#7B57C8;--ps:#1C0F3C;--ph:#C4A8FF;--pl:#DCC6FF;--pb:#5C3FA0;
-  --glow:rgba(160,110,255,.7)}
+.theme-arcane .pcsvg.w{--pf:#E2F0FF;--ps:#2E4D7A;--ph:#FFFFFF;--pl:#6E98CC;--pb:#B9D2EE;
+  --glow:rgba(120,205,255,.85)}
+.theme-arcane .pcsvg.b{--pf:#F0A43C;--ps:#3A1704;--ph:#FFD58A;--pl:#8A3F0C;--pb:#C9761F;
+  --glow:rgba(255,150,50,.8)}
 #board.theme-arcane .dot{background:rgba(170,215,255,.55);box-shadow:0 0 8px rgba(150,200,255,.6)}
-#board.theme-arcane .ring{border-color:rgba(196,150,255,.8);box-shadow:0 0 10px rgba(160,110,255,.5)}
-.theme-arcane .last{box-shadow:inset 0 0 0 3px rgba(150,110,255,.8)}
+#board.theme-arcane .ring{border-color:rgba(143,220,255,.85);box-shadow:0 0 10px rgba(120,205,255,.5)}
+.theme-arcane .last{box-shadow:inset 0 0 0 3px rgba(143,220,255,.75)}
 .theme-arcane .sel{box-shadow:inset 0 0 0 3px rgba(130,220,255,.95)}
 
 /* --- Holiday (key 'midwinter') — snow on snow, strung with lights ---
@@ -572,20 +572,20 @@ textarea::placeholder{color:var(--ink3)}
   --atmo-size:84px 90px, 122px 106px, 68px 76px}
 
 /* Fresh powder — bright, with a fine sparkle. */
-.theme-midwinter .light{background-color:#FFFFFF;
+.theme-midwinter .light{background-color:#EAF3F9;
   background-image:
     radial-gradient(circle at 24% 30%, rgba(255,255,255,1) 0 1.3px, transparent 1.7px),
     radial-gradient(circle at 72% 68%, rgba(206,226,238,.7) 0 1.5px, transparent 1.9px),
-    linear-gradient(158deg, #FFFFFF 0%, #F1F7FB 100%)}
+    linear-gradient(158deg, #F2F8FC 0%, #E2EEF6 100%)}
 /* Packed, shaded snow — the same white, just in shadow. */
-.theme-midwinter .dark{background-color:#D4E2EC;
+.theme-midwinter .dark{background-color:#B4CCDD;
   background-image:
-    radial-gradient(circle at 34% 64%, rgba(255,255,255,.75) 0 2.4px, transparent 3px),
-    radial-gradient(circle at 74% 26%, rgba(255,255,255,.6)  0 2px,   transparent 2.6px),
-    linear-gradient(158deg, #DEEAF2 0%, #C6D8E5 100%);
+    radial-gradient(circle at 34% 64%, rgba(255,255,255,.6) 0 2.4px, transparent 3px),
+    radial-gradient(circle at 74% 26%, rgba(255,255,255,.5)  0 2px,   transparent 2.6px),
+    linear-gradient(158deg, #C2D7E6 0%, #A6C1D5 100%);
   box-shadow:inset 0 1px 2px rgba(120,155,178,.28)}
 
-.theme-midwinter .pcsvg.w{--pf:#FFFFFF;--ps:#4E7288;--ph:#FFFFFF;--pl:#83A6BC;--pb:#DFECF4}
+.theme-midwinter .pcsvg.w{--pf:#FFFFFF;--ps:#2F5268;--ph:#FFFFFF;--pl:#83A6BC;--pb:#DFECF4}
 .theme-midwinter .pcsvg.b{--pf:#A31F2E;--ps:#4A2418;--ph:#D2505F;--pl:#E68C97;--pb:#7C1421}
 
 /* Snowmen and elves need more than one colour each, so their fills come from
@@ -615,7 +615,7 @@ textarea::placeholder{color:var(--ink3)}
   stroke-dasharray:2 2.8}
 /* On a white board a soft shadow is the only thing separating a white piece
    from the square under it. */
-#board.theme-midwinter .pc{filter:drop-shadow(0 2px 4px rgba(58,96,120,.55))}
+#board.theme-midwinter .pc{width:98%;height:98%;filter:drop-shadow(0 2px 3px rgba(30,64,88,.6))}
 #board.theme-midwinter .dot{background:rgba(60,110,90,.4)}
 #board.theme-midwinter .ring{border-color:rgba(163,31,46,.7)}
 .theme-midwinter .last{box-shadow:inset 0 0 0 3px rgba(214,169,74,.95)}
@@ -1530,6 +1530,142 @@ h1,h2,h3,.wordmark{font-weight:700;letter-spacing:0}
   font:inherit;font-weight:700;font-size:13.5px;white-space:nowrap;cursor:pointer;flex:none}
 .rtools button svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 .rtools button small{font-weight:600;font-size:12px;color:var(--pillnote)}
+
+/* ===================== Chess: the page wears the board's theme ===================== */
+#chess[data-theme]{transition:background .4s}
+#chess[data-theme="arcane"]{--acc:#8FDCFF;--accink:#0B1630;--accsoft:rgba(143,220,255,.14);--bad:#FF6B8A;
+  background:radial-gradient(120% 70% at 50% 0%, #2A1B5C 0%, #140C2E 58%, #0B0619 100%)}
+#chess[data-theme="midwinter"]{--acc:#FFD84A;--accink:#2E2200;--accsoft:rgba(255,216,74,.16);--ink2:#D8F0E4;--bad:#E8394B;
+  background:
+    radial-gradient(circle at 12% 8%, rgba(255,255,255,.55) 0 1.5px, transparent 2.2px),
+    radial-gradient(circle at 70% 22%, rgba(255,255,255,.45) 0 1.2px, transparent 1.8px),
+    radial-gradient(circle at 40% 60%, rgba(255,255,255,.35) 0 1.4px, transparent 2px),
+    linear-gradient(180deg, #145A40 0%, #0D3F2D 100%);
+  background-size:90px 96px, 130px 110px, 70px 84px, auto}
+#chess:is([data-theme="arcane"],[data-theme="midwinter"]) .chcard{background:rgba(255,255,255,.07)}
+#chess:is([data-theme="arcane"],[data-theme="midwinter"]) .chcard.on{background:var(--accsoft)}
+#chess:is([data-theme="arcane"],[data-theme="midwinter"]) #ch-bar button:not(.hl):not(.sure){background:rgba(255,255,255,.1)}
+#chess:is([data-theme="arcane"],[data-theme="midwinter"]) #ch-status .chip:not(.me):not(.check){background:rgba(255,255,255,.12)}
+/* the round buttons at the top follow the theme too */
+#chess:is([data-theme="arcane"],[data-theme="midwinter"]) #chtop .iconbtn{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.22)}
+#chess:is([data-theme="arcane"],[data-theme="midwinter"]) #chtop .iconbtn svg{stroke:#FFFFFF}
+#chess[data-theme="arcane"] #chtop .iconbtn{box-shadow:0 0 12px rgba(143,220,255,.18)}
+#chess[data-theme="arcane"] .chcard.on{box-shadow:inset 0 0 0 2px var(--acc), 0 0 18px rgba(143,220,255,.28)}
+#chess #boardwrap.lit{padding:30px 24px 26px}
+/* Everything inside a themed chess screen (settings, result card, close
+   buttons, switches) takes the theme's palette instead of the app's purple. */
+#chess[data-theme="arcane"]{--bg:#140C2E;--bg2:#1A1238;--surf:#181C44;--surf2:#222960;--line:rgba(143,220,255,.28);--ink2:#C9D8F0;--ink3:#93A7C6;--acc2:#4FB6E8}
+#chess[data-theme="midwinter"]{--bg:#0F4A35;--bg2:#125A40;--surf:#145C42;--surf2:#1B6B4E;--line:rgba(255,255,255,.26);--ink3:#A9D6C0;--acc2:#C9A21A}
+#chess[data-theme="arcane"] #ch-result{background:rgba(5,3,18,.62)}
+#chess[data-theme="midwinter"] #ch-result{background:rgba(4,30,20,.55)}
+#chess[data-theme="arcane"] #ch-result .chrcard{--ci:#0B1630;--ct:#E6F2FB;--cs:#4A5E7E}
+#chess[data-theme="midwinter"] #ch-result .chrcard{--ci:#0F3A2A;--ct:#E5F3EC;--cs:#4C6E5E}
+#chess:is([data-theme="arcane"],[data-theme="midwinter"]) #ch-result .chrcard{color:var(--ci)}
+#chess:is([data-theme="arcane"],[data-theme="midwinter"]) #ch-result :is(.chrhead,.chrtiles b,.chrgo,.chrrow button){color:var(--ci)}
+#chess:is([data-theme="arcane"],[data-theme="midwinter"]) #ch-result :is(.chrsub,.chrtiles span){color:var(--cs)}
+#chess:is([data-theme="arcane"],[data-theme="midwinter"]) #ch-result :is(.chrtiles div,.chrrow button,.chrclose){background:var(--ct)}
+#chess:is([data-theme="arcane"],[data-theme="midwinter"]) #ch-result .chrclose{border-color:transparent}
+#chess:is([data-theme="arcane"],[data-theme="midwinter"]) #ch-result .chrclose svg{stroke:var(--ci)}
+#chess[data-theme="arcane"] #ch-result .chrgo{background:var(--acc)}
+#chess:is([data-theme="arcane"],[data-theme="midwinter"]) #ch-coach .coachcard{color:var(--ci,#0B1630)}
+
+/* ===================== Profiles: stats for every game ===================== */
+.gstats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.gstat{display:flex;flex-direction:column;gap:8px;min-width:0;padding:12px;border-radius:20px;background:var(--surf);border:1px solid var(--line)}
+.gstat .top{display:flex;align-items:center;gap:9px;min-width:0}
+.gstat .ic{width:34px;height:34px;border-radius:11px;overflow:hidden;flex:none;background:var(--gc,var(--surf2))}
+.gstat .ic svg{width:100%;height:100%;display:block}
+.gstat .gn{font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gstat .big{font-family:var(--display);font-weight:700;font-size:28px;line-height:1}
+.gstat .lbl{font-size:12.5px;color:var(--ink2);margin-top:2px}
+.gstat .more{font-size:12.5px;color:var(--ink2);line-height:1.35}
+.gstat .more b{color:var(--ink);font-weight:800}
+.gstat.none .big{color:var(--ink3)}
+.gstats .loading{grid-column:1/-1;font-size:13px;color:var(--ink2);padding:6px 2px}
+#friendsheet .fprofile{margin-bottom:6px}
+
+/* ===================== Chess: the bigger board, player cards and buttons ===================== */
+#chess #chtop{padding:calc(var(--sat) + 10px) 10px 8px}
+#ch-status{flex:1;min-width:0;display:flex;justify-content:center}
+#ch-status .chip{display:inline-flex;align-items:center;gap:8px;max-width:100%;height:42px;padding:0 16px;border-radius:999px;
+  background:rgba(255,255,255,.16);color:var(--ink);font-family:var(--display);font-weight:600;font-size:17px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#ch-status .chip i{width:10px;height:10px;border-radius:50%;background:currentColor;flex:none}
+#ch-status .chip.me{background:var(--acc);color:var(--accink)}
+/* the chip's outline is a darker shade of its own fill, so it follows the theme */
+#ch-status .chip.me{border-color:var(--acc2,rgba(0,0,0,.18))}
+#ch-status .chip.check{border-color:rgba(0,0,0,.2)}
+#chess[data-theme="arcane"] #ch-status .chip.me{border-color:#4FB6E8}
+#chess[data-theme="midwinter"] #ch-status .chip.me{border-color:#C9A21A}
+#chess:is([data-theme="arcane"],[data-theme="midwinter"]) #ch-status .chip:not(.me):not(.check){border-color:rgba(255,255,255,.22)}
+#ch-status .chip.check{background:var(--bad);color:#FFFFFF}
+.chcard{display:flex;align-items:center;gap:10px;min-height:58px;box-sizing:border-box;margin:0 8px;padding:8px 10px;border-radius:16px;
+  background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 2px transparent;transition:background .25s,box-shadow .25s}
+.chcard.on{background:var(--accsoft);box-shadow:inset 0 0 0 2px var(--acc)}
+.chcard .av{width:40px;height:40px;border-radius:12px;font-size:17px;flex:none}
+.chcard .bot{display:grid;place-items:center;background:#2D1F73}
+.chcard .bot svg{width:24px;height:24px;fill:none;stroke:#C9BBFF;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.chcard .side{border-radius:50%;border:2px solid rgba(255,255,255,.5)}
+.chcard .side.w{background:#F2F0EB}.chcard .side.b{background:#14161C}
+.chcard .who{flex:1;min-width:0}
+.chcard .nm{font-weight:800;font-size:16px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chcard .sub{font-size:13px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chcard.on .sub{color:var(--acc)}
+.chcard .caps{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;max-width:52%;row-gap:2px}
+.chcard .caps .takenpc{width:24px;height:24px;margin-right:-6px}
+.chcard .caps .takenpc:last-of-type{margin-right:0}
+.chcard .lead{margin-left:8px;font-family:var(--mono);font-weight:700;font-size:14px;color:var(--acc)}
+#chess #boardwrap{padding:10px 8px}
+#chess #boardwrap.lit{padding:22px 20px 12px}
+#chess #boardbox{max-width:min(calc(100vw - 16px), calc(100dvh - var(--sat) - var(--sab) - 300px), 560px)}
+#ch-fill{flex:1;min-height:8px}
+#ch-bar{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:8px;padding:0 8px calc(var(--sab) + 14px)}
+#ch-bar button{height:62px;border:0;border-radius:16px;background:rgba(255,255,255,.14);color:var(--ink);cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font:800 13px/1 var(--body);-webkit-tap-highlight-color:transparent}
+#ch-bar button svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#ch-bar button.hl{background:var(--acc);color:var(--accink)}
+#ch-bar button.sure{background:var(--bad);color:#FFFFFF}
+#ch-bar button:disabled{opacity:.38;cursor:default}
+#ch-bar button:active:not(:disabled){transform:scale(.96)}
+#ch-bar button[hidden]{display:none}
+.sq.hint{box-shadow:inset 0 0 0 4px var(--acc)}
+.sq.danger{box-shadow:inset 0 0 0 4px var(--bad)}
+#ch-coach{position:absolute;left:8px;right:8px;bottom:calc(var(--sab) + 90px);z-index:65}
+#ch-coach .coachcard{display:grid;grid-template-columns:auto 1fr;gap:10px 12px;align-items:center;padding:14px;border-radius:20px;
+  background:#FFFFFF;color:#23175A;box-shadow:0 12px 34px rgba(20,8,70,.5);animation:chrRise .25s ease-out both}
+#ch-coach .coachic{width:44px;height:44px;border-radius:14px;background:#FFD84A;display:grid;place-items:center}
+#ch-coach .coachic svg{width:24px;height:24px;fill:none;stroke:#23175A;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#ch-coach b{display:block;font-family:var(--display);font-weight:700;font-size:18px}
+#ch-coach span{font-size:14.5px;color:#5A4C8C;line-height:1.35}
+#ch-coach .coachbtns{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#ch-coach button{height:46px;border:0;border-radius:14px;font:800 14px var(--body);cursor:pointer}
+#ch-coach #coach-back{background:#FFD84A;color:#23175A}
+#ch-coach #coach-go{background:#F1ECFF;color:#23175A}
+/* the end-of-game card: a white sheet with the winner's king on top */
+#ch-result{place-items:end center;padding:0 8px calc(var(--sab) + 16px);background:rgba(28,14,80,.5)}
+#ch-result .chrcard{overflow:visible;max-width:440px;margin-top:70px;padding:22px 20px 20px;border-radius:28px;background:#FFFFFF;color:#23175A;border:0;
+  box-shadow:0 -8px 40px rgba(20,8,70,.45)}
+#ch-result .chrclose{color:#23175A;background:#F1ECFF}
+#ch-result .chrclose svg{stroke:#23175A;fill:none}
+#ch-result .chrmark{width:84px;height:84px;margin:-76px auto 10px;border-radius:26px;background:#FFD84A;border:5px solid #FFFFFF;
+  display:flex;align-items:center;justify-content:center;box-sizing:border-box}
+#ch-result .chrmark::before{display:none}
+#ch-result .chrmark .pcsvg{width:60px;height:60px}
+#ch-result .chrmark.draw .pcsvg{width:38px;height:38px}
+#ch-result .chrhead{font-family:var(--display);font-weight:700;font-size:32px;letter-spacing:0;color:#23175A}
+#ch-result .chrsub{font-size:16px;color:#5A4C8C}
+#ch-result .chrtiles{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:8px;margin:16px 0 12px;
+  animation:chrRise .36s ease-out .46s both}
+#ch-result .chrtiles div{padding:10px 6px;border-radius:14px;background:#F1ECFF;text-align:center}
+#ch-result .chrtiles b{display:block;font-family:var(--display);font-weight:700;font-size:22px;color:#23175A}
+#ch-result .chrtiles span{font-size:12px;font-weight:800;color:#5A4C8C}
+#ch-result .chrgo{width:100%;height:54px;border:0;border-radius:16px;background:#FFD84A;color:#23175A;font:700 18px var(--display);cursor:pointer}
+#ch-result .chrrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+#ch-result .chrrow button{height:50px;border:0;border-radius:16px;background:#F1ECFF;color:#23175A;font:800 15px var(--body);cursor:pointer}
+.chconf{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.chconf i{position:absolute;top:-20px;width:9px;height:15px;border-radius:3px;animation:chConf var(--d,2.6s) cubic-bezier(.3,.6,.5,1) var(--w,0s) forwards}
+@keyframes chConf{to{transform:translate(var(--x,0px),105vh) rotate(var(--r,540deg))}}
+@media (prefers-reduced-motion:reduce){.chconf{display:none}}
 </style>
 
 
@@ -1633,13 +1769,28 @@ h1,h2,h3,.wordmark{font-weight:700;letter-spacing:0}
   <section id="chess" hidden>
     <div id="chtop">
       <button class="iconbtn" id="ch-exit" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
-      <div id="ch-status"></div>
-      <button class="iconbtn" id="ch-undo" aria-label="Take back a move"><svg viewBox="0 0 24 24"><path d="M9 14l-4-4 4-4"/><path d="M5 10h8a5 5 0 0 1 0 10h-2"/></svg></button>
+      <div id="ch-status" aria-live="polite"></div>
       <button class="iconbtn" id="ch-gear" aria-label="Game settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 14.6a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5v.2a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1h.2a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg></button>
     </div>
-    <div id="ch-players"></div>
+    <div class="chcard" id="ch-top"></div>
     <div id="boardwrap"><div id="boardbox"><div id="board"></div></div></div>
-    <div id="ch-taken"></div>
+    <div class="chcard" id="ch-bottom"></div>
+    <div id="ch-fill"></div>
+    <div id="ch-bar">
+      <button id="ch-undo" aria-label="Take back a move"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14l-4-4 4-4"/><path d="M5 10h8a5 5 0 0 1 0 10h-2"/></svg>Undo</button>
+      <button id="ch-hint" class="hl"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg>Hint</button>
+      <button id="ch-nudge" class="hl" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>Nudge</button>
+      <button id="ch-flip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v14M4 15l3 3 3-3M17 20V6M14 9l3-3 3 3"/></svg>Flip</button>
+      <button id="ch-resign"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg><span>Resign</span></button>
+    </div>
+
+    <div id="ch-coach" hidden role="alertdialog" aria-labelledby="coach-head">
+      <div class="coachcard">
+        <div class="coachic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg></div>
+        <div class="coachtx"><b id="coach-head">Careful!</b><span id="coach-body"></span></div>
+        <div class="coachbtns"><button id="coach-back">Pick another move</button><button id="coach-go">Move anyway</button></div>
+      </div>
+    </div>
 
     <!-- GAME SETTINGS, slid in from the right -->
     <div id="ch-scrim" hidden></div>
@@ -1661,7 +1812,16 @@ h1,h2,h3,.wordmark{font-weight:700;letter-spacing:0}
             <button class="switch" id="set-hints" role="switch" aria-pressed="true" aria-label="Show move options"><span class="knob"></span></button>
           </div>
           <p class="note">Marks every square the piece you tapped can reach.</p>
-          <button class="arow" id="set-flipnow"><span class="k">Turn the board now</span></button>
+          <div class="switchrow">
+            <span class="k">Coach me</span>
+            <button class="switch" id="set-coach" role="switch" aria-pressed="false" aria-label="Coach me"><span class="knob"></span></button>
+          </div>
+          <p class="note">Against the computer: warns you before a move that gives a piece away.</p>
+          <div class="switchrow">
+            <span class="k">Sounds</span>
+            <button class="switch" id="set-sound" role="switch" aria-pressed="true" aria-label="Sounds"><span class="knob"></span></button>
+          </div>
+          <p class="note">A click when a piece lands, a crunch for a capture, a chime for check.</p>
         </div>
         <div class="seclabel">Board</div>
         <div class="themegrid" id="ch-themes"></div>
@@ -1670,12 +1830,15 @@ h1,h2,h3,.wordmark{font-weight:700;letter-spacing:0}
 
     <!-- RESULT -->
     <div class="gresult" id="ch-result" hidden>
+      <div class="chconf" id="ch-conf" aria-hidden="true"></div>
       <div class="chrcard">
         <button class="iconbtn chrclose" id="ch-rclose" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
         <div class="chrmark" id="chr-mark"></div>
         <div class="chrhead" id="chr-head"></div>
         <div class="chrsub" id="chr-sub"></div>
-        <div class="chrstats" id="chr-stats"></div>
+        <div class="chrtiles" id="chr-stats"></div>
+        <button class="chrgo" id="chr-again">Rematch</button>
+        <div class="chrrow"><button id="chr-look">See the board</button><button id="chr-done">Done</button></div>
       </div>
     </div>
   </section>
@@ -1931,6 +2094,9 @@ h1,h2,h3,.wordmark{font-weight:700;letter-spacing:0}
       <input type="file" id="photo-input" accept="image/*" hidden>
       <div class="note" id="photo-err" style="color:var(--bad);margin-top:8px"></div>
 
+      <div class="seclabel">Your games</div>
+      <div class="gstats" id="me-gstats"></div>
+
       <div class="seclabel">Appearance</div>
       <div class="seg" id="theme-seg">
         <button data-mode="dark">Dark</button>
@@ -1988,16 +2154,20 @@ h1,h2,h3,.wordmark{font-weight:700;letter-spacing:0}
   <section class="sheet" id="friendsheet" hidden>
     <div class="sheethead">
       <button class="iconbtn" id="fs-close" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
-      <h2>Head to head</h2>
+      <h2>Profile</h2>
     </div>
     <div class="sheetbody">
       <div class="fprofile"><div id="fs-av"></div><div class="nm" id="fs-name"></div><div class="note" id="fs-sub"></div></div>
+      <div class="seclabel" style="margin-top:4px">Head to head</div>
       <div class="h2h">
         <div class="win"><div class="v" id="fs-w">0</div><div class="k">You win</div></div>
         <div class="loss"><div class="v" id="fs-l">0</div><div class="k">They win</div></div>
         <div><div class="v" id="fs-t">0</div><div class="k">Played together</div></div>
       </div>
       <p class="note" id="fs-games"></p>
+      <div class="seclabel" id="fs-gstats-label">Their games</div>
+      <div class="gstats" id="fs-gstats"></div>
+      <p class="note" id="fs-gstats-note" style="margin:8px 0 16px"></p>
       <button class="btn" id="fs-challenge">Challenge</button>
       <button class="btn ghost" id="fs-remove" style="margin-top:10px">Remove friend</button>
     </div>
@@ -2711,6 +2881,79 @@ function renderFriends(){
   list.appendChild(add);
 }
 
+/* ---------------- stats for every game ----------------
+   Matches come from S for you; for anyone else from player_matches, which
+   returns every GameRoom game they are in (not only the ones you share).
+   The daily games keep their results in their own tables. */
+const STATS_GAMES = ['take-five','daily-quiz','chess','connect-four','five-letters'];
+async function loadStats(userId){
+  let matches = null, shared = false;
+  if(userId === me.id) matches = S.matches;
+  else {
+    try{ const rows = await API.rpc('player_matches', {p_user: userId}); matches = (rows || []).map(r => ({...r, players: r.players || []})); }
+    catch(e){ matches = S.matches.filter(m => m.players.some(p => uid(p) === userId)); shared = true; }
+  }
+  const [dq, wp] = await Promise.all([
+    API.get_('daily_players?user_id=eq.' + userId + '&select=day,score,correct&order=day.desc&limit=400').catch(() => []),
+    API.get_('word_players?user_id=eq.' + userId + '&select=day,tries,solved&order=day.desc&limit=400').catch(() => [])
+  ]);
+  return {matches, dq: dq || [], wp: wp || [], shared};
+}
+function dayStreak(days){
+  const set = new Set(days); let n = 0; const d = new Date();
+  if(!set.has(dateKey(d))) d.setDate(d.getDate() - 1);
+  while(set.has(dateKey(d))){ n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+function gameStats(id, userId, data){
+  const plural = (n, w) => n + ' ' + w + (n === 1 ? '' : 's');
+  if(id === 'daily-quiz'){
+    const n = data.dq.length; if(!n) return null;
+    const best = Math.max(...data.dq.map(r => r.score || 0));
+    return {big: n, lbl: n === 1 ? 'day played' : 'days played', more: 'Best <b>' + best + '</b> · Streak <b>' + dayStreak(data.dq.map(r => r.day)) + '</b>'};
+  }
+  if(id === 'five-letters'){
+    const n = data.wp.length; if(!n) return null;
+    const solved = data.wp.filter(r => r.solved), avg = solved.length ? (solved.reduce((a, r) => a + r.tries, 0) / solved.length).toFixed(1) : '–';
+    return {big: Math.round(100 * solved.length / n) + '%', lbl: 'solved', more: plural(n, 'puzzle') + ' · Avg <b>' + avg + '</b> tries'};
+  }
+  const mine = data.matches.filter(m => (m.game_id || 'take-five') === id && m.players.some(p => uid(p) === userId));
+  if(!mine.length) return null;
+  if(id === 'take-five'){
+    const done = mine.filter(m => m.players.find(p => uid(p) === userId).status === 'done');
+    if(!done.length) return {big: 0, lbl: 'played', more: plural(mine.length, 'game') + ' waiting'};
+    const wins = done.filter(m => matchWinner(m) === userId).length;
+    const best = Math.max(...done.map(m => m.players.find(p => uid(p) === userId).score || 0));
+    return {big: done.length, lbl: done.length === 1 ? 'game played' : 'games played', more: 'Wins <b>' + wins + '</b> · Best <b>' + best + '</b>'};
+  }
+  let w = 0, l = 0, t = 0;
+  const over = mine.filter(m => m.status === 'complete');
+  over.forEach(m => { const x = matchWinner(m); if(x === userId) w++; else if(x === 'tie') t++; else if(x) l++; });
+  const live = mine.length - over.length;
+  return {big: w + '\u2013' + l, lbl: 'won \u2013 lost', more: (t ? 'Draws <b>' + t + '</b> · ' : '') + plural(over.length, 'game') + (live ? ' · ' + live + ' going' : '')};
+}
+function renderStats(box, userId, data){
+  box.innerHTML = '';
+  STATS_GAMES.filter(id => gameById(id) && playable(id)).forEach(id => {
+    const g = gameById(id), st = gameStats(id, userId, data);
+    const card = el('div', 'gstat' + (st ? '' : ' none'));
+    const ic = el('div', 'ic'); ic.style.setProperty('--gc', gameColor(id));
+    const art = gameArt(id); if(art) ic.innerHTML = art;
+    const top = el('div', 'top'); top.append(ic, el('div', 'gn', g.name));
+    card.appendChild(top);
+    const num = el('div'); num.append(el('div', 'big', st ? String(st.big) : '–'), el('div', 'lbl', st ? st.lbl : 'Not played yet'));
+    card.appendChild(num);
+    if(st && st.more) card.appendChild(el('div', 'more', st.more));
+    box.appendChild(card);
+  });
+}
+async function showStats(box, userId, note){
+  box.innerHTML = '<div class="loading">Adding up the scores…</div>';
+  const data = await loadStats(userId);
+  renderStats(box, userId, data);
+  if(note) note.textContent = data.shared ? 'Showing only the games you have played together.' : '';
+}
+
 let fsUser = null;
 function openFriend(id){
   fsUser = byId(id);
@@ -2723,7 +2966,10 @@ function openFriend(id){
     : 'You have not played a game together';
   $('#fs-w').textContent=h.w; $('#fs-l').textContent=h.l; $('#fs-t').textContent=h.t;
   $('#fs-games').textContent = h.t ? 'Games together: '+Object.entries(h.games).sort((a,b)=>b[1]-a[1]).map(([n,c])=>n+' '+c).join(' · ') : '';
+  $('#fs-gstats-label').textContent = fsUser.name + '\u2019s games';
   $('#friendsheet').hidden = false;
+  $('#friendsheet .sheetbody').scrollTop = 0;
+  showStats($('#fs-gstats'), id, $('#fs-gstats-note'));
 }
 $('#fs-close').addEventListener('click', ()=>{ $('#friendsheet').hidden = true; });
 $('#fs-challenge').addEventListener('click', ()=>{ $('#friendsheet').hidden=true; playMode='online';
@@ -3719,6 +3965,7 @@ function renderMe(){
   $('#me-stats').textContent = played+' games played · '+wins+' first-place finishes'
     + (streakCache ? ' · '+streakCache+'-day daily streak' : '');
   $('#row-admin').hidden = !me.is_admin;
+  showStats($('#me-gstats'), me.id);
   applyTheme();
   loadStreak().then(n=>{
     $('#me-stats').textContent = played+' games played · '+wins+' first-place finishes'
@@ -4359,7 +4606,7 @@ if(typeof module !== 'undefined' && module.exports) module.exports = CHESS;
      to look at a board is nobody else's business and must never travel with a
      move. */
   const SET_KEY = 'gameroom.chess.settings';
-  const SET_DEFAULTS = {turn:true, hints:true};
+  const SET_DEFAULTS = {turn:true, hints:true, coach:false, sound:true};
   let SETTINGS = Object.assign({}, SET_DEFAULTS);
   try{
     const raw = JSON.parse(localStorage.getItem(SET_KEY) || '{}');
@@ -4624,16 +4871,18 @@ if(typeof module !== 'undefined' && module.exports) module.exports = CHESS;
   function statusLine(){
     const st = CHESS.status(G.pos, G.history);
     const mover = G.pos.turn === CHESS.WHITE ? 'White' : 'Black';
-    if(st === 'checkmate') return (G.pos.turn === CHESS.WHITE ? 'Black' : 'White') + ' wins by checkmate';
+    if(G.resigned) return (G.mode === 'local' ? colourWord(G.resigned) : cardName(G.resigned)) + ' resigned';
+    if(st === 'checkmate') return 'Checkmate';
     if(st === 'stalemate')   return 'Stalemate — a draw';
     if(st === 'fifty-move')  return 'Draw by the fifty-move rule';
     if(st === 'insufficient')return 'Draw — not enough material to mate';
     if(st === 'repetition')  return 'Draw by repetition';
-    if(st === 'check')       return mover + ' to move — in check';
+    if(st === 'check')       return G.mode === 'local' ? mover + ' — check!' : (myTurn() ? 'Check! Your move' : 'Check');
     if(G.mode === 'local')   return mover + ' to move';
-    return myTurn() ? 'Your move' : 'Waiting for ' + (opponentName() || 'your opponent');
+    if(G.mode === 'solo' && !myTurn()) return 'Computer is thinking';
+    return myTurn() ? 'Your move' : (opponentName() || 'Their') + '\u2019s move';
   }
-  const finished = () => ['checkmate','stalemate','fifty-move','insufficient','repetition']
+  const finished = () => !!G.resigned || ['checkmate','stalemate','fifty-move','insufficient','repetition']
     .includes(CHESS.status(G.pos, G.history));
   const myTurn = () => G.mode === 'local' ? true : (G.myColor === G.pos.turn && !finished());
   function opponentName(){
@@ -4702,10 +4951,323 @@ if(typeof module !== 'undefined' && module.exports) module.exports = CHESS;
     if(old) old.remove();
     if(THEMES[getTheme()].lights) box.appendChild(lightStrand());
 
-    $$('#ch-status').textContent = statusLine();
-    drawTaken();
-    drawPlayers();
-    $$('#ch-undo').hidden = !canUndo();
+    if(G.hint) [G.hint.from, G.hint.to].forEach(i => { const e = board.querySelector('.sq[data-sq="'+i+'"]'); if(e) e.classList.add('hint'); });
+    if(G.warn) [G.warn.sq, G.warn.by].forEach(i => { const e = board.querySelector('.sq[data-sq="'+i+'"]'); if(e) e.classList.add('danger'); });
+    $$('#boardwrap').classList.toggle('lit', !!THEMES[getTheme()].lights);
+    drawStatus();
+    drawCards();
+    drawBar();
+  }
+
+  /* ---------- sound ----------
+     Made on the spot with Web Audio: a wooden click for a move, a heavier knock
+     for a capture, a two-note chime for check, a short tune at the end. Phones
+     only allow sound after a tap, so the audio starts on the first tap. */
+  const SFX = (function(){
+    let ctx = null;
+    const ac = () => { try{ if(!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)(); if(ctx.state === 'suspended') ctx.resume(); }catch(e){} return ctx; };
+    function knock(t, freq, gain, len){
+      const c = ctx, n = c.createBufferSource(), buf = c.createBuffer(1, Math.floor(c.sampleRate * len), c.sampleRate), d = buf.getChannelData(0);
+      for(let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 3);
+      n.buffer = buf;
+      const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = freq; bp.Q.value = 2.2;
+      const g = c.createGain(); g.gain.value = gain;
+      n.connect(bp); bp.connect(g); g.connect(c.destination); n.start(t);
+      const o = c.createOscillator(), og = c.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(freq / 9, t);
+      o.frequency.exponentialRampToValueAtTime(freq / 16, t + len); og.gain.setValueAtTime(gain * .9, t); og.gain.exponentialRampToValueAtTime(.001, t + len);
+      o.connect(og); og.connect(c.destination); o.start(t); o.stop(t + len);
+    }
+    function tone(t, f, len, gain, type){
+      const c = ctx, o = c.createOscillator(), g = c.createGain(); o.type = type || 'triangle'; o.frequency.value = f;
+      g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + .015); g.gain.exponentialRampToValueAtTime(.0001, t + len);
+      o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + len + .02);
+    }
+    function sweep(t, f1, f2, len, gain, type){
+      const c = ctx, o = c.createOscillator(), g = c.createGain(); o.type = type || 'sine';
+      o.frequency.setValueAtTime(f1, t); o.frequency.exponentialRampToValueAtTime(f2, t + len);
+      g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + .02); g.gain.exponentialRampToValueAtTime(.0001, t + len);
+      o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + len + .02);
+    }
+    function bell(t, f, gain){ [1, 2.76, 5.4].forEach((m, i) => tone(t, f * m, .5 - i * .12, gain / (i + 1), 'sine')); }
+    function crunch(t, gain){
+      const c = ctx, n = c.createBufferSource(), len = .22, buf = c.createBuffer(1, Math.floor(c.sampleRate * len), c.sampleRate), d = buf.getChannelData(0);
+      for(let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (Math.random() < .3 ? 1 : .2) * Math.pow(1 - i / d.length, 1.5);
+      n.buffer = buf; const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2400;
+      const g = c.createGain(); g.gain.value = gain; n.connect(lp); lp.connect(g); g.connect(c.destination); n.start(t);
+    }
+    /* A short, bright click: a piece set down on a wooden board. */
+    function click(t, freq, gain){
+      const c = ctx, n = c.createBufferSource(), len = .022, buf = c.createBuffer(1, Math.floor(c.sampleRate * len), c.sampleRate), d = buf.getChannelData(0);
+      for(let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 6);
+      n.buffer = buf; const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = freq; bp.Q.value = 1.4;
+      const g = c.createGain(); g.gain.value = gain; n.connect(bp); bp.connect(g); g.connect(c.destination); n.start(t);
+      tone(t, freq / 3, .03, gain * .25, 'sine');
+    }
+    /* Air moving: noise through a filter that swings up and back down. */
+    function wind(t, len, gain){
+      const c = ctx, n = c.createBufferSource(), buf = c.createBuffer(1, Math.floor(c.sampleRate * len), c.sampleRate), d = buf.getChannelData(0);
+      for(let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      n.buffer = buf;
+      const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 6;
+      bp.frequency.setValueAtTime(300, t); bp.frequency.exponentialRampToValueAtTime(1800, t + len * .45); bp.frequency.exponentialRampToValueAtTime(400, t + len);
+      const g = c.createGain(); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + len * .3); g.gain.exponentialRampToValueAtTime(.0001, t + len);
+      const pan = c.createStereoPanner ? c.createStereoPanner() : null;
+      n.connect(bp); bp.connect(g);
+      if(pan){ pan.pan.setValueAtTime(-.7, t); pan.pan.linearRampToValueAtTime(.7, t + len); g.connect(pan); pan.connect(c.destination); } else g.connect(c.destination);
+      n.start(t); n.stop(t + len);
+    }
+    /* Snow: soft granular crunch. Bigger and lower with a thump for a snowball. */
+    function snow(t, len, gain, cutoff){
+      const c = ctx, n = c.createBufferSource(), buf = c.createBuffer(1, Math.floor(c.sampleRate * len), c.sampleRate), d = buf.getChannelData(0);
+      for(let i = 0; i < d.length; i++){ const grain = Math.random() < .12 ? 1 : .18; d[i] = (Math.random() * 2 - 1) * grain * Math.pow(1 - i / d.length, 2); }
+      n.buffer = buf; const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = cutoff;
+      const hp = c.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 250;
+      const g = c.createGain(); g.gain.value = gain; n.connect(hp); hp.connect(lp); lp.connect(g); g.connect(c.destination); n.start(t);
+    }
+    function thump(t, gain){ sweep(t, 140, 55, .18, gain, 'sine'); }
+    /* Real snow: no tones at all. A crunch is hundreds of tiny ice crystals
+       snapping in two quick waves (heel, then toe); a splat is a dull, wet
+       burst of noise with crystals spraying off it. */
+    function grains(len, density, bright, waves){
+      const c = ctx, sr = c.sampleRate, n = Math.floor(sr * len), buf = c.createBuffer(1, n, sr), d = buf.getChannelData(0);
+      for(let i = 0; i < n; i++){
+        const x = i / n;
+        let env = 0; waves.forEach(([at, w, h]) => { const z = (x - at) / w; env += h * Math.exp(-z * z); });
+        if(Math.random() < density * env){
+          const amp = (Math.random() * .8 + .2) * (Math.random() < .5 ? -1 : 1), k = 6 + Math.floor(Math.random() * bright);
+          for(let j = 0; j < k && i + j < n; j++) d[i + j] += amp * Math.sin(Math.PI * j / k) * Math.pow(1 - j / k, 1.5);
+        }
+        d[i] += (Math.random() * 2 - 1) * .02 * env;
+      }
+      return buf;
+    }
+    function play(buf, t, gain, hp, lp){
+      const c = ctx, n = c.createBufferSource(); n.buffer = buf;
+      const h = c.createBiquadFilter(); h.type = 'highpass'; h.frequency.value = hp;
+      const l = c.createBiquadFilter(); l.type = 'lowpass'; l.frequency.value = lp;
+      const g = c.createGain(); g.gain.value = gain;
+      n.connect(h); h.connect(l); l.connect(g); g.connect(c.destination); n.start(t);
+    }
+    /* Snow, take three: a few dozen separate ice cracks (each a tiny ringing
+       snap at its own pitch) with gaps between them, over a soft low whump of
+       the snow packing down. Sparse cracks read as crunch; dense ones as static. */
+    function cracks(len, perSec, fLo, fHi, tauLo, tauHi, waves){
+      const c = ctx, sr = c.sampleRate, n = Math.floor(sr * len), buf = c.createBuffer(1, n, sr), d = buf.getChannelData(0);
+      const envAt = x => { let e = 0; waves.forEach(([at, w, h]) => { const z = (x - at) / w; e += h * Math.exp(-z * z); }); return e; };
+      for(let i = 0; i < n; i++){
+        if(Math.random() < perSec / sr * envAt(i / n)){
+          const f = fLo + Math.random() * (fHi - fLo), tau = (tauLo + Math.random() * (tauHi - tauLo)) * sr;
+          const amp = (Math.random() < .15 ? 1 : .35 + Math.random() * .35) * (Math.random() < .5 ? -1 : 1);
+          /* a dry tick of noise, no pitch, so it snaps instead of dripping */
+          for(let j = 0; j < tau * 4 && i + j < n; j++) d[i + j] += amp * (Math.random() * 2 - 1) * Math.exp(-j / tau);
+        }
+      }
+      return buf;
+    }
+    function whump(len, cutoff, waves){
+      const c = ctx, sr = c.sampleRate, n = Math.floor(sr * len), buf = c.createBuffer(1, n, sr), d = buf.getChannelData(0);
+      const k = 1 - Math.exp(-2 * Math.PI * cutoff / sr); let lp = 0;
+      for(let i = 0; i < n; i++){
+        const x = i / n; let e = 0; waves.forEach(([at, w, h]) => { const z = (x - at) / w; e += h * Math.exp(-z * z); });
+        lp += ((Math.random() * 2 - 1) - lp) * k; d[i] = lp * e * 4;
+      }
+      return buf;
+    }
+    function snowStep(t, gain){
+      const waves = [[.25, .13, 1], [.62, .18, .75]];
+      play(whump(.26, 380, waves), t, gain * .9, 40, 700);
+      play(cracks(.26, 170, 900, 2600, .0015, .0035, waves), t, gain * .5, 350, 2200);
+    }
+    function splat(t, gain){
+      play(whump(.16, 520, [[.12, .14, 1]]), t, gain * .55, 40, 900);
+      /* a soft poof of snow spreading out, with only a light sprinkle of crunch */
+      play(whump(.32, 1100, [[.16, .2, 1]]), t + .015, gain * .32, 120, 1600);
+      play(cracks(.28, 80, 450, 1400, .0015, .004, [[.14, .12, 1]]), t + .02, gain * .28, 300, 1900);
+    }
+    /* Each board has its own voice: wood for Classic, spells for Wizard, snow for Holiday. */
+    const VOICES = {
+      classic: {
+        move(t){ click(t, 3400, .55); },
+        capture(t){ click(t, 3000, .6); click(t + .05, 2300, .5); }
+      },
+      arcane: {
+        move(t){ sweep(t, 520, 1240, .16, .12); tone(t + .05, 1860, .14, .05, 'sine'); },
+        capture(t){ wind(t, .6, .5); sweep(t + .05, 900, 1600, .4, .03, 'sine'); },
+        check(t){ tone(t, 740, .25, .12); tone(t + .1, 1108, .35, .12); tone(t + .2, 1480, .45, .08); },
+        win(t){ [523, 784, 1047, 1568, 2093].forEach((f, i) => tone(t + i * .09, f, .5, .1, 'sine')); },
+        lose(t){ sweep(t, 600, 150, .7, .12, 'triangle'); }
+      },
+      midwinter: {
+        move(t){ snowStep(t, .55); },
+        capture(t){ splat(t, .6); },
+        check(t){ snowStep(t, .5); snowStep(t + .2, .5); },
+        win(t){ /* Jingle Bells (traditional, public domain): E E E, E E E, E G C D E */
+          [330,330,330,0,330,330,330,0,330,392,262,294,330].forEach((f, i) => { if(f) tone(t + i * .14, f * 2, .22, .12, 'triangle'); }); },
+        lose(t){ [392, 349, 330, 294].forEach((f, i) => tone(t + i * .18, f * 2, .3, .08, 'triangle')); }
+      }
+    };
+    return {
+      wake: ac,
+      play(name){
+        if(!SETTINGS.sound || !ac()) return;
+        const t = ctx.currentTime + .01;
+        const v = VOICES[getTheme()];
+        if(v && v[name]) return v[name](t);
+        if(name === 'move') knock(t, 1700, .5, .07);
+        if(name === 'capture'){ knock(t, 1300, .65, .09); knock(t + .06, 900, .45, .12); }
+        if(name === 'check'){ tone(t, 880, .18, .16); tone(t + .12, 1175, .28, .16); }
+        if(name === 'win') [523, 659, 784, 1047].forEach((f, i) => tone(t + i * .11, f, .35, .14));
+        if(name === 'lose') [392, 330, 262].forEach((f, i) => tone(t + i * .16, f, .4, .12));
+        if(name === 'draw') [523, 523].forEach((f, i) => tone(t + i * .18, f, .3, .12));
+        if(name === 'nudge'){ tone(t, 988, .12, .12); tone(t + .1, 1319, .2, .12); }
+      }
+    };
+  })();
+
+  /* ---------- the coach ----------
+     Games against the computer only. Before a move goes through, look at what
+     the computer could take straight back; if a piece is left hanging, say so
+     once and let the player choose. */
+  const PIECE_WORD = {p:'pawn', n:'knight', b:'bishop', r:'rook', q:'queen'};
+  const sqName = i => 'abcdefgh'[CHESS.file(i)] + (8 - CHESS.rank(i));
+  function hangs(pos, move){
+    const me = pos.turn, after = CHESS.apply(pos, move);
+    const st = CHESS.status(after, [CHESS.repetitionKey(after)]);
+    if(st === 'checkmate' || st === 'stalemate') return null;
+    const took = pos.board[move.to] ? VALUE[pos.board[move.to].type] : 0;
+    let worst = null;
+    for(const m of CHESS.moves(after)){
+      const tgt = after.board[m.to];
+      if(!tgt || tgt.color !== me || tgt.type === 'k') continue;
+      const gain = VALUE[tgt.type], cost = VALUE[after.board[m.from].type] || 0;
+      const back = CHESS.attacked(CHESS.apply(after, m), m.to, me);
+      const net = (back ? gain - cost : gain) - took;
+      if(net >= 2 && (!worst || net > worst.net)) worst = {net, type: tgt.type, sq: m.to, by: m.from};
+    }
+    return worst;
+  }
+  function coachOrCommit(move){
+    if(G.mode !== 'solo' || !SETTINGS.coach) return commit(move);
+    const w = hangs(G.pos, move);
+    if(!w) return commit(move);
+    const word = PIECE_WORD[w.type] || 'piece';
+    $$('#coach-head').textContent = 'Careful!';
+    $$('#coach-body').textContent = 'After this move, the computer can take your ' + word + ' on ' + sqName(w.sq) + '.';
+    G.warn = {move, sq: w.sq, by: w.by};
+    draw();
+    $$('#ch-coach').hidden = false;
+  }
+  function closeCoach(go){
+    const w = G && G.warn; $$('#ch-coach').hidden = true;
+    if(!G) return;
+    G.warn = null;
+    if(go && w) return commit(w.move);
+    G.sel = null; G.legal = null; draw();
+  }
+
+  /* ---------- nudge: a text to the other player with a link back ---------- */
+  async function nudge(){
+    if(G.mode !== 'online') return;
+    const who = opponentName() || 'there';
+    const url = (typeof APP_URL === 'string' && APP_URL) || location.href.split('#')[0];
+    const text = 'Your move in chess, ' + who + '! ' + url;
+    SFX.play('nudge');
+    try{
+      if(navigator.share){ await navigator.share({text}); return; }
+    }catch(e){ if(e && e.name === 'AbortError') return; }
+    try{ await navigator.clipboard.writeText(text); window.__banner && window.__banner('Copied. Paste it in a message to ' + who + '.', 'good'); }
+    catch(e){ location.href = 'sms:?&body=' + encodeURIComponent(text); }
+  }
+
+  /* ---------- the turn chip, the two player cards, the buttons ---------- */
+  function drawStatus(){
+    const st = CHESS.status(G.pos, G.history), over = finished();
+    const chip = mk('span', 'chip' + (!over && st === 'check' ? ' check' : (!over && myTurn() ? ' me' : '')));
+    chip.appendChild(mk('i'));
+    chip.appendChild(document.createTextNode(statusLine()));
+    const box = $$('#ch-status'); box.innerHTML = ''; box.appendChild(chip);
+  }
+  const otherColour = c => c === 'w' ? 'b' : 'w';
+  const colourWord = c => c === 'w' ? 'White' : 'Black';
+  function drawCards(){
+    /* The card above the board is whoever sits at the top of it, so when the
+       board turns round for pass and play, the names change places with it. */
+    const top = G.flipped ? 'w' : 'b';
+    fillCard($$('#ch-top'), top);
+    fillCard($$('#ch-bottom'), otherColour(top));
+  }
+  function fillCard(box, colour){
+    box.innerHTML = '';
+    const over = finished(), moving = !over && G.pos.turn === colour;
+    box.classList.toggle('on', moving);
+    const mineSide = G.mode !== 'local' && colour === G.myColor;
+    let face, sub;
+    if(G.mode === 'local'){
+      face = mk('div', 'av side ' + colour);
+      sub = over ? '' : (moving ? 'Your turn' : 'Waiting');
+    } else if(G.mode === 'solo' && !mineSide){
+      face = mk('div', 'av bot', '<svg viewBox="0 0 24 24"><rect x="5" y="7" width="14" height="11" rx="3"/><path d="M12 7V4M9.5 12h.01M14.5 12h.01M9.5 15h5"/></svg>');
+      sub = ({easy:'Easy', medium:'Medium', hard:'Hard'}[G.level] || '') + (moving ? ' · thinking' : ' · ' + colourWord(colour));
+    } else {
+      const id = mineSide ? window.__me?.id : (G.match && G.match.players.find(p => p.user_id !== window.__me?.id)?.user_id);
+      const u = (typeof byId === 'function' && id) ? byId(id) : null;
+      face = (typeof avatar === 'function') ? avatar(u || window.__me, 40) : mk('div', 'av');
+      sub = colourWord(colour) + (moving ? (mineSide ? ' · your move' : ' · their move') : '');
+    }
+    box.appendChild(face);
+    const who = mk('div', 'who');
+    who.appendChild(mk('div', 'nm', cardName(colour)));
+    who.appendChild(mk('div', 'sub', sub));
+    box.appendChild(who);
+    /* what this side has taken, and how far ahead that puts them */
+    const took = lost(otherColour(colour));
+    const lead = took.reduce((n,t)=>n+VALUE[t], 0) - lost(colour).reduce((n,t)=>n+VALUE[t], 0);
+    const caps = mk('div', 'caps');
+    took.forEach(t => caps.appendChild(mk('span', 'takenpc ' + otherColour(colour), pieceSVG(t, otherColour(colour)))));
+    if(lead > 0) caps.appendChild(mk('span', 'lead', '+' + lead));
+    box.appendChild(caps);
+  }
+  function cardName(colour){
+    if(G.mode === 'local') return colourWord(colour);
+    if(colour === G.myColor) return (window.__me && window.__me.name) || 'You';
+    return G.mode === 'solo' ? 'Computer' : (opponentName() || 'Opponent');
+  }
+  let resignArmed = 0;
+  function drawBar(){
+    const over = finished();
+    $$('#ch-undo').disabled = !canUndo();
+    const hint = $$('#ch-hint');
+    hint.hidden = G.mode !== 'solo';
+    hint.disabled = busy || over || G.pos.turn !== G.myColor;
+    $$('#ch-flip').disabled = busy;
+    $$('#ch-nudge').hidden = !(G.mode === 'online' && !over && G.pos.turn !== G.myColor);
+    const r = $$('#ch-resign');
+    r.disabled = over || (G.mode === 'online' && !G.match);
+    if(!resignArmed){ r.classList.remove('sure'); r.querySelector('span').textContent = 'Resign'; }
+  }
+  function showHint(){
+    if(G.mode !== 'solo' || busy || finished() || G.pos.turn !== G.myColor) return;
+    const m = aiPick(G.pos, 'medium');
+    if(!m) return;
+    G.hint = {from: m.from, to: m.to};
+    G.sel = m.from; G.legal = CHESS.moves(G.pos, m.from);
+    draw();
+  }
+  async function resign(){
+    if(busy || finished()) return;
+    const r = $$('#ch-resign');
+    if(!resignArmed){
+      /* two taps, so a stray thumb can't end the game */
+      resignArmed = setTimeout(()=>{ resignArmed = 0; drawBar(); }, 3000);
+      r.classList.add('sure'); r.querySelector('span').textContent = 'Sure?';
+      return;
+    }
+    clearTimeout(resignArmed); resignArmed = 0;
+    G.resigned = G.mode === 'local' ? G.pos.turn : G.myColor;
+    G.sel = null; G.legal = null; G.hint = null;
+    draw();
+    maybeShowResult();
+    if(G.mode === 'online'){ busy = true; const mine = gen; await persist(); if(mine === gen){ busy = false; if(G) drawBar(); } drawBar(); }
   }
 
   /* ---------- the light strand ----------
@@ -5050,6 +5612,7 @@ if(typeof module !== 'undefined' && module.exports) module.exports = CHESS;
   let gen = 0;
 
   function tap(idx){
+    SFX.wake();
     if(busy || finished()) return;
     if(G.mode !== 'local' && !myTurn()) return;
 
@@ -5057,7 +5620,7 @@ if(typeof module !== 'undefined' && module.exports) module.exports = CHESS;
     if(chosen){
       const promos = G.legal.filter(m => m.to === idx && m.promotion);
       if(promos.length) return askPromotion(promos);
-      return commit(chosen);
+      return coachOrCommit(chosen);
     }
     const p = G.pos.board[idx];
     if(p && p.color === G.pos.turn){
@@ -5088,6 +5651,7 @@ if(typeof module !== 'undefined' && module.exports) module.exports = CHESS;
     busy = true;
     const mine = gen;
     const notation = CHESS.san(G.pos, move);
+    const capturing = !!G.pos.board[move.to] || /x/.test(notation);
 
     const wait = animateMove(move);
     if(wait) await new Promise(r => setTimeout(r, wait));
@@ -5104,23 +5668,24 @@ if(typeof module !== 'undefined' && module.exports) module.exports = CHESS;
     G.history.push(CHESS.repetitionKey(G.pos));
     G.sans = (G.sans || []).concat(notation);
     G.lastMove = {from: move.from, to: move.to};
-    G.sel = null; G.legal = null;
+    G.sel = null; G.legal = null; G.hint = null;
+    { const st = CHESS.status(G.pos, G.history); if(st !== 'checkmate') SFX.play(st === 'check' ? 'check' : capturing ? 'capture' : 'move'); }
     draw();
     maybeShowResult();
 
     if(G.mode === 'solo'){
-      if(mine === gen) busy = false;
+      if(mine === gen){ busy = false; if(G) drawBar(); }
       aiTurn();
       return;
     }
     if(G.mode === 'local'){
       /* one phone: turn the board so the next player is facing up */
       if(SETTINGS.turn && G.flipped !== (G.pos.turn === 'b')) await flipBoard();
-      if(mine === gen) busy = false;
+      if(mine === gen){ busy = false; if(G) drawBar(); }
       return;
     }
     await persist();
-    if(mine === gen) busy = false;
+    if(mine === gen){ busy = false; if(G) drawBar(); }
   }
 
   /* ---------- taking a move back ----------
@@ -5128,7 +5693,7 @@ if(typeof module !== 'undefined' && module.exports) module.exports = CHESS;
      move, and only while the other player has not moved since — which the
      version guard on the write is what actually enforces. */
   function canUndo(){
-    if(!G || !G.past || !G.past.length) return false;
+    if(!G || !G.past || !G.past.length || G.resigned) return false;
     if(G.mode === 'local') return true;
     if(G.mode === 'solo') return !busy && G.past.length >= (G.pos.turn === G.myColor ? 2 : 1);
     return G.pos.turn !== G.myColor;
@@ -5144,8 +5709,8 @@ if(typeof module !== 'undefined' && module.exports) module.exports = CHESS;
     G.sans = back.sans;
     G.history = back.history;
     G.lastMove = back.lastMove;
-    G.sel = null; G.legal = null;
-    G.result = null;
+    G.sel = null; G.legal = null; G.hint = null;
+    G.result = null; G.shown = null;
     hideResult();
 
     if(G.flipped !== back.flipped && !reducedMotion()){ await flipBoard(); }
@@ -5153,7 +5718,7 @@ if(typeof module !== 'undefined' && module.exports) module.exports = CHESS;
     if(mine !== gen) return;
 
     if(G.mode !== 'local') await persist();
-    if(mine === gen) busy = false;
+    if(mine === gen){ busy = false; if(G) drawBar(); }
   }
 
   /* ---------- the settings panel ---------- */
@@ -5178,6 +5743,8 @@ if(typeof module !== 'undefined' && module.exports) module.exports = CHESS;
   function syncSwitches(){
     $$('#set-turn').setAttribute('aria-pressed', String(SETTINGS.turn));
     $$('#set-hints').setAttribute('aria-pressed', String(SETTINGS.hints));
+    $$('#set-coach').setAttribute('aria-pressed', String(SETTINGS.coach));
+    $$('#set-sound').setAttribute('aria-pressed', String(SETTINGS.sound));
     const local = G && G.mode === 'local';
     $$('#set-turn').disabled = !local;
     $$('#set-turnnote').textContent = local
@@ -5194,35 +5761,72 @@ if(typeof module !== 'undefined' && module.exports) module.exports = CHESS;
     repetition:  'Draw — threefold repetition'
   };
   function maybeShowResult(){
-    const st = CHESS.status(G.pos, G.history);
+    const st = G.resigned ? 'resign' : CHESS.status(G.pos, G.history);
+    if(st === 'resign'){ if(G.shown !== st){ G.shown = st; showResult(st); } return; }
     if(!RESULT_TEXT[st]) return;
     if(G.shown === st) return;           /* already announced this one */
     G.shown = st;
     showResult(st);
   }
   function showResult(st){
-    const winner = st === 'checkmate' ? (G.pos.turn === 'w' ? 'b' : 'w') : null;
-    $$('#chr-head').textContent = winner
-      ? sideName(winner) + ' wins'
-      : RESULT_TEXT[st];
-    $$('#chr-sub').textContent = winner ? 'by checkmate' : 'The game is drawn.';
+    const winner = st === 'checkmate' ? (G.pos.turn === 'w' ? 'b' : 'w') : st === 'resign' ? otherColour(G.resigned) : null;
+    const iWon = winner && G.mode !== 'local' && winner === G.myColor;
+    const them = G.mode === 'solo' ? 'the computer' : (opponentName() || 'your opponent');
+    let head, sub;
+    if(!winner){ head = RESULT_TEXT[st]; sub = 'The game is drawn.'; }
+    else if(G.mode === 'local'){ head = st === 'resign' ? colourWord(winner) + ' wins' : 'Checkmate!'; sub = st === 'resign' ? colourWord(G.resigned) + ' resigned.' : colourWord(winner) + ' wins.'; }
+    else if(iWon){ head = st === 'resign' ? 'You win!' : 'Checkmate!';
+      sub = (G.mode === 'solo' ? 'You beat the computer on ' + ({easy:'Easy',medium:'Medium',hard:'Hard'}[G.level]||'') : 'You beat ' + them) + (st === 'resign' ? ' — they resigned.' : '.'); }
+    else { head = st === 'resign' ? 'You resigned' : 'Checkmate'; sub = (G.mode === 'solo' ? 'The computer' : (opponentName() || 'Your opponent')) + ' wins this one.'; }
+    $$('#chr-head').textContent = head;
+    $$('#chr-sub').textContent = sub;
 
     const mark = $$('#chr-mark');
-    mark.innerHTML = winner
-      ? pieceSVG('k', winner)
-      : pieceSVG('k', 'w') + pieceSVG('k', 'b');
+    mark.innerHTML = winner ? pieceSVG('k', winner) : pieceSVG('k', 'w') + pieceSVG('k', 'b');
     /* Carry the board's theme onto the card so the king is the one that
        actually just won, not a generic stand-in. */
     mark.className = 'chrmark theme-' + getTheme() + (winner ? '' : ' draw');
 
     const moves = Math.ceil((G.sans || []).length / 2);
     const taken = lost('w').length + lost('b').length;
-    $$('#chr-stats').textContent = moves + (moves === 1 ? ' move' : ' moves') +
-      ' · ' + taken + (taken === 1 ? ' piece taken' : ' pieces taken');
+    const tiles = [[moves, moves === 1 ? 'Move' : 'Moves'], [taken, 'Pieces taken']];
+    if(G.mode === 'solo') tiles.push([({easy:'Easy',medium:'Medium',hard:'Hard'}[G.level]||'—'), 'Level']);
+    if(G.mode === 'online'){ const rec = recordVs(winner); if(rec) tiles.push([rec, 'You vs ' + (opponentName() || 'them')]); }
+    $$('#chr-stats').innerHTML = tiles.map(([v,l]) => '<div><b>' + v + '</b><span>' + l + '</span></div>').join('');
+    $$('#chr-again').textContent = 'Rematch';
 
+    const conf = $$('#ch-conf'); conf.innerHTML = '';
+    if(winner && (G.mode === 'local' || iWon)){
+      const cols = ['#FFD84A','#FF6FA8','#3FE0C5','#FFFFFF','#9B7CFF'];
+      for(let i = 0; i < 36; i++){
+        const c = mk('i');
+        c.style.left = (i * 37 % 100) + '%'; c.style.background = cols[i % cols.length];
+        c.style.setProperty('--x', ((i * 53 % 120) - 60) + 'px'); c.style.setProperty('--r', (360 + i * 47 % 540) + 'deg');
+        c.style.setProperty('--d', (2.2 + (i * 13 % 14) / 10) + 's'); c.style.setProperty('--w', ((i * 7 % 10) / 20) + 's');
+        conf.appendChild(c);
+      }
+    }
+    SFX.play(!winner ? 'draw' : (G.mode === 'local' || iWon) ? 'win' : 'lose');
     const box = $$('#ch-result');
     box.hidden = false;
     requestAnimationFrame(()=>box.classList.add('on'));
+  }
+  /* Wins and losses against this opponent, counting the game that just ended. */
+  function recordVs(winner){
+    const other = G.match && G.match.players.find(p => p.user_id !== window.__me?.id)?.user_id;
+    if(!other || typeof S === 'undefined' || typeof matchWinner !== 'function') return null;
+    let w = 0, l = 0;
+    S.matches.filter(m => m.game_id === 'chess' && m.id !== G.match.id && m.status === 'complete' && m.players.some(p => p.user_id === other))
+      .forEach(m => { const x = matchWinner(m); if(x === window.__me.id) w++; else if(x === other) l++; });
+    if(winner === G.myColor) w++; else if(winner) l++;
+    return w + '\u2013' + l;
+  }
+  function rematch(){
+    hideResult();
+    if(G.mode === 'solo'){ soloColor = G.myColor; return startSolo(G.level); }
+    if(G.mode === 'local') return startLocal();
+    const other = G.match && G.match.players.find(p => p.user_id !== window.__me?.id)?.user_id;
+    if(other && typeof startChessGame === 'function') startChessGame(other);
   }
   function hideResult(){
     const box = $$('#ch-result');
@@ -5235,7 +5839,8 @@ if(typeof module !== 'undefined' && module.exports) module.exports = CHESS;
     if(!G.match) return;
     const done = finished();
     const state = {fen: CHESS.fen(G.pos), sans: G.sans, history: G.history,
-                   last: G.lastMove, result: done ? CHESS.status(G.pos, G.history) : null};
+                   last: G.lastMove, result: G.resigned ? {winner: otherColour(G.resigned), resigned: G.resigned}
+                                          : done ? CHESS.status(G.pos, G.history) : null};
     const opponent = G.match.players.find(p => p.user_id !== window.__me.id);
     try{
       /* Guarded by the row version we opened with, so taking a move back can
@@ -5259,8 +5864,8 @@ if(typeof module !== 'undefined' && module.exports) module.exports = CHESS;
   }
 
   async function recordResult(){
-    const st = CHESS.status(G.pos, G.history);
-    const loser = G.pos.turn;                       /* the side to move has lost or drawn */
+    const st = G.resigned ? 'checkmate' : CHESS.status(G.pos, G.history);
+    const loser = G.resigned || G.pos.turn;         /* the side to move has lost or drawn */
     for(const p of G.match.players){
       const colour = G.match.state?.colors?.[p.user_id] ||
                      (p.user_id === window.__me.id ? G.myColor : CHESS.swap(G.myColor));
@@ -5366,7 +5971,7 @@ if(typeof module !== 'undefined' && module.exports) module.exports = CHESS;
     G = {pos, history: st.history || [CHESS.repetitionKey(pos)], sans: st.sans || [],
          mode: 'online', match, myColor: colors[window.__me.id] || 'w',
          flipped: (colors[window.__me.id] || 'w') === 'b',
-         seen: match.updated_at,
+         seen: match.updated_at, resigned: (st.result && st.result.resigned) || null,
          sel: null, legal: null, lastMove: st.last || null, past: [], shown: null};
     openBoard();
   }
@@ -5377,6 +5982,7 @@ if(typeof module !== 'undefined' && module.exports) module.exports = CHESS;
     document.querySelectorAll('.screen').forEach(s => s.hidden = true);
     $$('#chess').hidden = false;
     $$('#ch-result').hidden = true; $$('#ch-result').classList.remove('on');
+    $$('#ch-coach').hidden = true;
     $$('#ch-panel').hidden = true;  $$('#ch-panel').classList.remove('on');
     $$('#ch-scrim').hidden = true;  $$('#ch-scrim').classList.remove('on');
     $$('#nav').hidden = true;
@@ -5504,7 +6110,7 @@ if(typeof module !== 'undefined' && module.exports) module.exports = CHESS;
     busy = true;
     const mine = gen;
     await flipBoard();
-    if(mine === gen) busy = false;
+    if(mine === gen){ busy = false; if(G) drawBar(); }
   }
 
   $$('#ch-exit').addEventListener('click', closeBoard);
@@ -5513,7 +6119,17 @@ if(typeof module !== 'undefined' && module.exports) module.exports = CHESS;
   $$('#ch-panelclose').addEventListener('click', closePanel);
   $$('#ch-scrim').addEventListener('click', closePanel);
   $$('#ch-rclose').addEventListener('click', hideResult);
-  $$('#set-flipnow').addEventListener('click', ()=>{ closePanel(); flipNow(); });
+  $$('#chr-look').addEventListener('click', hideResult);
+  $$('#chr-done').addEventListener('click', ()=>{ hideResult(); closeBoard(); });
+  $$('#chr-again').addEventListener('click', rematch);
+  $$('#ch-hint').addEventListener('click', showHint);
+  $$('#ch-nudge').addEventListener('click', nudge);
+  $$('#coach-back').addEventListener('click', ()=>closeCoach(false));
+  $$('#coach-go').addEventListener('click', ()=>closeCoach(true));
+  $$('#set-coach').addEventListener('click', ()=>{ SETTINGS.coach = !SETTINGS.coach; saveSettings(); syncSwitches(); });
+  $$('#set-sound').addEventListener('click', ()=>{ SETTINGS.sound = !SETTINGS.sound; saveSettings(); syncSwitches(); if(SETTINGS.sound){ SFX.wake(); SFX.play('move'); } });
+  $$('#ch-flip').addEventListener('click', flipNow);
+  $$('#ch-resign').addEventListener('click', resign);
   $$('#set-turn').addEventListener('click', ()=>{
     SETTINGS.turn = !SETTINGS.turn; saveSettings(); syncSwitches();
   });
