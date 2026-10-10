@@ -536,6 +536,7 @@ nav button.skinned[aria-current="page"] .skin-ico g:not(.smoke),nav button.skinn
 .rx-tog{appearance:none;-webkit-appearance:none;width:48px;height:30px;border-radius:99px;background:var(--surface3,#333);position:relative;cursor:pointer;flex:none;border:0}
 .rx-tog::after{content:"";position:absolute;left:3px;top:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .15s}
 .rx-tog:checked{background:var(--green,#3BD17F)}.rx-tog:checked::after{transform:translateX(18px)}
+.linkish{background:none;border:0;padding:0;font:inherit;font-weight:700;color:var(--accent);text-decoration:underline;cursor:pointer}
 .rx-code{font:700 1.5rem/1 ui-monospace,Menlo,monospace;letter-spacing:.12em;background:var(--surface2);border-radius:10px;padding:10px 14px;display:inline-block}
 .rx-inline{display:flex;gap:8px}.rx-inline input{flex:1;min-width:0;text-transform:uppercase}
 .rx-sm{padding:8px 12px!important;font-size:.85rem!important;width:auto!important}
@@ -1892,6 +1893,7 @@ function renderPSettings(){
     <div class="me" style="padding-bottom:6px"><button class="av-edit" id="pEditAv" aria-label="Change your picture"><span class="av" style="background:var(--surface2)">${kidAv(a)}</span><span class="pen" aria-hidden="true"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></span></button>
       <p class="uname">${esc(a.name)}</p><p class="rname">Parent · @${esc(a.username)}</p>
       <div class="prof-actions"><button class="btn ghost" id="pEditPic">Edit picture</button></div></div>
+    ${parentsSection()}
     ${adminSection()}
     ${window.WEBAPPS_SUITE?`<h3>Name, picture and password</h3><p class="hint" style="margin-top:0">They're shared by every app on Web Apps, so you change them in one place.</p><p><button class="btn ghost" id="rxHub" style="width:100%">Open your Web Apps account</button></p>`:`<h3>Your password</h3>
     <form class="stack" id="myLogin" novalidate>
@@ -1903,6 +1905,7 @@ function renderPSettings(){
     <h3>Account</h3>
     <div class="menu-list"><button id="signOut">${IC.out} Sign out</button><button id="reset" class="danger-x">Reset everything</button></div></div>`;
   el.querySelectorAll("[data-afam]").forEach(b=>b.onclick=()=>{adminFam=b.dataset.afam;renderAdminFamily();scrollTo(0,0)});
+  wireParents(el);
   $("#rxHub")?.addEventListener("click",()=>{try{parent.SUITE.close("#account")}catch(e){}});
   if($("#myLogin"))$("#myLogin").onsubmit=e=>{e.preventDefault();const pw=$("#mPass").value,m=$("#mMsg");
     if(pw.length<6){m.className="msg bad";m.textContent="Use at least 6 characters.";return}
@@ -1911,6 +1914,57 @@ function renderPSettings(){
   $("#clearSamples")?.addEventListener("click",()=>{clearSamples();renderPSettings();toast("Sample content removed")});
   $("#signOut").onclick=async()=>{if(await ask({title:"Sign out of Remix?",ok:"Sign out"}))signOut()};
   $("#reset").onclick=async()=>{if(await ask({title:"Reset everything?",body:"This clears all videos, accounts, favorites, collections and passwords, then signs you out.",ok:"Reset",danger:true})){S=blank();loadSamples();seedFamilies();save();previewKid=null;boot()}};
+}
+/* ---------- Other parents: invite one with a private parent code, or join another family with one ---------- */
+const parentsOf=()=>S.accounts.filter(a=>a.role==="parent");
+const aloneInFamily=()=>parentsOf().length===1&&!kids().length;
+function parentsSection(){
+  const a=me(),ps=parentsOf();
+  return `<h3>Parents</h3>
+    <div class="rx-card">${ps.map(p=>`<div class="rx-row"><span class="av">${kidAv(p)}</span><span class="nm"><b>${esc(p.name)}${p.id===a.id?" (you)":""}</b><small>@${esc(p.username||"")}</small></span></div>`).join("")}</div>
+    <p><button class="btn ghost" id="invParent" style="width:100%">Invite another parent</button></p>
+    ${aloneInFamily()?`<p class="hint">Did someone else already set up your family? <button class="linkish" id="joinFam">Join it with their parent code</button></p>`:""}`;
+}
+async function getParentCode(fresh){
+  if(window.REMIX_LIVE){const r=await RXL.rpc("parent_code",{p_new:!!fresh});const row=Array.isArray(r)?r[0]:r;return {code:row.code,until:new Date(row.expires_at)}}
+  if(fresh||!S.demoParentCode)S.demoParentCode={code:Array.from({length:8},()=>"ABCDEFGHJKMNPQRSTUVWXYZ23456789"[Math.random()*31|0]).join(""),until:Date.now()+7*864e5};
+  return {code:S.demoParentCode.code,until:new Date(S.demoParentCode.until)};
+}
+const prettyCode=c=>c.slice(0,4)+"-"+c.slice(4);
+async function inviteParentSheet(fresh){
+  const sh=$("#sheet");
+  sh.innerHTML=`<h3 id="sheetTitle">Invite another parent</h3><p class="hint">Loading…</p>`;openSheet();
+  let inv;try{inv=await getParentCode(fresh)}catch(x){sh.innerHTML=`<h3 id="sheetTitle">Invite another parent</h3><p class="msg bad">${esc(RXL.msg(x.message))}</p><button class="btn ghost" id="ipDone" style="width:100%">Close</button>`;$("#ipDone").onclick=closeSheet;return}
+  const fam=myFam(),until=inv.until.toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"});
+  const link=location.href.split("#")[0];
+  const text=`Join the ${fam?fam.name+" ":""}family on Remix as a parent: open ${link}, sign in with your Web Apps account, and enter the parent code ${prettyCode(inv.code)}`;
+  sh.innerHTML=`<h3 id="sheetTitle">Invite another parent</h3>
+    <p class="hint" style="margin-top:0">Give this code to the other adult. They sign in to Remix with their own Web Apps account, then enter it. They'll be a parent in your family, with the same controls you have.</p>
+    <p style="text-align:center;margin:14px 0 6px"><span class="rx-code" style="font-size:1.8rem">${esc(prettyCode(inv.code))}</span></p>
+    <p class="hint" style="text-align:center;margin-top:0">Works until ${esc(until)}. This is only for parents. To connect with another family, use the family code on the Family tab.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 8px"><button class="btn" id="ipShare">${navigator.share?"Share":"Copy"}</button><button class="btn ghost" id="ipNew">New code</button></div>
+    <button class="btn ghost" id="ipDone" style="width:100%">Done</button>`;
+  $("#ipShare").onclick=async()=>{try{if(navigator.share)await navigator.share({text});else{await navigator.clipboard.writeText(text);toast("Copied")}}catch(e){}};
+  $("#ipNew").onclick=async()=>{if(await ask({title:"Make a new code?",body:"The old code will stop working.",ok:"New code"}))inviteParentSheet(true)};
+  $("#ipDone").onclick=closeSheet;
+}
+async function joinFamilySheet(){
+  const fam=myFam(),sh=$("#sheet");
+  sh.innerHTML=`<h3 id="sheetTitle">Join another family</h3>
+    <p class="hint" style="margin-top:0">Ask a parent in that family for their parent code. They'll find it under Me, Invite another parent.</p>
+    <form class="stack" id="jfForm" novalidate><input id="jfCode" maxlength="12" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="Parent code" aria-label="Parent code">
+    <p class="hint" style="margin:0">Your ${fam?`“${esc(fam.name)}” `:""}family will be removed. Any videos and creators you added come with you.</p>
+    <p class="msg bad" id="jfMsg"></p><button class="btn" type="submit">Join family</button></form>
+    <button class="btn ghost" id="jfCancel" style="width:100%;margin-top:8px">Cancel</button>`;
+  openSheet();$("#jfCancel").onclick=closeSheet;
+  $("#jfForm").onsubmit=async e=>{e.preventDefault();const m=$("#jfMsg"),code=$("#jfCode").value.trim();m.textContent="";
+    if(!code){m.textContent="Enter their parent code.";return}
+    if(!window.REMIX_LIVE){m.textContent="Joining works in the live app.";return}
+    try{await RXL.rpc("join_family",{p_code:code});closeSheet();await RXL.start();toast("You joined the family")}catch(x){m.textContent=RXL.msg(x.message)}};
+}
+function wireParents(el){
+  el.querySelector("#invParent")?.addEventListener("click",()=>inviteParentSheet(false));
+  el.querySelector("#joinFam")?.addEventListener("click",joinFamilySheet);
 }
 function startPreview(kidId){if(!kidById(kidId))return;previewKid=kidId;boot()}
 
@@ -1922,7 +1976,7 @@ const RXL={
   sb:()=>WebApps.client.schema("remix"),
   msg(m){const k=(String(m).match(/rx:\w+/)||[])[0];return ({"rx:bad_code":"No family has that code.","rx:own_code":"That's your own family's code.","rx:cant_send_to":"You can't send to them right now.",
     "rx:sharing_off":"Sharing is turned off for you.","rx:parents_only":"Only a parent can do that.","rx:not_found":"That video isn't available.","rx:family_name":"Enter your family name.",
-    "rx:already_in_family":"You're already in a family.","rx:not_member":"Join Remix first."})[k]||m},
+    "rx:already_in_family":"You're already in a family.","rx:bad_parent_code":"That parent code didn't work. Check it with the other parent.","rx:parent_code_expired":"That code has expired. Ask for a new one.","rx:same_family":"You're already in that family.","rx:family_has_people":"Your family has other people in it, so it can't be moved. Ask an admin for help.","rx:parents_only":"Only parents can do that.","rx:not_member":"Join Remix first."})[k]||m},
   async q(p){const {data,error}=await p;if(error)throw new Error(RXL.msg(error.message));return data},
   rpc(n,a){return RXL.q(RXL.sb().rpc(n,a))},
   async fn(body){const {data,error}=await WebApps.client.functions.invoke("remix-family",{body});
@@ -2031,7 +2085,11 @@ function renderLogin(msg){
     pending:`<p class="lede">Your request to join Remix is waiting for an admin to approve it.</p><p><button class="btn ghost" id="rxCheck" style="width:100%">Check again</button></p><p><button class="btn ghost" id="rxOut" style="width:100%">Sign out</button></p>`,
     setup:`<p class="lede">Welcome, ${esc(WebApps.me&&WebApps.me.display_name||"")}! Set up your family to get started.</p>
       <form class="stack" id="rxSetup" novalidate><input id="rxFam" maxlength="40" placeholder="Your family's last name" aria-label="Family name"><p class="msg bad" id="rxMsg"></p>
-      <button class="btn" type="submit">Create family</button></form><p class="hint">You'll be the family's parent. Add your kids from the Family tab, and other parents from Me.</p>
+      <button class="btn" type="submit">Create family</button></form><p class="hint">You'll be the family's parent. Add your kids from the Family tab, and invite other parents from Me.</p>
+      <h3 style="margin:22px 0 4px">Joining a family that's already set up?</h3>
+      <p class="hint" style="margin-top:0">Ask a parent there for their parent code (Me, Invite another parent).</p>
+      <form class="stack" id="rxJoinFam" novalidate><input id="rxPCode" maxlength="12" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="Parent code" aria-label="Parent code"><p class="msg bad" id="rxJMsg"></p>
+      <button class="btn ghost" type="submit">Join family</button></form>
       <p><button class="btn ghost" id="rxOut" style="width:100%">Sign out</button></p>`,
     error:`<p class="lede">Couldn't load Remix.</p><p class="msg bad">${esc(RXL.err||"")}</p><p><button class="btn" id="rxCheck" style="width:100%">Try again</button></p>`
   }[g];
@@ -2043,6 +2101,9 @@ function renderLogin(msg){
   $("#rxOut")?.addEventListener("click",async()=>{await WebApps.signOut();RXL.start()});
   $("#rxSetup")?.addEventListener("submit",async e=>{e.preventDefault();const m=$("#rxMsg");
     try{await RXL.rpc("create_family",{p_name:$("#rxFam").value});await RXL.start()}catch(x){m.textContent=RXL.msg(x.message)}});
+  $("#rxJoinFam")?.addEventListener("submit",async e=>{e.preventDefault();const m=$("#rxJMsg"),c=$("#rxPCode").value.trim();m.textContent="";
+    if(!c){m.textContent="Enter the parent code.";return}
+    try{await RXL.rpc("join_family",{p_code:c});await RXL.start()}catch(x){m.textContent=RXL.msg(x.message)}});
 }
 
 window.__rx={RXL,get S(){return S},get tab(){return tab},me,kids,myFam,myVideos,shareTargets,curKid};
