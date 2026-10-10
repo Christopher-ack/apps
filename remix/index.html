@@ -226,6 +226,9 @@ details code{background:var(--surface2);padding:2px 6px;border-radius:4px}
 .forlist label:has(input:checked){border-color:var(--accent);background:#2A2310}
 .forlist .all-box{flex-basis:100%}
 .forlist input{width:18px;height:18px;margin:0;accent-color:var(--accent);flex:none;padding:0}
+label.chk-row{flex-direction:row;align-items:center;gap:10px;cursor:pointer;color:var(--ink);font-size:.95rem}
+label.chk-row input{width:20px;height:20px;margin:0;accent-color:var(--accent);flex:none;padding:0}
+label.chk-row small{display:block;font-weight:500;color:var(--ink2);font-size:.8rem;margin-top:2px}
 .forlist .av{width:28px;height:28px;font-size:.95rem;background:var(--accent)}
 .for-line{display:block;color:var(--accent);font-weight:600;font-size:.8rem;margin-top:2px}
 .kidstat{display:flex;flex-wrap:wrap;gap:6px;margin-top:5px}
@@ -723,6 +726,9 @@ function parseLink(raw){
 }
 function cleanHandle(s){const m=String(s||"").trim().match(/(?:tiktok\.com\/)?@?([\w.]{2,24})\/?$/i);return m?m[1].toLowerCase():null}
 const creator=h=>S.trusted.find(t=>t.handle===h);
+/* "Hide profile picture" on a video: that creator's TikTok picture is never fetched or shown */
+const avHidden=h=>{try{return !!h&&S.videos.some(v=>v.hideAv&&v.handle===h)}catch(e){return false}};
+const setAvHidden=(h,on)=>{if(!h)return;S.videos.forEach(v=>{if(v.handle!==h)return;if(on)v.hideAv=true;else delete v.hideAv})};
 function avatarFor(h){const c=creator(h);return c?{e:c.avatar||"🎬",bg:c.color||SWATCHES[hashN(h)%SWATCHES.length]}:{e:esc(String(h||"?").replace(/[^a-z0-9]/gi,"").charAt(0).toUpperCase()||"?"),bg:SWATCHES[hashN(h)%SWATCHES.length]}}
 /* TikTok pictures: video thumbnails and creators' profile photos.
    Remix asks its tiktok-meta function (TikTok's picture links expire), keeps answers for most of a day,
@@ -743,7 +749,7 @@ const TTM={K:"rx-ttmeta",m:{},q:new Set(),bad:new Set(),timer:null,busy:false,
     i.onerror=()=>{i.remove();if(this.bad.has(src))return;this.bad.add(src);for(const k in this.m)if(this.m[k].t===src||this.m[k].a===src)delete this.m[k];this.store()};i.src=src;el.prepend(i)},
   paint(root=document){
     root.querySelectorAll("[data-tt]").forEach(el=>{const x=this.m[el.dataset.tt];if(x)this.img(el,x.t);else this.want(el.dataset.tt)});
-    root.querySelectorAll("[data-ttav]").forEach(el=>{const a=this.av(el.dataset.ttav);if(a)this.img(el,a);else if(el.dataset.ttsrc)this.want(el.dataset.ttsrc)});
+    root.querySelectorAll("[data-ttav]").forEach(el=>{if(typeof avHidden==="function"&&avHidden(el.dataset.ttav))return;const a=this.av(el.dataset.ttav);if(a)this.img(el,a);else if(el.dataset.ttsrc)this.want(el.dataset.ttsrc)});
     root.querySelectorAll("[data-ttname]").forEach(el=>{if(!el.textContent){const n=this.name(el.dataset.ttname);if(n){el.textContent=n;el.hidden=false}}})}
 };
 TTM.load();
@@ -1729,12 +1735,13 @@ function editAudience(item,kind,after){
   sheet.innerHTML=`<h3 id="sheetTitle">${kind==="creator"?"Who follows "+esc(item.name||"@"+item.handle)+"?":"Who sees this video?"}</h3>
     ${kind==="video"?`<p class="hint" style="margin:0 0 12px">${esc(item.title||"Untitled video")}</p>`:""}
     ${forPicker("forEdit",item.for,"")}
+    ${kind==="video"&&item.handle?`<label class="chk-row" style="margin-top:12px"><input type="checkbox" id="forHideAv" ${avHidden(item.handle)?"checked":""}><span>Hide profile picture<small>For every video from @${esc(item.handle)}.</small></span></label>`:""}
     <p class="msg bad" id="forMsg" style="min-height:1.2em"></p>
     <div class="row"><button class="btn ghost" id="forNo">Cancel</button><button class="btn" id="forOk">Save</button></div>`;
   wireForPicker("forEdit");
   openSheet(null);
   $("#forNo").onclick=closeSheet;
-  $("#forOk").onclick=()=>{const f=readFor("forEdit");if(f!==ALL&&!f.length){$("#forMsg").textContent="Check at least one child.";return}item.for=f;save();closeSheet();after&&after();toast("Saved")};
+  $("#forOk").onclick=()=>{const f=readFor("forEdit");if(f!==ALL&&!f.length){$("#forMsg").textContent="Check at least one child.";return}item.for=f;if(kind==="video"&&$("#forHideAv"))setAvHidden(item.handle,$("#forHideAv").checked);save();closeSheet();after&&after();toast("Saved")};
 }
 function renderPAdd(){
   const el=$("#p-add");
@@ -1746,6 +1753,7 @@ function renderPAdd(){
       <label>Title they'll see<input id="fTitle" maxlength="60" placeholder="Golden retriever learns to skateboard"></label>
       <label>Your note (optional)<input id="fNote" maxlength="90" placeholder="This made me think of you!"></label>
       <p class="hint" style="margin:0">Your note will be signed "${esc(me().name)}".</p>
+      <label class="chk-row"><input type="checkbox" id="fHideAv"><span>Hide profile picture<small>Shows a plain icon instead of the creator's picture, on all their videos.</small></span></label>
       <p class="msg" id="addMsg"></p>
       <button class="btn" type="submit">Add video</button>
     </form>
@@ -1753,10 +1761,12 @@ function renderPAdd(){
   wireForPicker("addFor");
   const info=()=>{const r=parseLink($("#fLink").value),m=$("#linkInfo");
     if(!$("#fLink").value.trim()){m.textContent="";return}
+    if(r.handle&&!$("#fHideAv").dataset.touched)$("#fHideAv").checked=avHidden(r.handle);
     if(r.id){m.className="msg good";const c=r.handle&&creator(r.handle);m.textContent=r.handle?`Video from @${r.handle}${c?` (trusted for ${forLabel(c).toLowerCase()==="all children"?"all children":forLabel(c)})`:""}`:"Video link recognized"}
     else if(r.short){m.className="msg good";m.textContent="Short share link. Remix looks up the full video when you add it."}
     else{m.className="msg bad";m.textContent="Not a TikTok video link yet."}};
   $("#fLink").addEventListener("input",info);
+  $("#fHideAv").addEventListener("change",()=>{$("#fHideAv").dataset.touched="1"});
   $("#pasteBtn").onclick=async()=>{try{const t=await navigator.clipboard.readText();$("#fLink").value=t.trim();info();$("#fTitle").focus()}catch(e){const m=$("#linkInfo");m.className="msg bad";m.textContent="Your browser blocked pasting. Long-press the box and choose Paste.";$("#fLink").focus()}};
   if(incoming){$("#fLink").value=incoming;incoming=null;info();$("#fTitle").focus()}
   $("#addForm").onsubmit=e=>{
@@ -1771,7 +1781,7 @@ function renderPAdd(){
     const dup=S.videos.find(v=>v.postId===r.id);
     if(dup){msg.textContent=`That video is already added (for ${forLabel(dup)}). Change who sees it from the Videos tab.`;return}
     const v={id:uid(),postId:r.id,handle:r.handle||"",title:$("#fTitle").value.trim(),note:$("#fNote").value.trim(),from:me().name,addedBy:me().id,for:f,addedAt:Date.now()};
-    S.videos.push(v);save();
+    S.videos.push(v);if(v.handle)setAvHidden(v.handle,$("#fHideAv").checked);else if($("#fHideAv").checked)v.hideAv=true;save();
     renderPAdd();const m=$("#addMsg");m.className="msg good";m.textContent=`Added for ${forLabel(v).toLowerCase()==="all children"?"all children":forLabel(v)}.`;
   };
 }
