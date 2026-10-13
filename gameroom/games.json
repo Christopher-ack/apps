@@ -61,16 +61,17 @@
     {
       "id": "deal",
       "name": "Deal",
-      "blurb": "Collect three complete sets to win. Rent, steals, and a lot of arguing.",
+      "blurb": "Collect three full sets to win. Rent, steals, and a lot of arguing.",
       "modes": [
-        "online"
+        "online",
+        "local",
+        "solo"
       ],
       "pace": "live",
       "players": "2-4",
       "color": "#8A7BE8",
       "colorLight": "#6250CF",
-      "icon": "<rect x=\"9\" y=\"4.5\" width=\"10\" height=\"14\" rx=\"2\" transform=\"rotate(9 14 11.5)\"/><rect x=\"4.5\" y=\"6\" width=\"9.5\" height=\"13.5\" rx=\"2\"/><path d=\"M9.2 12.8v-.1a1.6 1.6 0 1 1 1.9-1.6\"/>",
-      "soon": true
+      "icon": "<rect x=\"9\" y=\"4.5\" width=\"10\" height=\"14\" rx=\"2\" transform=\"rotate(9 14 11.5)\"/><rect x=\"4.5\" y=\"6\" width=\"9.5\" height=\"13.5\" rx=\"2\"/><path d=\"M9.2 12.8v-.1a1.6 1.6 0 1 1 1.9-1.6\"/>"
     },
     {
       "id": "eights",

@@ -1787,6 +1787,230 @@ h1,h2,h3,.wordmark{font-weight:700;letter-spacing:0}
 #golf.nohints .gfpile.can::after{display:none}
 #golf.nohints #gf-hint:not(.warn){visibility:hidden}
 
+
+/* ===================== Deal: an overhead card table ===================== */
+#deal{position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;background:var(--bg);--sw:var(--msw);--bw:40px}
+#deal #dtop{display:flex;align-items:center;gap:8px;padding:calc(var(--sat) + 10px) 10px 8px;flex:none}
+#deal #dtop .iconbtn{width:40px;height:40px}
+#dd-gear svg,#d-loot svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+#d-status{flex:1;min-width:0;display:flex;justify-content:center}
+.dchip{display:inline-flex;align-items:center;gap:10px;max-width:100%;height:42px;padding:0 16px;border-radius:999px;background:rgba(255,255,255,.16);
+  color:var(--ink);font:600 17px var(--display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dchip.me{background:var(--acc);color:var(--accink)}
+.dchip .pips{display:inline-flex;gap:4px}.dchip .pips i{width:10px;height:10px;border-radius:50%;background:currentColor;opacity:.25}.dchip .pips i.on{opacity:1}
+#dd-table{position:relative;flex:1;min-height:0;margin:0 8px;border-radius:30px;padding:12px 10px;display:flex;flex-direction:column;gap:10px;box-sizing:border-box;
+  background:radial-gradient(ellipse at 50% 45%,#2E9A5C 0%,#1F7D47 55%,#145C33 100%);
+  box-shadow:inset 0 0 0 7px #7A4A22,inset 0 0 0 9px #5A3416,inset 0 0 40px rgba(0,0,0,.35),0 8px 0 rgba(0,0,0,.18)}
+#dd-table::before{content:'';position:absolute;inset:9px;border-radius:22px;pointer-events:none;opacity:.22;background-image:radial-gradient(rgba(0,0,0,.35) .6px,transparent .8px);background-size:4px 4px}
+#dd-table>*{position:relative}
+#dd-left,#dd-right{display:none}
+.ddside{display:flex;gap:8px;justify-content:center}
+#dd-mid{display:flex;align-items:center;justify-content:center;padding:0 6px}
+.ddpiles{display:flex;align-items:center;gap:16px}
+.ddpile{position:relative;width:var(--pw);height:calc(var(--pw) * 1.4);padding:0;border:0;background:none;border-radius:10px;flex:none}
+.ddpile .dk{--w:var(--pw);position:absolute;left:0;top:0}
+.ddpile .cnt{position:absolute;right:-8px;bottom:-8px;min-width:22px;height:22px;padding:0 5px;border-radius:999px;background:rgba(0,0,0,.5);color:#fff;font:800 11px/22px var(--body);text-align:center;z-index:9}
+.ddpile.can{cursor:pointer}
+.ddpile.can::after{content:'';position:absolute;inset:-6px;border-radius:14px;border:3px dashed #FFE680;animation:gPulse 1.4s ease-in-out infinite}
+.ddpile .ghost,.dbank .ghost{position:absolute;inset:0;display:grid;place-items:center;border:2px dashed rgba(255,255,255,.3);border-radius:10px;color:rgba(255,255,255,.55);font:700 11px var(--body)}
+#dd-centerhint{display:none}
+#dd-me{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:auto}
+#dd-mine{display:flex;align-items:flex-end;justify-content:center;gap:16px;width:100%}
+#dd-mine .sets,.dseat .sets,.osets{display:flex;flex-wrap:wrap;gap:12px 8px;justify-content:center;align-items:flex-end}
+.none{font:italic 600 12.5px var(--body);color:rgba(255,255,255,.7)}
+.none.mine{padding:26px 10px;border:2px dashed rgba(255,255,255,.28);border-radius:14px}
+.none.hand{position:absolute;left:0;right:0;bottom:44px;text-align:center}
+#dd-hint{flex:none;min-height:22px;padding:8px 18px 2px;text-align:center;font-weight:700;font-size:14px;line-height:1.3;color:var(--ink)}
+#dd-hand{position:relative;flex:none;height:calc(var(--hw) * 1.4 + 26px);margin:2px 8px 0;max-width:1000px;width:calc(100% - 16px);align-self:center}
+#dd-hand .dk{--w:var(--hw);position:absolute;bottom:4px;transform-origin:50% 140%;cursor:pointer;transition:filter .2s}
+#dd-hand .dk.dim{filter:saturate(.35) brightness(.82)}
+#dd-hand .dk:active{bottom:14px}
+#dd-bar{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:8px;padding:6px 8px calc(var(--sab) + 14px);flex:none;max-width:1000px;width:100%;align-self:center;box-sizing:border-box}
+#dd-bar button{height:56px;border:0;border-radius:16px;background:rgba(255,255,255,.14);color:var(--ink);font:800 13px var(--body);display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer}
+#dd-bar button.ghost{flex-direction:column;gap:3px}
+#dd-bar button.hl{background:var(--acc);color:var(--accink);font:700 18px var(--display);grid-column:span 2}
+#dd-bar button.warn{background:#E0822F;color:#fff;font:700 17px var(--display)}
+#dd-bar button.off{opacity:.55;pointer-events:none}
+#dd-bar svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* the cards */
+.dk{--w:80px;position:relative;width:var(--w);height:calc(var(--w) * 1.4);border-radius:calc(var(--w) * .09);background:#FFFDF7;color:#1F1A33;flex:none;box-sizing:border-box;
+  box-shadow:0 2px 0 rgba(0,0,0,.18),0 5px 12px rgba(0,0,0,.2);overflow:hidden;font-family:var(--display);text-align:left}
+.dk::after{content:'';position:absolute;inset:calc(var(--w) * .035);border-radius:calc(var(--w) * .065);border:1.5px solid rgba(0,0,0,.08);pointer-events:none}
+.dk .val{position:absolute;left:calc(var(--w) * .05);top:calc(var(--w) * .05);width:calc(var(--w) * .24);height:calc(var(--w) * .24);border-radius:50%;background:#fff;color:#1F1A33;
+  display:grid;place-items:center;font-weight:600;font-size:calc(var(--w) * .088);box-shadow:0 0 0 1.5px rgba(0,0,0,.15);z-index:2}
+.dk.prop .band{position:absolute;left:calc(var(--w) * .035);right:calc(var(--w) * .035);top:calc(var(--w) * .035);height:calc(var(--w) * .38);border-radius:calc(var(--w) * .065) calc(var(--w) * .065) 0 0;
+  background:var(--cc);color:#fff;display:flex;align-items:flex-start;padding:calc(var(--w) * .085) calc(var(--w) * .05) 0 calc(var(--w) * .31);box-sizing:border-box;
+  font-weight:600;font-size:calc(var(--w) * .1);letter-spacing:0;line-height:1.08;overflow:hidden;word-break:break-word}
+.dk.prop .band span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.dk.prop.lt .band{color:#1F1A33}
+.dk.prop .band.long{font-size:calc(var(--w) * .088)}
+.dk .setn{position:absolute;left:0;right:0;top:calc(var(--w) * .45);text-align:center;font:700 calc(var(--w) * .082) var(--body);color:#6A6280;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 6%;box-sizing:border-box}
+.dk .ladder{position:absolute;left:calc(var(--w) * .1);right:calc(var(--w) * .1);top:calc(var(--w) * .62);display:flex;flex-direction:column;gap:calc(var(--w) * .03)}
+.dk .ladder div{display:flex;align-items:center;justify-content:space-between;font-size:calc(var(--w) * .095);font-weight:600}
+.dk .ladder span{display:inline-flex;gap:1px}
+.dk .ladder span i{width:calc(var(--w) * .07);height:calc(var(--w) * .1);border-radius:1.5px;background:var(--cc);opacity:.85}
+.dk .ladder div.full b{color:#1F9D5C}
+.dk.wild .band{background:linear-gradient(135deg,var(--c1) 0 50%,var(--c2) 50% 100%)}
+.dk.wild.any .band{background:conic-gradient(from 200deg,#8A5A36,#6FC6E8,#DE5F9E,#E0822F,#D2352F,#E0B62B,#268B4E,#2A5BC0,#40424C,#8E9A3E,#8A5A36);padding-left:calc(var(--w) * .1)}
+.dk.wild .mid{position:absolute;left:4%;right:4%;top:calc(var(--w) * .56);text-align:center;font-weight:600;font-size:calc(var(--w) * .12);line-height:1.1}
+.dk.wild .mid small{display:block;font-size:calc(var(--w) * .095);font-weight:600;color:#6A6280;margin-top:2px}
+.dk.money{background:var(--mc)}
+.dk.money .coin{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:calc(var(--w) * .66);height:calc(var(--w) * .66);border-radius:50%;background:#fff;
+  box-shadow:0 0 0 calc(var(--w) * .03) rgba(0,0,0,.12),inset 0 0 0 calc(var(--w) * .04) var(--mc2);display:grid;place-items:center;font-weight:600;font-size:calc(var(--w) * .22);color:#1F1A33}
+.dk.money .val{background:rgba(255,255,255,.85)}
+.dk.money .val.br{left:auto;top:auto;right:calc(var(--w) * .05);bottom:calc(var(--w) * .05)}
+.dk.act .ring{position:absolute;left:50%;top:calc(var(--w) * .2);transform:translateX(-50%);width:calc(var(--w) * .62);height:calc(var(--w) * .62);border-radius:50%;
+  background:var(--ac);display:grid;place-items:center;box-shadow:inset 0 0 0 calc(var(--w) * .035) rgba(255,255,255,.55)}
+.dk.act .ring svg{width:56%;height:56%;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.dk.act .nm{position:absolute;left:calc(var(--w) * .06);right:calc(var(--w) * .06);top:calc(var(--w) * .87);text-align:center;font-weight:600;font-size:calc(var(--w) * .115);line-height:1.05;color:#1F1A33}
+.dk.act .nm small{display:block;font-family:var(--body);font-weight:600;font-size:calc(var(--w) * .082);color:#6A6280;margin-top:3px;line-height:1.15}
+.dk.rent .ring{background:conic-gradient(var(--c1) 0 50%,var(--c2) 50% 100%)}
+.dk.rent.any .ring{background:conic-gradient(#8A5A36,#6FC6E8,#DE5F9E,#E0822F,#D2352F,#E0B62B,#268B4E,#2A5BC0,#40424C,#8E9A3E,#8A5A36)}
+.dk.rent .ring b{width:62%;height:62%;border-radius:50%;background:#fff;display:grid;place-items:center;font-size:calc(var(--w) * .1);font-weight:700;letter-spacing:.04em;color:#1F1A33}
+.dk.back{background:#173A6B}
+.dk.back::before{content:'';position:absolute;inset:calc(var(--w) * .07);border-radius:calc(var(--w) * .06);background:repeating-linear-gradient(45deg,#1E4C8A 0 5px,#173A6B 5px 10px);box-shadow:inset 0 0 0 2px rgba(255,255,255,.25)}
+.dk.back b{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-12deg);background:#FFD84A;color:#173A6B;font-weight:700;font-size:calc(var(--w) * .2);padding:2px calc(var(--w) * .08);border-radius:6px;z-index:1;letter-spacing:.03em}
+.zcard .dk{--w:min(58vw,190px);border-radius:14px}
+/* sets on the table */
+.dstack{position:relative;display:flex;flex-direction:column;align-items:center;cursor:pointer}
+.dstack .cas{position:relative;width:var(--sw)}
+.dstack .cas .dk{--w:var(--sw);position:absolute;left:0}
+.dstack .cap{margin-top:5px;font:700 11px var(--body);display:flex;gap:4px;align-items:center;white-space:nowrap;color:#fff}
+.dstack .cap b{font-family:var(--display);font-size:13px}
+.dstack.full .cas::after{content:'';position:absolute;inset:-4px;border-radius:12px;box-shadow:0 0 0 2.5px #FFD84A,0 0 16px rgba(255,216,74,.55);pointer-events:none}
+.dstack .done{position:absolute;right:-7px;top:-7px;width:20px;height:20px;border-radius:50%;background:#FFD84A;color:#2E2200;display:grid;place-items:center;font:800 12px var(--body);z-index:9;box-shadow:0 2px 0 rgba(0,0,0,.25)}
+.dstack .bld{position:absolute;left:-6px;top:-9px;z-index:9;background:#fff;border-radius:7px;padding:1px 5px;font:800 10px var(--body);color:#1F1A33;box-shadow:0 2px 0 rgba(0,0,0,.25);white-space:nowrap}
+.dbank{display:flex;flex-direction:column;align-items:center;gap:5px;flex:none}
+.dbank .fan{position:relative;height:calc(var(--bw) * 1.4);width:calc(var(--bw) + var(--n) * var(--bw) * .22);min-width:var(--bw)}
+.dbank .fan .dk{--w:var(--bw);position:absolute;top:0}
+.dbank .tot{font:700 13px var(--body);color:#fff}
+.dbank .tot b{font:700 17px var(--display);color:#FFD84A}
+.dtag{display:inline-flex;align-items:center;gap:8px;padding:4px 12px;border-radius:999px;background:rgba(0,0,0,.25);color:#fff;font-size:13px;white-space:nowrap}
+.dtag b{font-family:var(--display);font-size:15px}
+.dtag.on{background:var(--acc);color:var(--accink)}
+.dtag .meta{display:inline-flex;gap:8px;opacity:.92;font-weight:700}
+.dtag .meta i{font-style:normal;display:inline-flex;align-items:center;gap:3px}
+.dtag .meta i::before{content:'';width:9px;height:12px;border-radius:2px;background:#173A6B;box-shadow:0 0 0 1.5px currentColor}
+.dtag .meta em{font-style:normal}
+.dtag .meta s{text-decoration:none;display:inline-flex;gap:2px;align-items:center}
+.dtag .meta s u{width:8px;height:8px;border-radius:50%;background:currentColor;opacity:.3}
+.dtag .meta s u.on{background:#FFD84A;opacity:1}
+.dtag.on .meta s u.on{background:#2E2200}
+/* phone, 3 or 4 players: a compact panel for each of the others */
+.dopp{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 5px;border:0;border-radius:16px;background:rgba(0,0,0,.14);color:#fff;cursor:pointer}
+.dopp.on{background:rgba(255,216,74,.16);box-shadow:inset 0 0 0 2px #FFD84A}
+.dopp.can{box-shadow:inset 0 0 0 3px #FFE680,0 0 18px rgba(255,230,128,.5);animation:gPulse 1.4s ease-in-out infinite}
+.dopp .nm{font:700 14px var(--display);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dopp .line{display:flex;gap:7px;font:700 11px var(--body);opacity:.92;flex-wrap:wrap;justify-content:center}
+.dopp .line .hc{display:inline-flex;align-items:center;gap:3px}
+.dopp .line .hc::before{content:'';width:8px;height:11px;border-radius:2px;background:#173A6B;box-shadow:0 0 0 1.5px #fff}
+.dopp .minis{display:flex;flex-wrap:wrap;justify-content:center;gap:4px}
+.dopp .none{font-size:11px}
+.mini{position:relative;width:17px;height:24px;border-radius:4px;background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.25);overflow:hidden}
+.mini::before{content:'';position:absolute;left:0;right:0;top:0;height:46%;background:var(--cc)}
+.mini b{position:absolute;left:0;right:0;bottom:1px;text-align:center;font:800 10px var(--body);color:#1F1A33}
+.mini.full{box-shadow:0 0 0 2px #FFD84A}
+/* the other players' own tables (two players on a phone, and table view) */
+.dseat{display:flex;flex-direction:column;align-items:center;gap:8px;padding:6px;border:0;background:none;color:#fff;border-radius:18px;cursor:pointer;--sw:var(--osw);--bw:calc(var(--osw) * .7)}
+.dseat.can{box-shadow:0 0 0 3px #FFE680,0 0 20px rgba(255,230,128,.5)}
+.dseat .srow{display:flex;align-items:flex-end;gap:12px}
+#deal.lay-duo .dseat{--sw:44px;--bw:32px}
+/* table view */
+#deal.lay-table #dd-table{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-rows:auto minmax(0,1fr) auto;
+  grid-template-areas:"left top right" "left mid right" "me me me";gap:12px 18px;padding:20px 22px 16px}
+#deal.lay-table #dd-top{grid-area:top}
+#deal.lay-table #dd-left{grid-area:left;display:flex;align-self:center}
+#deal.lay-table #dd-right{grid-area:right;display:flex;align-self:center}
+#deal.lay-table #dd-left .sets,#deal.lay-table #dd-right .sets{display:grid;grid-template-columns:repeat(2,auto);gap:12px}
+#deal.lay-table #dd-left .srow,#deal.lay-table #dd-right .srow{flex-direction:column;align-items:center}
+#deal.lay-table #dd-mid{grid-area:mid;flex-direction:column;justify-content:center;gap:14px}
+#deal.lay-table #dd-centerhint{display:block;padding:10px 16px;border-radius:18px;background:rgba(0,0,0,.28);color:#fff;font:700 15px var(--body);text-align:center;max-width:440px}
+#deal.lay-table #dd-bankslot{display:none}
+#deal.lay-table #dd-me{grid-area:me}
+#deal.lay-table #dd-mine{--bw:calc(var(--msw) * .7)}
+#deal.lay-table #dd-hint{display:none}
+/* a player's full table, slid up */
+#dd-sheet{position:fixed;inset:0;z-index:80}
+#dd-sheet .scrim{position:absolute;inset:0;background:rgba(10,8,30,.55);opacity:0;transition:opacity .2s}
+#dd-sheet.on .scrim{opacity:1}
+.osheet{position:absolute;left:50%;bottom:0;width:min(100%,720px);transform:translate(-50%,100%);transition:transform .25s cubic-bezier(.2,.9,.3,1);max-height:86vh;overflow-y:auto;box-sizing:border-box;
+  border-radius:28px 28px 0 0;padding:10px 16px calc(var(--sab) + 22px);color:#fff;--sw:64px;--bw:40px;
+  background:radial-gradient(ellipse at 50% 30%,#2E9A5C 0%,#1F7D47 60%,#145C33 100%);box-shadow:0 -10px 40px rgba(0,0,0,.45),inset 0 0 0 6px #7A4A22}
+#dd-sheet.on .osheet{transform:translate(-50%,0)}
+.osheet .grab{width:44px;height:5px;border-radius:9px;background:rgba(255,255,255,.5);margin:2px auto 12px}
+.osheet .ohead{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.osheet .oav{width:46px;height:46px;border-radius:14px;background:#FF9F6B;display:grid;place-items:center;font:700 22px var(--display);color:#2E1200;flex:none}
+.osheet .onm{flex:1;min-width:0}
+.osheet .onm b{display:block;font:700 22px var(--display)}
+.osheet .onm span{font:700 13px var(--body);opacity:.85;display:flex;gap:10px;flex-wrap:wrap}
+.osheet .onm i{font-style:normal}
+.osheet .x{width:38px;height:38px;border-radius:50%;border:0;background:rgba(0,0,0,.25);color:#fff;font-size:18px;flex:none}
+.osheet .osets{padding:8px 0 14px;gap:16px 12px}
+.osheet .orow{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.18)}
+.osheet .ohand{display:flex;flex-direction:column;align-items:center;gap:5px;font:700 13px var(--body)}
+.osheet .ohand .backs{position:relative;height:56px;width:112px}
+.osheet .ohand .backs .dk{--w:40px;position:absolute;top:0}
+.dstack.pick .cas,.dstack.pickc{cursor:pointer}
+.dstack.pick .cas::before{content:'';position:absolute;inset:-5px;border-radius:12px;box-shadow:0 0 0 3px #FFE680,0 0 16px rgba(255,230,128,.6);z-index:8;pointer-events:none}
+.dstack .dk.canpick{box-shadow:0 0 0 3px #FFE680,0 6px 14px rgba(0,0,0,.35)}
+.dstack.pick .cap::after,.dstack.pickc .cap::after{content:'Tap to take';margin-left:4px;color:#FFE680}
+.dstack.locked{opacity:.5;cursor:default}
+.dstack.locked .cap::after{content:'Locked';margin-left:4px;opacity:.85}
+#dd-banner{position:fixed;left:50%;transform:translateX(-50%);width:min(calc(100% - 24px),520px);top:calc(var(--sat) + 8px);z-index:90;display:flex;align-items:center;gap:10px;padding:10px 12px;box-sizing:border-box;
+  border-radius:18px;background:#FFFFFF;color:#23175A;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+#dd-banner[hidden]{display:none}
+#dd-banner .ic{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;flex:none}
+#dd-banner .ic svg{width:22px;height:22px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+#dd-banner b{display:block;font:700 16px var(--display)}
+#dd-banner span{font:600 12.5px var(--body);color:#5A4C8C}
+#dd-banner button{margin-left:auto;height:36px;border:0;border-radius:11px;padding:0 12px;background:#F1ECFF;color:#23175A;font:800 13px var(--body);flex:none}
+/* pass the phone */
+#dd-pass{position:fixed;inset:0;z-index:95;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:30px;text-align:center;color:#fff;
+  background:radial-gradient(circle at 50% 35%,#7B5CF0 0%,#4A2DB8 55%,#2A1873 100%);opacity:0;transition:opacity .2s}
+#dd-pass.on{opacity:1}
+#dd-pass[hidden]{display:none}
+#dd-pass .big{width:120px;height:120px;border-radius:36px;background:#7FD6A8;display:grid;place-items:center;font:700 56px var(--display);color:#0D3A22;box-shadow:0 10px 0 rgba(0,0,0,.2)}
+#dd-pass h1{margin:6px 0 0;font:700 40px/1.05 var(--display)}
+#dd-pass p{margin:0;font:600 16px/1.4 var(--body);opacity:.9;max-width:28ch}
+#dd-pass .last{margin-top:6px;padding:12px 14px;border-radius:16px;background:rgba(0,0,0,.22);font:700 14px var(--body);max-width:340px}
+#dd-pass button{margin-top:18px;height:60px;padding:0 28px;border:0;border-radius:18px;background:#FFD84A;color:#2E2200;font:700 20px var(--display);box-shadow:0 6px 0 rgba(0,0,0,.2);cursor:pointer}
+#dd-pass small{opacity:.7;font:600 13px var(--body)}
+/* choosing cards to pay with or discard */
+.dpick{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;padding-bottom:90px}
+.dpick .dk{--w:84px;cursor:pointer;transition:transform .12s}
+.dpick .dk.chosen{transform:translateY(-6px);box-shadow:0 0 0 4px var(--acc),0 8px 16px rgba(0,0,0,.3)}
+/* settings */
+#dd-settings{place-items:end center;padding:0 8px calc(var(--sab) + 16px);background:rgba(10,30,18,.45)}
+#dd-settings .chrcard{max-width:440px;padding:22px 18px 18px;border-radius:28px;background:#FFFFFF;color:#23175A;border:0;box-shadow:0 -8px 40px rgba(0,0,0,.35);text-align:left}
+#dd-settings .chrclose{color:#23175A;background:#F1ECFF}
+#dd-settings .chrclose svg{stroke:#23175A;fill:none}
+#dd-settings .chrhead{font-family:var(--display);font-weight:700;font-size:28px;color:#23175A;text-align:center}
+#dd-settings .chrgo{width:100%;height:52px;border:0;border-radius:16px;background:#FFD84A;color:#23175A;font:700 18px var(--display);cursor:pointer;margin-top:16px}
+.ddnames{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.ddname{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:10px 12px;border-radius:16px;border:2.5px solid transparent;background:#F7F5FF;color:#23175A;cursor:pointer;text-align:left}
+.ddname .sw{display:flex;gap:3px}.ddname .sw i{width:16px;height:10px;border-radius:3px}
+.ddname b{font:700 15px var(--display)}
+.ddname small{font:600 11.5px var(--body);color:#5A4C8C}
+.ddname[aria-pressed="true"]{border-color:#FFB020;background:#FFF8DD}
+:root[data-mode="pirate"] #dd-bar button:not(.hl):not(.warn){background:rgba(90,58,26,.16)}
+.dfly{position:fixed;z-index:120;pointer-events:none;perspective:900px;transform-origin:50% 50%}
+.dfly-in{position:relative;width:100%;height:100%;transform-style:preserve-3d}
+.dfly-in>.dk{position:absolute;left:0;top:0;--w:inherit;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.dfly-in>.dk.back{transform:rotateY(180deg)}
+/* who won: the same white card as Golf and Chess */
+#d-result{place-items:end center;padding:0 8px calc(var(--sab) + 16px);background:rgba(10,30,18,.45);position:fixed;z-index:96}
+#d-result .chrcard{overflow:visible;max-width:440px;margin-top:70px;padding:22px 20px 20px;border-radius:28px;background:#FFFFFF;color:#23175A;border:0;box-shadow:0 -8px 40px rgba(0,0,0,.35)}
+#d-result .chrclose{color:#23175A;background:#F1ECFF}
+#d-result .chrclose svg{stroke:#23175A;fill:none}
+#d-result .dmark{display:flex;align-items:center;width:fit-content;min-width:120px;height:84px;margin:-76px auto 10px;padding:0 16px;border-radius:26px;background:#4ED08E;border:5px solid #fff;box-sizing:border-box}
+#d-result .chrhead{font-family:var(--display);font-weight:700;font-size:30px;color:#23175A}
+#d-result .chrsub{font-size:15px;color:#5A4C8C}
+#d-result .chrstats{font-family:var(--body);font-weight:700;color:#5A4C8C;border-top-color:#EFEAFD}
+#d-result .chrgo{width:100%;height:54px;border:0;border-radius:16px;background:#FFD84A;color:#23175A;font:700 18px var(--display);cursor:pointer;margin-top:14px}
+#d-result .chrgo[hidden]{display:none}
+#d-result .chrrow{display:grid;gap:8px;margin-top:8px}
+#d-result .chrrow button{height:50px;border:0;border-radius:16px;background:#F1ECFF;color:#23175A;font:800 15px var(--body);cursor:pointer}
+
 /* ===== Golf: an overhead view of a card table ===== */
 #golf{position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;background:var(--bg);
   /* one card unit, sized so both hands, the piles and the buttons always fit on screen */
@@ -2511,7 +2735,9 @@ h1,h2,h3,.wordmark{font-weight:700;letter-spacing:0}
   <section class="screen" id="s-deal" hidden>
     <div class="pad">
       <div class="phead"><h1>Deal</h1><button class="iconbtn headx" id="dl-back" aria-label="Close Deal"><svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19"/></svg></button></div>
-      <div class="tiles" id="dl-actions"></div>
+      <div id="dl-countwrap" hidden><div class="seclabel" style="margin-top:4px">Players</div>
+      <div class="seg" id="dl-count" role="group" aria-label="Players"><button data-n="2">2 players</button><button data-n="3">3 players</button><button data-n="4">4 players</button></div></div>
+      <div class="tiles" id="dl-actions" style="margin-top:14px"></div>
       <div class="seclabel" id="dl-gameslabel" hidden>Your games</div>
       <div class="feed" id="dl-games"></div>
       <div class="seclabel">How it works</div>
@@ -2524,12 +2750,37 @@ h1,h2,h3,.wordmark{font-weight:700;letter-spacing:0}
     <div id="dtop">
       <button class="iconbtn" id="d-exit" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
       <div id="d-status"></div>
-      <button class="iconbtn" id="d-loot" aria-label="Game log"><svg viewBox="0 0 24 24"><path d="M5 7h14M5 12h14M5 17h9"/></svg></button>
+      <button class="iconbtn" id="d-loot" aria-label="Game log" hidden><svg viewBox="0 0 24 24"><path d="M5 7h14M5 12h14M5 17h9"/></svg></button>
+      <button class="iconbtn" id="dd-gear" aria-label="Deal settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 14.6a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5v.2a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1h.2a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg></button>
     </div>
-    <div id="d-others"></div>
-    <div id="d-prompt"></div>
-    <div id="d-mine"></div>
-    <div id="d-handwrap"><div class="eyebrow" id="d-handlabel">Your hand</div><div id="d-hand"></div></div>
+    <div id="dd-table">
+      <div class="ddside" id="dd-top"></div>
+      <div class="ddside" id="dd-left"></div>
+      <div id="dd-mid">
+        <div class="ddpiles"><button class="ddpile" id="dd-deck" aria-label="Draw from the deck"></button><div class="ddpile" id="dd-discard" aria-label="Discard pile"></div></div>
+        <div id="dd-centerhint"></div>
+        <div id="dd-bankslot"></div>
+      </div>
+      <div class="ddside" id="dd-right"></div>
+      <div id="dd-me"><div id="dd-mine"></div><div id="dd-metag"></div></div>
+    </div>
+    <div id="dd-hint" aria-live="polite"></div>
+    <div id="dd-hand"></div>
+    <div id="dd-bar"></div>
+    <div id="dd-sheet" hidden></div>
+    <div id="dd-banner" hidden></div>
+    <div id="dd-pass" hidden></div>
+    <div class="gresult" id="dd-settings" hidden>
+      <div class="chrcard ddset">
+        <button class="iconbtn chrclose" id="dd-setclose" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
+        <div class="chrhead">Settings</div>
+        <div class="gfsetlbl">Card names</div>
+        <div class="ddnames" id="dd-names"></div>
+        <div class="gfsetrow"><span><b>Sound</b><small>Card flips, steals and the cheer at the end</small></span><button class="gftog" id="dd-togsound" role="switch" aria-checked="false"><i></i></button></div>
+        <div class="gfsetrow"><span><b>Table view</b><small>Everyone round the table. On by itself on iPad.</small></span><button class="gftog" id="dd-togtable" role="switch" aria-checked="false"><i></i></button></div>
+        <button class="chrgo" id="dd-setdone">Done</button>
+      </div>
+    </div>
 
     <div class="gresult" id="d-result" hidden>
       <div class="chrcard">
@@ -2538,6 +2789,8 @@ h1,h2,h3,.wordmark{font-weight:700;letter-spacing:0}
         <div class="chrhead" id="dr-head"></div>
         <div class="chrsub" id="dr-sub"></div>
         <div class="chrstats" id="dr-stats"></div>
+        <button class="chrgo" id="dr-again">Play again</button>
+        <div class="chrrow"><button id="dr-done">Done</button></div>
       </div>
     </div>
   </section>
@@ -4086,7 +4339,7 @@ HANDLERS['deal'] = {
     const open = mine.filter(m => m.status !== 'complete').length;
     return open ? open + (open === 1 ? ' game in progress' : ' games in progress') : null;
   },
-  open(){ window.__dealLobby(); show('deal'); }
+  open(mode){ window.__dealLobby(mode); show('deal'); }
 };
 
 /* One creation path for every seated card game. Seat order is fixed here so
@@ -7837,13 +8090,19 @@ if(typeof module !== 'undefined' && module.exports) module.exports = DEAL;
 /* ============================================================
    Part two: the table.
 
-   The UI never encodes a rule. It asks the engine what is legal and
-   draws a control for each answer, so a rule change needs no UI change
-   and the two can never disagree.
+   An overhead card table, like Golf's: the other players round the top
+   (or round the edge, in table view), the deck and discard in the middle,
+   your sets laid out in front of you and your hand fanned along the bottom.
 
-   Live play is polling: while the table is open the match row is read
-   every couple of seconds, and every write is guarded by the row's
-   updated_at so a stale client cannot overwrite a newer state.
+   The UI still never encodes a rule. It asks the engine what is legal and
+   draws a control for each answer.
+
+   Three ways to play:
+     online  every write is guarded by the row's updated_at, and the table
+             polls while it is open
+     local   one phone or iPad passed round; a full-screen "pass to …"
+             card hides the hand between turns
+     solo    you against one to three computer players
    ============================================================ */
 (function(){
   if(typeof document === 'undefined') return;   /* node is running the engine only */
@@ -7851,403 +8110,647 @@ if(typeof module !== 'undefined' && module.exports) module.exports = DEAL;
   const $$ = s => document.querySelector(s);
   const mk = (t,c,h)=>{const e=document.createElement(t); if(c)e.className=c; if(h!=null)e.innerHTML=h; return e;};
   const esc = t => String(t).replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const reduced = () => CARDS.reduced();
+  const sfx = n => { try{ if(POPSFX.on() && POPSFX[n]) POPSFX[n](); }catch(e){} };
 
   const POLL_MS = 1800;
-  let G = null;    /* {match, state, me, seen, timer, busy} */
+  let G = null;    /* {mode, match, state, viewer, seen, timer, busy, shown, gen, target} */
+  let lobbyMode = 'online', gen = 0;
 
   const who = id => (window.__userName && window.__userName(id)) || 'Player';
   const meId = () => window.__me && window.__me.id;
+  const tableOn = () => typeof TABLEVIEW !== 'undefined' && TABLEVIEW.on();
+
+  /* ---------- who is who ---------- */
+  const BOTS = ['bot-penny', 'bot-monty', 'bot-goldie'];
+  const BOTNAME = {'bot-penny':'Penny', 'bot-monty':'Monty', 'bot-goldie':'Goldie'};
+  function seatName(id){
+    if(!G) return who(id);
+    if(G.mode === 'local') return 'Player ' + (G.state.players.findIndex(p => p.id === id) + 1);
+    if(G.mode === 'solo') return id === meId() ? 'You' : (BOTNAME[id] || 'GameRoom');
+    return id === meId() ? 'You' : who(id);
+  }
+  const initial = id => (G && G.mode === 'local') ? String(G.state.players.findIndex(p => p.id === id) + 1) : (seatName(id)[0] || '?').toUpperCase();
+  /* whose eyes the table is drawn for: you, or in pass and play whoever has the phone */
+  const viewer = () => G.mode === 'local' ? G.viewer : meId();
+  const isBot = id => G.mode === 'solo' && id !== meId();
+
+  /* ---------- the names on the cards ----------
+     The colours never change, so people with different name themes can
+     still play each other. Roads is ours; more themes slot in here. */
+  const NAME_KEY = 'gr.deal.names';
+  const NAMESETS = {
+    roads: {label:'Roads', sets:{
+      brown:['Maple Lane','Acorn Way'], lblue:['Bluebell Road','Harbor View','Seaside Drive'],
+      pink:['Rosewood Ave','Blossom Court','Petal Place'], orange:['Sunset Road','Marigold St','Copper Lane'],
+      red:['Cherry Street','Ruby Road','Poppy Avenue'], yellow:['Sunflower Way','Honey Lane','Lemon Grove'],
+      green:['Fern Hill','Ivy Lane','Willow Park'], blue:['Ocean Drive','Bayview Hill'],
+      rail:['North Station','South Station','East Station','West Station'], util:['Power Plant','Water Works']}},
+    /* each colour is a planet, each card a place on it */
+    starwars: {label:'Star Wars', setNames:{brown:'Tatooine', lblue:'Hoth', pink:'Naboo', orange:'Bespin', red:'Mustafar', yellow:'Jakku',
+      green:'Dagobah', blue:'Coruscant', rail:'Starships', util:'Battle Stations'}, sets:{
+      brown:['Mos Eisley','Lars Homestead'], lblue:['Echo Base','Wampa Cave','North Ridge'],
+      pink:['Theed Palace','Otoh Gunga','Lake Country'], orange:['Cloud City','Carbon Chamber','Tibanna Mine'],
+      red:['Vader\u2019s Castle','Lava Falls','Mining Station'], yellow:['Niima Outpost','Ship Graveyard','Rey\u2019s AT-AT'],
+      green:['Yoda\u2019s Hut','Dark Cave','Swamp Landing'], blue:['Jedi Temple','Senate Rotunda'],
+      rail:['Millennium Falcon','Star Destroyer','X-wing','TIE Fighter'], util:['Death Star','Starkiller Base']}},
+    /* each colour is a land or park, each card a ride in it */
+    disney: {label:'Disney World', setNames:{brown:'Frontierland', lblue:'Adventureland', pink:'Fantasyland', orange:'Tomorrowland',
+      red:'Toy Story Land', yellow:'EPCOT', green:'Animal Kingdom', blue:'Galaxy\u2019s Edge', rail:'Getting Around', util:'Icons'}, sets:{
+      brown:['Big Thunder Mtn','Tiana\u2019s Bayou'], lblue:['Pirates','Jungle Cruise','Magic Carpets'],
+      pink:['Peter Pan','Small World','Mine Train'], orange:['Space Mountain','TRON','Buzz Lightyear'],
+      red:['Slinky Dog Dash','Toy Story Mania','Alien Saucers'], yellow:['Cosmic Rewind','Test Track','Mission: SPACE'],
+      green:['Everest','Safari','Flight of Passage'], blue:['Rise of the Resistance','Smugglers Run'],
+      rail:['Monorail','Skyliner','Ferryboat','Railroad'], util:['Cinderella Castle','Spaceship Earth']}},
+    /* each colour is a circuit, each card one of its corners */
+    f1: {label:'F1 Circuits', setNames:{brown:'Zandvoort', lblue:'Montreal', pink:'Suzuka', orange:'Interlagos', red:'Monza', yellow:'Spa',
+      green:'Silverstone', blue:'Monaco', rail:'Teams', util:'Race Control'}, sets:{
+      brown:['Tarzan','Hugenholtz'], lblue:['L\u2019Epingle','Wall of Champions','Senna Corner'],
+      pink:['130R','Spoon','Degner'], orange:['Senna S','Descida do Lago','Junção'],
+      red:['Parabolica','Lesmo','Ascari'], yellow:['Eau Rouge','Pouhon','Blanchimont'],
+      green:['Copse','Maggotts','Stowe'], blue:['Casino Square','Fairmont Hairpin'],
+      rail:['Ferrari','McLaren','Mercedes','Red Bull'], util:['Safety Car','Pit Lane']}}
+  };
+  const namesPref = () => { try{ const v = localStorage.getItem(NAME_KEY); return NAMESETS[v] ? v : 'roads'; }catch(e){ return 'roads'; } };
+  const PROP_I = {};
+  (()=>{ const n = {}; DEAL.DECK.forEach(c => { if(c.kind === 'prop'){ n[c.colour] = n[c.colour] || 0; PROP_I[c.id] = n[c.colour]++; } }); })();
+  function propName(id){
+    const c = DEAL.card(id), list = NAMESETS[namesPref()].sets[c.colour];
+    return list ? list[PROP_I[id] % list.length] : DEAL.SETS[c.colour].name;
+  }
+  const setName = colour => ((NAMESETS[namesPref()].setNames || {})[colour]) || DEAL.SETS[colour].name;
+  function cardLabel(id){
+    const c = DEAL.card(id);
+    if(c.kind === 'prop') return propName(id);
+    if(c.kind === 'wild') return c.colours === 'any' ? 'a wild card' : 'a ' + setName(c.colours[0]) + '/' + setName(c.colours[1]) + ' wild';
+    return DEAL.label(id);
+  }
 
   /* ---------- cards ---------- */
-  /* One card, drawn the same everywhere it appears. */
-  function cardEl(id, opts){
-    const c = DEAL.card(id), o = opts || {};
-    const el = mk('button', 'dcard k-' + c.kind);
+  const MONEY = {1:['#F3E7C4','#D8C48E'], 2:['#F6C9C2','#E39A8E'], 3:['#CFE8C4','#93C784'], 4:['#C9E3F4','#86BDE2'], 5:['#DCCDF4','#AE93E3'], 10:['#FBD8A6','#F0AE52']};
+  const LIGHT = {lblue:1, yellow:1};
+  const ACT = {
+    passgo:    ['#2E9E52', 'Draw 2 cards', '<path d="M5 12a7 7 0 1 1 2 5"/><path d="M5 18v-5h5"/>'],
+    birthday:  ['#E2509A', 'Everyone pays you 2M', '<path d="M5 20h14v-7H5zM5 16c2 1.5 4 1.5 7 0s5-1.5 7 0M12 13V9M12 6.5c-1-1-1-2 0-3 1 1 1 2 0 3"/>'],
+    debt:      ['#7A5AF0', 'One player pays you 5M', '<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/>'],
+    sly:       ['#2F8FE6', 'Steal one property', '<path d="M7 11V6a1.5 1.5 0 0 1 3 0v5M10 10V4.5a1.5 1.5 0 0 1 3 0V10M13 10V5.5a1.5 1.5 0 0 1 3 0V12M16 9a1.5 1.5 0 0 1 3 0v4a7 7 0 0 1-12 5l-3-4a1.5 1.5 0 0 1 2.5-1.7L7 13"/>'],
+    forced:    ['#18A0A0', 'Swap a property', '<path d="M4 8h13l-3-3M20 16H7l3 3"/>'],
+    breaker:   ['#D2352F', 'Steal a full set', '<path d="M13 3L5 13h6l-1 8 8-10h-6z"/>'],
+    jsn:       ['#E0822F', 'Cancel an action', '<circle cx="12" cy="12" r="8"/><path d="M6.5 6.5l11 11"/>'],
+    doublerent:['#C9A21A', 'Play with a rent card', '<path d="M6 8l6 8M12 8l-6 8M15 10a2 2 0 0 1 4 0c0 2-4 3-4 6h4"/>'],
+    house:     ['#268B4E', '+3M on a full set', '<path d="M4 11l8-7 8 7M6 10v10h12V10M10 20v-5h4v5"/>'],
+    hotel:     ['#2A5BC0', '+4M after a house', '<path d="M5 21V5h14v16M9 9h2M13 9h2M9 13h2M13 13h2M10 21v-4h4v4"/>']
+  };
+  const RAINBOW = 'conic-gradient(from 200deg,#8A5A36,#6FC6E8,#DE5F9E,#E0822F,#D2352F,#E0B62B,#268B4E,#2A5BC0,#40424C,#8E9A3E,#8A5A36)';
+  const hex = c => DEAL.SETS[c].hex;
+  function cardHTML(id){
+    const c = DEAL.card(id), val = c.value ? '<span class="val">' + c.value + 'M</span>' : '';
     if(c.kind === 'prop'){
-      el.style.setProperty('--cc', DEAL.SETS[c.colour].hex);
-      el.appendChild(mk('span','dc-band'));
-      el.appendChild(mk('span','dc-name', DEAL.SETS[c.colour].name));
-    } else if(c.kind === 'wild'){
-      const cols = c.colours === 'any' ? DEAL.COLOURS : c.colours;
-      const band = mk('span','dc-band split');
-      band.style.background = c.colours === 'any'
-        ? 'linear-gradient(135deg,' + DEAL.COLOURS.map(x => DEAL.SETS[x].hex).join(',') + ')'
-        : 'linear-gradient(135deg,' + DEAL.SETS[cols[0]].hex + ' 0 50%,' + DEAL.SETS[cols[1]].hex + ' 50% 100%)';
-      el.appendChild(band);
-      el.appendChild(mk('span','dc-name', c.colours === 'any' ? 'Wild' : 'Wild'));
-      el.appendChild(mk('span','dc-sub', c.colours === 'any' ? 'any set'
-        : DEAL.SETS[cols[0]].name + ' / ' + DEAL.SETS[cols[1]].name));
-    } else if(c.kind === 'money'){
-      el.appendChild(mk('span','dc-big', c.value + 'M'));
-    } else if(c.kind === 'rent'){
-      const cols = c.colours === 'any' ? DEAL.COLOURS : c.colours;
-      const band = mk('span','dc-band split');
-      band.style.background = c.colours === 'any'
-        ? 'linear-gradient(135deg,' + DEAL.COLOURS.map(x => DEAL.SETS[x].hex).join(',') + ')'
-        : 'linear-gradient(135deg,' + DEAL.SETS[cols[0]].hex + ' 0 50%,' + DEAL.SETS[cols[1]].hex + ' 50% 100%)';
-      el.appendChild(band);
-      el.appendChild(mk('span','dc-name','Rent'));
-      el.appendChild(mk('span','dc-sub', c.colours === 'any' ? 'any, one player'
-        : DEAL.SETS[cols[0]].name + ' / ' + DEAL.SETS[cols[1]].name));
-    } else {
-      el.appendChild(mk('span','dc-name', DEAL.ACTIONS[c.act].name));
+      const S = DEAL.SETS[c.colour];
+      const lad = S.rent.map((r, i) => '<div class="' + (i === S.size - 1 ? 'full' : '') + '"><span>' + '<i></i>'.repeat(i + 1) + '</span><b>' + r + 'M</b></div>').join('');
+      return '<div class="dk prop' + (LIGHT[c.colour] ? ' lt' : '') + '" style="--cc:' + S.hex + '" data-id="' + id + '">' + val +
+        '<div class="band' + (propName(id).length > 13 ? ' long' : '') + '"><span>' + esc(propName(id)) + '</span></div><div class="setn">' + esc(setName(c.colour)) + (setName(c.colour).length > 10 ? '' : ' · set of ' + S.size) + '</div><div class="ladder">' + lad + '</div></div>';
     }
-    if(c.value) el.appendChild(mk('span','dc-val', c.value + 'M'));
-    if(o.small) el.classList.add('small');
-    if(o.on)    el.classList.add('on');
-    if(o.flat)  el.disabled = true;
-    return el;
+    if(c.kind === 'wild'){
+      if(c.colours === 'any') return '<div class="dk prop wild any" data-id="' + id + '"><div class="band">Wild</div><div class="mid">Any<small>colour</small></div></div>';
+      return '<div class="dk prop wild" style="--c1:' + hex(c.colours[0]) + ';--c2:' + hex(c.colours[1]) + '" data-id="' + id + '">' + val +
+        '<div class="band">Wild</div><div class="mid">' + esc(setName(c.colours[0])) + '<small>or ' + esc(setName(c.colours[1])) + '</small></div></div>';
+    }
+    if(c.kind === 'money'){
+      const m = MONEY[c.value] || MONEY[1];
+      return '<div class="dk money" style="--mc:' + m[0] + ';--mc2:' + m[1] + '" data-id="' + id + '">' + val + '<div class="coin">' + c.value + 'M</div><span class="val br">' + c.value + 'M</span></div>';
+    }
+    if(c.kind === 'rent'){
+      const any = c.colours === 'any';
+      return '<div class="dk act rent' + (any ? ' any' : '') + '"' + (any ? '' : ' style="--c1:' + hex(c.colours[0]) + ';--c2:' + hex(c.colours[1]) + '"') + ' data-id="' + id + '">' + val +
+        '<div class="ring"><b>RENT</b></div><div class="nm">Rent<small>' + (any ? 'Any colour, one player' : esc(setName(c.colours[0])) + ' or ' + esc(setName(c.colours[1]))) + '</small></div></div>';
+    }
+    const A = ACT[c.act] || ['#7A5AF0', '', ''];
+    return '<div class="dk act" style="--ac:' + A[0] + '" data-id="' + id + '">' + val + '<div class="ring"><svg viewBox="0 0 24 24">' + A[2] + '</svg></div><div class="nm">' +
+      esc(DEAL.ACTIONS[c.act].name) + '<small>' + esc(A[1]) + '</small></div></div>';
   }
+  const BACK = '<div class="dk back"><b>DEAL</b></div>';
+  function cardEl(id){ const t = mk('div'); t.innerHTML = id ? cardHTML(id) : BACK; const el = t.firstChild;
+    if(id && G && G.hide && G.hide.has(id)) el.style.visibility = 'hidden';
+    return el; }
 
-  /* A tiny version of a card, for the ones already lying on the table.
-     Big enough to tell a property from a house from a wild, small enough
-     that a complete set still fits across a phone. */
-  function laidEl(id){
-    const c = DEAL.card(id);
-    const el = mk('span', 'laid dlaid');
-    const cols = c.kind === 'prop' ? [c.colour]
-      : c.colours === 'any' ? DEAL.COLOURS
-      : c.colours || [];
-    if(cols.length === 1) el.style.background = DEAL.SETS[cols[0]].hex;
-    else if(cols.length) el.style.background =
-      'linear-gradient(140deg,' + cols.map(x => DEAL.SETS[x].hex).join(',') + ')';
-    if(c.kind !== 'prop') el.appendChild(mk('span', 'dlmark', c.kind === 'wild' ? '✦' : ''));
-    el.title = DEAL.label(id);
-    return el;
-  }
-
-  /* A set as it actually sits on the table: the cards themselves, fanned,
-     with what it is and what it earns written underneath. */
-  function setEl(p, colour){
-    const s = p.sets[colour] || {cards:[], house:false, hotel:false};
+  /* ---------- pieces of the table ---------- */
+  /* A set lying on the table: the cards cascade so every colour band shows. */
+  function stackEl(p, colour){
+    const s = p.sets[colour], cards = s ? s.cards : [];
     const full = DEAL.isComplete(p, colour);
-    const el = mk('div', 'dset' + (full ? ' full' : ''));
-    el.style.setProperty('--cc', DEAL.SETS[colour].hex);
-
-    const fan = mk('div', 'dfan');
-    s.cards.forEach(id => fan.appendChild(laidEl(id)));
-    /* The gaps a set still has, drawn as outlines, so you can see what it
-       needs without counting. */
-    for(let i = s.cards.length; i < DEAL.SETS[colour].size; i++)
-      fan.appendChild(mk('span', 'laid dgap'));
-    if(s.house) fan.appendChild(mk('span', 'laid dbuild', '⌂'));
-    if(s.hotel) fan.appendChild(mk('span', 'laid dbuild', '⌸'));
-    el.appendChild(fan);
-
-    const foot = mk('div', 'dsfoot');
-    foot.appendChild(mk('span', 'dsname', DEAL.SETS[colour].name));
-    const rent = DEAL.rentFor(p, colour);
-    foot.appendChild(mk('span', 'dsrent', s.cards.length
-      ? rent + 'M' : DEAL.SETS[colour].size + ' needed'));
-    el.appendChild(foot);
+    const el = mk('div', 'dstack' + (full ? ' full' : ''));
     el.dataset.colour = colour;
+    const cas = mk('div', 'cas');
+    cards.forEach((id, i) => { const c = cardEl(id); c.style.top = 'calc(var(--sw) * ' + (0.3 * i).toFixed(2) + ')'; cas.appendChild(c); });
+    cas.style.height = 'calc(var(--sw) * ' + (1.4 + 0.3 * Math.max(0, cards.length - 1)).toFixed(2) + ')';
+    if(full) cas.appendChild(mk('span', 'done', '✓'));
+    if(s && (s.house || s.hotel)) cas.appendChild(mk('span', 'bld', s.hotel ? '⌂ + hotel' : '⌂ house'));
+    el.appendChild(cas);
+    el.appendChild(mk('div', 'cap', cards.length + '/' + DEAL.SETS[colour].size + ' <b>' + DEAL.rentFor(p, colour) + 'M</b>'));
     return el;
   }
-
-  /* Your own table lists every colour, so you can see at a glance what each
-     set still needs. An opponent's lists only what they actually hold. */
-  function tableEl(p, mine){
-    const wrap = mk('div', 'dtable');
-    const held = DEAL.COLOURS.filter(c => p.sets[c] && p.sets[c].cards.length);
-    if(!mine){
-      if(!held.length) wrap.appendChild(mk('span', 'dnone', 'No property yet'));
-      else held.forEach(c => wrap.appendChild(setEl(p, c)));
-      return wrap;
-    }
-    DEAL.COLOURS.forEach(c=>{
-      const el = setEl(p, c);
-      if(!p.sets[c] || !p.sets[c].cards.length) el.classList.add('empty');
-      wrap.appendChild(el);
-    });
-    return wrap;
-  }
-
-  /* Money in front of someone: the cards, not just a number, because what
-     they can pay with is as interesting as how much. */
+  const heldColours = p => DEAL.COLOURS.filter(c => p.sets[c] && p.sets[c].cards.length);
   function bankEl(p){
-    const wrap = mk('div', 'dbank');
-    if(!p.bank.length){ wrap.appendChild(mk('span', 'dnone', 'Nothing banked')); return wrap; }
-    const fan = mk('div', 'dfan');
-    p.bank.slice(0, 8).forEach(id=>{
-      const el = mk('span', 'laid dcash', String(DEAL.card(id).value));
-      fan.appendChild(el);
-    });
-    wrap.appendChild(fan);
-    wrap.appendChild(mk('span', 'dsrent', DEAL.worth(p.bank) + 'M'));
-    return wrap;
+    const ids = p.bank.slice(-8), el = mk('div', 'dbank');
+    const fan = mk('div', 'fan');
+    fan.style.setProperty('--n', Math.max(0, ids.length - 1));
+    if(!ids.length) fan.appendChild(mk('span', 'ghost', 'Bank'));
+    ids.forEach((id, i) => { const c = cardEl(id); c.style.left = 'calc(var(--bw) * ' + (0.22 * i).toFixed(2) + ')'; fan.appendChild(c); });
+    el.appendChild(fan);
+    el.appendChild(mk('div', 'tot', 'Bank <b>' + DEAL.worth(p.bank) + 'M</b>'));
+    return el;
+  }
+  function handCount(p){ return p.handCount != null ? p.handCount : p.hand.length; }
+  function tagEl(p, on){
+    const sets = DEAL.completeSets(p).length;
+    const t = mk('div', 'dtag' + (on ? ' on' : ''));
+    t.innerHTML = '<b>' + esc(seatName(p.id)) + '</b><span class="meta"><i>' + handCount(p) + '</i><em>' + DEAL.worth(p.bank) + 'M</em><s>' +
+      [0,1,2].map(k => '<u class="' + (k < sets ? 'on' : '') + '"></u>').join('') + '</s></span>';
+    return t;
   }
 
-  /* ---------- rendering ---------- */
+  /* ---------- drawing ---------- */
+  const layoutKind = () => tableOn() ? 'table' : G.state.players.length === 2 ? 'duo' : 'row';
+  function others(){
+    const s = G.state, n = s.players.length, me = s.players.findIndex(p => p.id === viewer());
+    return Array.from({length:n - 1}, (_, i) => s.players[(me + 1 + i) % n]);
+  }
   function draw(){
-    const s = G.state, me = DEAL.seat(s, G.me);
-    const turnId = DEAL.waitingOn(s);
-
-    $$('#d-status').textContent = statusLine();
-
-    /* Opponents run round the edge of the table, in seating order starting
-       after you: what they are holding, what they have banked, and every set
-       they have put down. */
-    const others = $$('#d-others');
-    others.innerHTML = '';
-    const n = s.players.length;
-    const start = s.players.findIndex(p => p.id === G.me);
-    for(let i = 1; i < n; i++){
-      const p = s.players[(start + i) % n];
-      const held = p.handCount != null ? p.handCount : p.hand.length;
-      const row = mk('div', 'rail dopp' + (turnId === p.id ? ' up' : ''));
-      row.id = 'dseat-' + String(p.id).replace(/[^a-zA-Z0-9]/g, '');
-      const head = mk('div', 'railhead');
-      head.appendChild(mk('span', 'railname', esc(who(p.id))));
-      head.appendChild(mk('span', 'railmeta',
-        DEAL.worth(p.bank) + 'M · ' + DEAL.completeSets(p).length + '/' + DEAL.SETS_TO_WIN + ' sets'));
-      row.appendChild(head);
-      const hand = mk('div', 'raillaid');
-      hand.appendChild(CARDS.backs(held, {max:7}));
-      row.appendChild(hand);
-      row.appendChild(tableEl(p, false));
-      others.appendChild(row);
-    }
-
-    /* your own table */
-    const mine = $$('#d-mine');
-    mine.innerHTML = '';
-    mine.id = 'd-mine';
-    const mhead = mk('div', 'railhead');
-    mhead.appendChild(mk('span', 'railname', 'You'));
-    mhead.appendChild(mk('span', 'railmeta',
-      DEAL.worth(me.bank) + 'M · ' + DEAL.completeSets(me).length + '/' + DEAL.SETS_TO_WIN + ' sets'));
-    mine.appendChild(mhead);
-    const bankRow = mk('div', 'dbankrow');
-    bankRow.id = 'd-bank';
-    bankRow.appendChild(bankEl(me));
-    mine.appendChild(bankRow);
-    mine.appendChild(tableEl(me, true));
-
-    drawPrompt();
+    if(!G) return;
+    const s = G.state, kind = layoutKind(), root = $$('#deal');
+    ['duo', 'row', 'table'].forEach(k => root.classList.toggle('lay-' + k, k === kind));
+    root.classList.toggle('targeting', !!G.target);
+    drawStatus();
+    drawOthers(kind);
+    drawMid(kind);
+    drawMine(kind);
+    drawHint();
     drawHand();
+    drawBar();
+    size(kind);
+  }
+  function drawStatus(){
+    const s = G.state, box = $$('#d-status'); box.innerHTML = '';
+    const chip = mk('span', 'dchip');
+    const w = DEAL.waitingOn(s), mine = w === viewer();
+    if(s.winner) chip.textContent = (s.winner === viewer() && G.mode !== 'local' ? 'You won!' : seatName(s.winner) + ' won!');
+    else if(s.pending) chip.textContent = mine ? 'Your move' : seatName(w) + '’s move';
+    else if(mine){
+      chip.classList.add('me');
+      chip.innerHTML = (G.mode === 'local' ? esc(seatName(w)) + '’s turn' : 'Your turn') + ' <span class="pips">' +
+        [0,1,2].map(k => '<i class="' + (k >= s.plays || s.phase === 'draw' ? 'on' : '') + '"></i>').join('') + '</span>';
+    } else chip.textContent = seatName(w) + '’s turn';
+    box.appendChild(chip);
+  }
+  function drawOthers(kind){
+    ['#dd-top', '#dd-left', '#dd-right'].forEach(k => $$(k).innerHTML = '');
+    const s = G.state, w = DEAL.waitingOn(s), list = others();
+    const tgt = G.target && G.target.players;
+    if(kind === 'row'){
+      list.forEach(p => {
+        const box = mk('button', 'dopp' + (w === p.id ? ' on' : '') + (tgt && tgt.includes(p.id) ? ' can' : ''));
+        box.appendChild(mk('div', 'nm', esc(seatName(p.id))));
+        box.appendChild(mk('div', 'line', '<span class="hc">' + handCount(p) + '</span><span>' + DEAL.worth(p.bank) + 'M</span><span>' + DEAL.completeSets(p).length + '/3 sets</span>'));
+        const minis = mk('div', 'minis');
+        heldColours(p).forEach(c => {
+          const m = mk('span', 'mini' + (DEAL.isComplete(p, c) ? ' full' : ''), '<b>' + p.sets[c].cards.length + '</b>');
+          m.style.setProperty('--cc', hex(c)); minis.appendChild(m);
+        });
+        if(!heldColours(p).length) minis.appendChild(mk('span', 'none', 'No property yet'));
+        box.appendChild(minis);
+        box.addEventListener('click', () => openSheet(p.id));
+        $$('#dd-top').appendChild(box);
+      });
+      return;
+    }
+    /* duo and table view: the other tables themselves */
+    const pos = kind === 'duo' || list.length === 1 ? ['top'] : list.length === 2 ? ['left', 'right'] : ['left', 'top', 'right'];
+    list.forEach((p, i) => {
+      const seat = mk('button', 'dseat dpos-' + pos[i] + (tgt && tgt.includes(p.id) ? ' can' : ''));
+      seat.appendChild(tagEl(p, w === p.id));
+      const row = mk('div', 'srow');
+      const sets = mk('div', 'sets');
+      heldColours(p).forEach(c => sets.appendChild(stackEl(p, c)));
+      if(!heldColours(p).length) sets.appendChild(mk('span', 'none', 'No property yet'));
+      row.appendChild(sets);
+      row.appendChild(bankEl(p));
+      seat.appendChild(row);
+      seat.addEventListener('click', () => openSheet(p.id));
+      $$('#dd-' + pos[i]).appendChild(seat);
+    });
+  }
+  function drawMid(kind){
+    const s = G.state;
+    const deck = $$('#dd-deck'); deck.innerHTML = '';
+    const n = typeof s.deck === 'number' ? s.deck : s.deck.length;
+    for(let k = 0; k < Math.min(3, Math.ceil(n / 20) + 1); k++){ const b = cardEl(null); b.style.transform = 'translate(' + (-1.5 * k) + 'px,' + (-1.5 * k) + 'px)'; deck.appendChild(b); }
+    deck.appendChild(mk('span', 'cnt', String(n)));
+    const canDraw = !s.pending && s.phase === 'draw' && DEAL.waitingOn(s) === viewer() && !s.winner;
+    deck.classList.toggle('can', canDraw);
+    const pile = $$('#dd-discard'); pile.innerHTML = '';
+    s.discard.slice(-3).forEach((id, i, a) => { const c = cardEl(id); c.style.transform = 'rotate(' + ((PROP_I[id] || id.length + i) % 2 ? 6 - i * 3 : -7 + i * 4) + 'deg)'; pile.appendChild(c); });
+    if(!s.discard.length) pile.appendChild(mk('span', 'ghost', 'Discard'));
+    $$('#dd-centerhint').textContent = kind === 'table' ? hintText() : '';
+    const slot = $$('#dd-bankslot'); slot.innerHTML = '';
+  }
+  function drawMine(kind){
+    const s = G.state, me = DEAL.seat(s, viewer()), box = $$('#dd-mine');
+    box.innerHTML = '';
+    const sets = mk('div', 'sets');
+    heldColours(me).forEach(c => {
+      const st = stackEl(me, c);
+      st.addEventListener('click', () => openSet(c, st));
+      sets.appendChild(st);
+    });
+    if(!heldColours(me).length) sets.appendChild(mk('span', 'none mine', 'Your properties go here'));
+    box.appendChild(sets);
+    box.appendChild(bankEl(me));
+    const tag = $$('#dd-metag'); tag.innerHTML = '';
+    tag.appendChild(tagEl(me, DEAL.waitingOn(s) === viewer() && !s.winner));
   }
 
-  function statusLine(){
-    const s = G.state;
-    if(s.winner) return s.winner === G.me ? 'You won' : who(s.winner) + ' won';
-    const turnId = DEAL.waitingOn(s);
+  /* what the game wants from whoever holds the phone */
+  function hintText(){
+    const s = G.state, v = viewer();
+    if(s.winner) return (s.winner === v && G.mode !== 'local' ? 'You' : seatName(s.winner)) + ' collected three sets.';
+    if(G.target) return G.target.text;
+    const acts = DEAL.actions(s, v);
+    if(!acts.length) return isBot(DEAL.waitingOn(s)) ? seatName(DEAL.waitingOn(s)) + ' is thinking…' : 'Waiting for ' + seatName(DEAL.waitingOn(s)) + '…';
     if(s.pending){
       const d = s.pending.demands[s.pending.at];
-      const verb = {rent:'Rent', debt:'Debt collector', birthday:'Birthday',
-                    sly:'Sly Deal', forced:'Forced Deal', breaker:'Deal Breaker'}[s.pending.kind];
-      if(turnId === G.me) return verb + ' — on you';
-      return verb + ' — waiting on ' + who(turnId);
+      if(d.status === 'respond') return demandText(s.pending, d);
+      if(d.status === 'pay') return 'You owe ' + seatName(s.pending.from) + ' ' + d.amount + 'M. Choose what to pay with.';
     }
-    if(turnId !== G.me) return who(turnId) + '’s turn';
-    if(s.phase === 'draw')    return 'Your turn — draw';
-    if(s.phase === 'discard') return 'Discard down to ' + DEAL.HAND_LIMIT;
+    if(s.phase === 'draw') return DEAL.seat(s, v).hand.length ? 'Draw two cards to start your turn.' : 'Empty hand: draw five.';
+    if(s.phase === 'discard') return 'Too many cards. Discard ' + (DEAL.seat(s, v).hand.length - DEAL.HAND_LIMIT) + '.';
     const left = DEAL.PLAYS_PER_TURN - s.plays;
-    return 'Your turn — ' + left + (left === 1 ? ' play left' : ' plays left');
+    return left > 0 ? 'Tap a card to play it · ' + left + (left === 1 ? ' play left' : ' plays left') : 'No plays left. End your turn.';
+  }
+  function demandText(pend, d){
+    const from = seatName(pend.from);
+    if(d.to === pend.from) return seatName(pend.demands[pend.at].origin) + ' said no! Say no back, or let it go.';
+    switch(pend.kind){
+      case 'rent':     return from + ' charges you ' + d.amount + 'M rent.';
+      case 'debt':     return from + ' wants ' + d.amount + 'M from you.';
+      case 'birthday': return 'It’s ' + from + '’s birthday: ' + d.amount + 'M, please.';
+      case 'sly':      return from + ' wants to take your ' + cardLabel(pend.take) + '.';
+      case 'forced':   return from + ' wants to swap their ' + cardLabel(pend.give) + ' for your ' + cardLabel(pend.take) + '.';
+      case 'breaker':  return from + ' wants your whole ' + setName(pend.colour) + ' set!';
+    }
+    return from + ' played something at you.';
+  }
+  function drawHint(){ $$('#dd-hint').textContent = layoutKind() === 'table' ? '' : hintText(); }
+
+  /* the hand, fanned along the bottom of the screen */
+  function drawHand(){
+    const s = G.state, me = DEAL.seat(s, viewer()), box = $$('#dd-hand');
+    box.innerHTML = '';
+    const acts = DEAL.actions(s, viewer());
+    const playable = new Set(acts.filter(a => a.card && a.type !== 'jsn').map(a => a.card));
+    const hw = parseFloat(getComputedStyle(box).getPropertyValue('--hw')) || 80;
+    const W = box.clientWidth || 360, n = me.hand.length;
+    const span = Math.min(W - hw - 44, n * hw * 0.8), step = n > 1 ? span / (n - 1) : 0, x0 = (W - span - hw) / 2;
+    me.hand.forEach((cid, i) => {
+      const el = cardEl(cid);
+      const t = i - (n - 1) / 2;
+      el.style.left = (x0 + i * step) + 'px';
+      el.style.transform = 'translateY(' + (t * t * 1.4).toFixed(1) + 'px) rotate(' + (t * 3).toFixed(1) + 'deg)';
+      el.style.zIndex = i + 1;
+      if(s.phase === 'play' && !s.pending && DEAL.waitingOn(s) === viewer() && !playable.has(cid)) el.classList.add('dim');
+      el.addEventListener('click', () => openCard(cid, el));
+      box.appendChild(el);
+    });
+    if(!n) box.appendChild(mk('span', 'none hand', 'No cards in hand'));
   }
 
-  /* The one thing the game is asking you for, as a bar you cannot miss. */
-  function drawPrompt(){
-    const box = $$('#d-prompt');
-    box.innerHTML = '';
-    const s = G.state;
-    if(s.winner){
-      const bar = mk('div','dprompt win');
-      bar.appendChild(mk('span','dptext', s.winner === G.me
-        ? 'You collected three sets.' : who(s.winner) + ' collected three sets.'));
-      box.appendChild(bar);
-      return;
-    }
-    const acts = DEAL.actions(s, G.me);
+  /* the bar: the log, and whatever the game is waiting for you to press */
+  function drawBar(){
+    const s = G.state, bar = $$('#dd-bar'), v = viewer();
+    bar.innerHTML = '';
+    const btn = (label, cls, fn, icon) => { const b = mk('button', cls || '', (icon || '') + '<span>' + label + '</span>'); b.addEventListener('click', fn); bar.appendChild(b); return b; };
+    btn('Log', 'ghost', openLog, '<svg viewBox="0 0 24 24"><path d="M5 7h14M5 12h14M5 17h9"/></svg>');
+    if(s.winner){ btn('See results', 'hl', () => { G.shown = false; showResult(); }); return; }
+    if(G.target){ btn('Cancel', 'hl', cancelTarget); return; }
+    const acts = DEAL.actions(s, v);
     if(!acts.length){
-      const bar = mk('div','dprompt wait');
-      bar.appendChild(mk('span','dptext', 'Waiting for ' + who(DEAL.waitingOn(s)) + '…'));
-      box.appendChild(bar);
+      if(G.mode === 'online') btn('Nudge', 'hl', nudge, '<svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0112 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 003.4 0"/></svg>');
+      else btn('Waiting…', 'hl off', ()=>{});
       return;
     }
-
-    const bar = mk('div','dprompt');
     if(s.pending){
       const d = s.pending.demands[s.pending.at];
       if(d.status === 'respond'){
-        bar.appendChild(mk('span','dptext', demandText(s.pending, d)));
-        const jsn = acts.find(a => a.type === 'jsn');
-        if(jsn){
-          const b = mk('button','dpbtn ghost','Just Say No');
-          b.addEventListener('click', ()=>act(jsn));
-          bar.appendChild(b);
-        }
-        const ok = mk('button','dpbtn','Allow it');
-        ok.addEventListener('click', ()=>act({type:'accept'}));
-        bar.appendChild(ok);
-      } else if(d.status === 'pay'){
-        bar.appendChild(mk('span','dptext','You owe ' + d.amount + 'M to ' + who(s.pending.from)));
-        const b = mk('button','dpbtn','Choose cards');
-        b.addEventListener('click', openPay);
-        bar.appendChild(b);
-      }
-      box.appendChild(bar);
+        const j = acts.find(a => a.type === 'jsn');
+        if(j) btn('Just Say No', 'warn', () => act(j));
+        btn(d.to === s.pending.from ? 'Let it go' : 'Allow it', 'hl', () => act({type:'accept'}));
+      } else if(d.status === 'pay') btn('Pay ' + d.amount + 'M', 'hl', openPay);
       return;
     }
-    if(s.phase === 'draw'){
-      bar.appendChild(mk('span','dptext', DEAL.seat(s, G.me).hand.length ? 'Draw two cards' : 'Empty hand — draw five'));
-      const b = mk('button','dpbtn','Draw');
-      b.addEventListener('click', ()=>act({type:'draw'}));
-      bar.appendChild(b);
-      box.appendChild(bar);
-      return;
+    if(s.phase === 'draw'){ btn('Draw', 'hl', doDraw); return; }
+    if(s.phase === 'discard'){ btn('Choose cards', 'hl', openDiscard); return; }
+    btn('End turn', 'hl', () => act({type:'endturn'}));
+  }
+
+  /* card sizes from the room there is */
+  function size(kind){
+    const root = $$('#deal'), W = window.innerWidth, H = window.innerHeight, m = Math.min(W, H);
+    const me = DEAL.seat(G.state, viewer()), held = Math.max(1, heldColours(me).length);
+    if(kind === 'table' && W > H * 1.1){        /* sideways: height is what runs out */
+      root.style.setProperty('--osw', Math.round(Math.max(36, Math.min(60, H / 18))) + 'px');
+      root.style.setProperty('--msw', Math.round(Math.max(50, Math.min(84, H / 12, (W - 300) / (held * 1.1 + 1.5)))) + 'px');
+      root.style.setProperty('--pw', Math.round(Math.max(56, Math.min(96, H / 11))) + 'px');
+      root.style.setProperty('--hw', Math.round(Math.max(72, Math.min(110, H / 9))) + 'px');
+    } else if(kind === 'table'){
+      root.style.setProperty('--osw', Math.round(Math.max(40, Math.min(66, m / 13))) + 'px');
+      root.style.setProperty('--msw', Math.round(Math.max(56, Math.min(96, m / 8.6, (W - 260) / (held * 1.1 + 1.5)))) + 'px');
+      root.style.setProperty('--pw', Math.round(Math.max(64, Math.min(112, m / 7.4))) + 'px');
+      root.style.setProperty('--hw', Math.round(Math.max(84, Math.min(124, m / 6.6, H / 6.8))) + 'px');
+    } else {
+      const per = Math.min(5, held), avail = Math.min(W, 560) - 40;
+      root.style.setProperty('--msw', Math.round(Math.max(42, Math.min(62, (avail - (per - 1) * 8) / per))) + 'px');
+      root.style.setProperty('--osw', '42px');
+      root.style.setProperty('--pw', '56px');
+      root.style.setProperty('--hw', Math.round(Math.max(70, Math.min(84, (H - 600) / 2 + 60))) + 'px');
     }
-    if(s.phase === 'discard'){
-      bar.appendChild(mk('span','dptext','Hand over ' + DEAL.HAND_LIMIT + ' — discard ' +
-        (DEAL.seat(s, G.me).hand.length - DEAL.HAND_LIMIT)));
-      const b = mk('button','dpbtn','Choose');
-      b.addEventListener('click', openDiscard);
-      bar.appendChild(b);
-      box.appendChild(bar);
-      return;
-    }
-    bar.appendChild(mk('span','dptext','Tap a card to play it'));
-    const b = mk('button','dpbtn ghost','End turn');
-    b.addEventListener('click', ()=>act({type:'endturn'}));
-    bar.appendChild(b);
-    box.appendChild(bar);
+    drawHandPositionsLater();
   }
+  let handRaf = 0;
+  function drawHandPositionsLater(){ cancelAnimationFrame(handRaf); handRaf = requestAnimationFrame(() => { if(G) drawHand(); }); }
 
-  function demandText(pend, d){
-    const from = who(pend.from);
-    switch(pend.kind){
-      case 'rent':     return from + ' charges ' + d.amount + 'M rent';
-      case 'debt':     return from + ' wants ' + d.amount + 'M';
-      case 'birthday': return 'It is ' + from + '’s birthday — ' + d.amount + 'M';
-      case 'sly':      return from + ' wants to take ' + DEAL.label(pend.take);
-      case 'forced':   return from + ' wants to swap for ' + DEAL.label(pend.take);
-      case 'breaker':  return from + ' wants your whole ' + DEAL.SETS[pend.colour].name + ' set';
-    }
-    return from + ' played something at you';
-  }
-
-  function drawHand(){
-    const s = G.state, me = DEAL.seat(s, G.me);
-    const box = $$('#d-hand');
-    box.innerHTML = '';
-    const playable = new Set(DEAL.actions(s, G.me)
-      .filter(a => a.card).map(a => a.card));
-    $$('#d-handlabel').textContent = 'Your hand · ' + me.hand.length +
-      (playable.size ? ' · ' + playable.size + ' playable' : '');
-    me.hand.forEach(cid=>{
-      const el = cardEl(cid, {});
-      el.classList.add(playable.has(cid) ? 'playable' : 'unplayable');
-      if(!playable.has(cid)) el.classList.add('dim');
-      el.addEventListener('click', ()=>openCard(cid, el));
-      box.appendChild(el);
-    });
-    if(!me.hand.length) box.appendChild(mk('span','dnone','Nothing in hand'));
-  }
-
-  /* ---------- what can I do with this card ----------
-     The card comes up large over the table with one button per legal use.
-     The UI does not know what any of them mean: it asks the engine and
-     labels whatever comes back, so a card with one use is one tap away and
-     a rent card with six targets is still a readable list. */
-  function openCard(cid, from){
-    const s = G.state;
-    const mine = DEAL.actions(s, G.me).filter(a => a.card === cid);
-    const c = DEAL.card(cid);
-
-    CARDS.zoom({
-      html: cardEl(cid, {flat:true}).outerHTML,
-      from,
-      title: DEAL.label(cid),
-      blurb: c.kind === 'action' ? DEAL.ACTIONS[c.act].blurb
-        : c.kind === 'rent'  ? 'Charge rent on one of your sets.'
-        : c.kind === 'money' ? 'Bank it. Money is only ever used to pay people.'
-        : 'Play it to a set, or bank it as ' + c.value + 'M.',
-      empty: s.phase === 'play'
-        ? 'Nothing you can do with this right now.' : 'Not your turn to play.',
-      actions: mine.map(a => ({
-        label: actionLabel(a),
-        hint:  a.type === 'bank' ? 'Adds ' + c.value + 'M to your bank' : null,
-        tone:  a.type === 'bank' ? null : 'go',
-        run:   ()=>playCard(a, from)
-      })),
-      backLabel: 'Back to your hand'
-    });
-  }
-
-  /* Where on the table a given play is going to land, so the card can be
-     seen travelling there rather than simply vanishing from your hand. */
-  function landingFor(a){
-    if(a.type === 'bank') return $$('#d-bank');
-    const seatEl = id => $$('#dseat-' + String(id).replace(/[^a-zA-Z0-9]/g, ''));
-    if(a.target) return seatEl(a.target) || $$('#d-mine');
-    const colour = a.colour || a.to;
-    if(colour){
-      const set = $$('#d-mine .dset[data-colour="' + colour + '"]');
-      if(set) return set;
-    }
-    return $$('#d-mine');
-  }
-
-  async function playCard(a, from){
-    const to = landingFor(a);
-    if(from && to && !CARDS.reduced())
-      await CARDS.fly(from, to, cardEl(a.card, {flat:true}).outerHTML, {ms:360});
-    await act(a);
-  }
-
+  /* ---------- tapping things ---------- */
   function actionLabel(a){
-    const S = DEAL.SETS;
     switch(a.type){
       case 'bank':   return 'Bank it as money';
-      case 'prop':   return 'Play to ' + S[a.colour].name;
+      case 'prop':   return 'Play to ' + setName(a.colour);
       case 'passgo': return 'Draw two cards';
-      case 'house':  return 'Build a house on ' + S[a.colour].name;
-      case 'hotel':  return 'Build a hotel on ' + S[a.colour].name;
+      case 'house':  return 'Build a house on ' + setName(a.colour);
+      case 'hotel':  return 'Build a hotel on ' + setName(a.colour);
       case 'doublerent': return 'Double your next rent';
       case 'birthday':   return 'Collect 2M from everyone';
-      case 'debt':   return 'Take 5M from ' + who(a.target);
+      case 'debt':   return 'Collect 5M from ' + seatName(a.target);
       case 'rent': {
-        const amt = DEAL.rentFor(DEAL.seat(G.state, G.me), a.colour) * Math.pow(2, G.state.doubles);
-        return 'Charge ' + amt + 'M on ' + S[a.colour].name +
-               (a.target ? ' — ' + who(a.target) : ' — everyone');
+        const amt = DEAL.rentFor(DEAL.seat(G.state, viewer()), a.colour) * Math.pow(2, G.state.doubles);
+        return 'Charge ' + amt + 'M on ' + setName(a.colour) + (a.target ? ' to ' + seatName(a.target) : ' to everyone');
       }
-      case 'sly':     return 'Take ' + DEAL.label(a.take) + ' from ' + who(a.target);
-      case 'breaker': return 'Take ' + who(a.target) + '’s ' + S[a.colour].name + ' set';
-      case 'forced':  return 'Swap your ' + DEAL.label(a.give) + ' for ' +
-                             who(a.target) + '’s ' + DEAL.label(a.take);
-      case 'movewild': return 'Move to ' + S[a.to].name;
+      case 'movewild': return 'Move to ' + setName(a.to);
     }
     return a.type;
   }
+  const PICK = {
+    sly:     {label:'Choose a property to take', title:'Sly Deal'},
+    forced:  {label:'Choose a swap', title:'Forced Deal'},
+    breaker: {label:'Choose a full set to take', title:'Deal Breaker'}
+  };
+  function openCard(cid, from){
+    if(G.target) return;
+    const s = G.state, c = DEAL.card(cid);
+    const mine = DEAL.actions(s, viewer()).filter(a => a.card === cid && a.type !== 'jsn');
+    const list = [], seen = new Set();
+    mine.forEach(a => {
+      if(PICK[a.type]){ if(seen.has(a.type)) return; seen.add(a.type); list.push({label:PICK[a.type].label, tone:'go', run:() => startTarget(a.type, cid)}); return; }
+      list.push({label:actionLabel(a), hint:a.type === 'bank' ? 'Adds ' + c.value + 'M to your bank' : null, tone:a.type === 'bank' ? null : 'go', run:() => playCard(a, from)});
+    });
+    list.sort((x, y) => (x.tone ? 0 : 1) - (y.tone ? 0 : 1));   /* banking it is always the last choice */
+    CARDS.zoom({
+      html: cardHTML(cid), from,
+      title: cardLabel(cid).replace(/^a /, '').replace(/^./, x => x.toUpperCase()),
+      blurb: c.kind === 'action' ? DEAL.ACTIONS[c.act].blurb
+        : c.kind === 'rent' ? 'Charge rent on one of your sets.'
+        : c.kind === 'money' ? 'Bank it. Money is only ever used to pay people.'
+        : c.kind === 'prop' ? setName(c.colour) + ': collect all ' + DEAL.SETS[c.colour].size + ' for a full set.'
+        : 'Plays as any of its colours. You can move it later.',
+      empty: c.kind === 'action' && c.act === 'jsn' ? 'Keep this one. It cancels an action played against you.'
+        : s.phase === 'play' && DEAL.waitingOn(s) === viewer() ? 'Nothing you can do with this right now.' : 'Not your turn to play.',
+      actions: list,
+      backLabel: 'Back to your hand'
+    });
+  }
+  /* tapping one of your own sets: move a wild card that's in it */
+  function openSet(colour, from){
+    const moves = DEAL.actions(G.state, viewer()).filter(a => a.type === 'movewild' && a.from === colour);
+    if(!moves.length){ return; }
+    const wid = moves[0].card;
+    CARDS.zoom({html:cardHTML(wid), from, title:'Move this wild', blurb:'Moving a wild card doesn’t use a play.',
+      actions: moves.filter(a => a.card === wid).map(a => ({label:actionLabel(a), tone:'go', run:() => act(a)})), backLabel:'Leave it'});
+  }
+  /* where on the table a play is going to land, so the card is seen going there */
+  function landingFor(a){
+    if(a.type === 'bank') return $$('#dd-mine .dbank') || $$('#dd-bankslot .dbank');
+    const col = a.colour || a.to;
+    if(col && (a.type === 'prop' || a.type === 'movewild')) return $$('#dd-mine .dstack[data-colour="' + col + '"]') || $$('#dd-mine');
+    return $$('#dd-discard');
+  }
+  async function playCard(a, from){
+    let src = null;
+    if(from && from.isConnected && !reduced()){
+      const r = from.getBoundingClientRect();
+      src = {cx:r.left + r.width / 2, cy:r.top + r.height / 2, w:from.offsetWidth,
+             rot:+((/rotate\(([-\d.]+)deg\)/.exec(from.style.transform) || [0, 0])[1])};
+    }
+    await act(a, src);
+  }
+  /* The card has already been put down by the time this runs; hide it where
+     it landed, fly a copy there from where it was in your hand, then show it. */
+  async function playIn(id, src){
+    cancelAnimationFrame(handRaf); drawHand();
+    const el = [...document.querySelectorAll('#dd-mine .dk[data-id="' + id + '"], #dd-discard .dk[data-id="' + id + '"]')].pop();
+    if(!el) return;
+    const w = el.offsetWidth, h = el.offsetHeight, to = el.getBoundingClientRect();
+    const cx = to.left + to.width / 2, cy = to.top + to.height / 2;
+    const rot = +((/rotate\(([-\d.]+)deg\)/.exec(el.style.transform) || [0, 0])[1]);
+    const box = mk('div', 'dfly');
+    box.style.cssText = 'left:' + (cx - w / 2) + 'px;top:' + (cy - h / 2) + 'px;width:' + w + 'px;height:' + h + 'px;--w:' + w + 'px';
+    box.appendChild(mk('div', 'dfly-in', cardHTML(id)));
+    document.body.appendChild(box);
+    const anim = box.animate([
+      {transform:'translate(' + (src.cx - cx) + 'px,' + (src.cy - cy) + 'px) scale(' + (src.w / w) + ') rotate(' + src.rot + 'deg)', boxShadow:'0 6px 14px rgba(0,0,0,.25)'},
+      {transform:'translate(' + ((src.cx - cx) * .45) + 'px,' + ((src.cy - cy) * .45 - 26) + 'px) scale(' + (Math.max(1, src.w / w) * 1.04) + ') rotate(' + (rot * .5) + 'deg)', offset:.55},
+      {transform:'translate(0,0) scale(1) rotate(' + rot + 'deg)'}], {duration:440, easing:'cubic-bezier(.3,.6,.3,1)', fill:'forwards'});
+    await new Promise(r => { anim.onfinish = r; setTimeout(r, 700); });
+    box.remove();
+    G.hide && G.hide.delete(id);
+    document.querySelectorAll('#deal .dk[data-id="' + id + '"]').forEach(e => e.style.visibility = '');
+  }
+  async function doDraw(){ await act({type:'draw'}); }
+  /* New cards in your hand come off the deck face down and turn over as they
+     travel, landing face up in their place in the fan. */
+  const nextFrame = () => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+  async function dealIn(fresh){
+    if(reduced() || !fresh.length) return;
+    const deck = $$('#dd-deck');
+    if(!deck) return;
+    cancelAnimationFrame(handRaf); drawHand();
+    const fr = deck.getBoundingClientRect();
+    await Promise.all(fresh.map((id, i) => wait(i * 150).then(async () => {
+      const el = $$('#dd-hand .dk[data-id="' + id + '"]');
+      if(!el) return;
+      await flipFly(fr, el);
+      G.hide && G.hide.delete(id);
+      const now = $$('#dd-hand .dk[data-id="' + id + '"]'); if(now) now.style.visibility = '';
+    })));
+  }
+  function flipFly(fr, el){
+    return new Promise(done => {
+      const w = el.offsetWidth, h = el.offsetHeight, to = el.getBoundingClientRect();
+      const cx = to.left + to.width / 2, cy = to.top + to.height / 2;
+      const rot = (/rotate\(([-\d.]+)deg\)/.exec(el.style.transform) || [0, 0])[1];
+      const box = mk('div', 'dfly');
+      box.style.cssText = 'left:' + (cx - w / 2) + 'px;top:' + (cy - h / 2) + 'px;width:' + w + 'px;height:' + h + 'px;--w:' + w + 'px';
+      const inner = mk('div', 'dfly-in', cardHTML(el.dataset.id) + BACK);
+      box.appendChild(inner);
+      box.style.opacity = '0';
+      document.body.appendChild(box);
+      const dx = (fr.left + fr.width / 2) - cx, dy = (fr.top + fr.height / 2) - cy, sc = fr.width / w;
+      const ease = 'cubic-bezier(.3,.7,.3,1)', ms = 560;
+      box.animate([{transform:'translate(' + dx + 'px,' + dy + 'px) scale(' + sc + ')', opacity:1}, {transform:'translate(0,0) rotate(' + rot + 'deg)', opacity:1}], {duration:ms, easing:ease, fill:'forwards'});
+      const a = inner.animate([{transform:'rotateY(180deg)'}, {transform:'rotateY(180deg)', offset:.15}, {transform:'rotateY(0deg)'}], {duration:ms, easing:'cubic-bezier(.45,0,.55,1)', fill:'forwards'});   /* turns over mid-flight */
+      sfx('flip');
+      a.onfinish = () => { box.remove(); done(); };
+      setTimeout(() => { if(box.isConnected){ box.remove(); done(); } }, ms + 300);
+    });
+  }
+
+  /* ---------- a player's full table ---------- */
+  function openSheet(pid, mode){
+    if(G.target && !mode){
+      if(G.target.step === 'player'){ if(G.target.players.includes(pid)) pickPlayer(pid); return; }
+      if(G.target.target !== pid) return;
+      mode = G.target.step;
+    }
+    const s = G.state, p = DEAL.seat(s, pid), box = $$('#dd-sheet');
+    const picking = !!mode;
+    box.innerHTML = '';
+    const scrim = mk('div', 'scrim'); scrim.addEventListener('click', () => closeSheet(true)); box.appendChild(scrim);
+    const sh = mk('div', 'osheet');
+    sh.appendChild(mk('div', 'grab'));
+    const head = mk('div', 'ohead');
+    head.appendChild(mk('span', 'oav', esc(initial(pid))));
+    head.appendChild(mk('div', 'onm', '<b>' + esc(seatName(pid)) + '</b><span><i>' + DEAL.completeSets(p).length + ' of 3 sets</i><i>Bank ' + DEAL.worth(p.bank) + 'M</i><i>' + handCount(p) + ' in hand</i></span>'));
+    const x = mk('button', 'x', '✕'); x.setAttribute('aria-label', 'Close'); x.addEventListener('click', () => closeSheet(true)); head.appendChild(x);
+    sh.appendChild(head);
+    const sets = mk('div', 'osets');
+    const ok = picking ? pickable(pid, mode) : null;
+    heldColours(p).forEach(c => {
+      const st = stackEl(p, c);
+      if(picking){
+        if(mode === 'breaker') st.classList.add(ok.sets.has(c) ? 'pick' : 'locked');
+        else st.classList.add(ok.cards.size && [...st.querySelectorAll('.dk')].some(e => ok.cards.has(e.dataset.id)) ? 'pickc' : 'locked');
+        st.querySelectorAll('.dk').forEach(e => { if(ok.cards.has(e.dataset.id)) e.classList.add('canpick'); });
+        st.addEventListener('click', ev => {
+          const card = ev.target.closest('.dk');
+          if(mode === 'breaker'){ if(ok.sets.has(c)) chooseTarget({colour:c}, st); return; }
+          const id = card && ok.cards.has(card.dataset.id) ? card.dataset.id : [...st.querySelectorAll('.dk')].map(e => e.dataset.id).reverse().find(i => ok.cards.has(i));
+          if(id) chooseTarget({card:id, colour:c}, card || st);
+        });
+      }
+      sets.appendChild(st);
+    });
+    if(!heldColours(p).length) sets.appendChild(mk('span', 'none', 'No property yet'));
+    sh.appendChild(sets);
+    const row = mk('div', 'orow');
+    const hand = mk('div', 'ohand');
+    const backs = mk('div', 'backs');
+    for(let i = 0; i < Math.min(5, handCount(p)); i++){ const b = cardEl(null); b.style.left = (i * 18) + 'px'; backs.appendChild(b); }
+    hand.append(backs, mk('span', '', handCount(p) + ' in hand'));
+    row.append(hand, bankEl(p));
+    sh.appendChild(row);
+    box.appendChild(sh);
+    box.hidden = false;
+    requestAnimationFrame(() => box.classList.add('on'));
+  }
+  function closeSheet(cancel){
+    const box = $$('#dd-sheet'); box.classList.remove('on');
+    setTimeout(() => { box.hidden = true; box.innerHTML = ''; }, 220);
+    if(cancel && G && G.target && G.target.step !== 'player') cancelTarget();
+  }
+
+  /* ---------- steals: pick the player, then the card ---------- */
+  function startTarget(type, cid){
+    const acts = DEAL.actions(G.state, viewer()).filter(a => a.card === cid && a.type === type);
+    const players = [...new Set(acts.map(a => a.target))];
+    G.target = {type, card:cid, acts, players, step:'player', text:PICK[type].title + ': tap a player.'};
+    if(players.length === 1) return pickPlayer(players[0]);
+    draw();
+    showBanner();
+  }
+  function pickPlayer(pid){
+    const T = G.target;
+    T.target = pid;
+    T.step = T.type === 'breaker' ? 'breaker' : 'take';
+    T.text = T.type === 'breaker' ? 'Deal Breaker: tap a full set to take.' : T.type === 'forced' ? 'Forced Deal: tap the property you want.' : 'Sly Deal: tap a property to take.';
+    draw(); showBanner();
+    openSheet(pid, T.step);
+  }
+  function pickable(pid, mode){
+    const T = G.target, cards = new Set(), sets = new Set();
+    T.acts.filter(a => a.target === pid).forEach(a => {
+      if(mode === 'breaker') sets.add(a.colour);
+      else if(mode === 'give'){ if(a.take === T.take) cards.add(a.give); }
+      else cards.add(a.take);
+    });
+    return {cards, sets};
+  }
+  async function chooseTarget(choice, el){
+    const T = G.target;
+    if(T.step === 'breaker'){
+      const a = T.acts.find(x => x.target === T.target && x.colour === choice.colour);
+      return finishTarget(a, el);
+    }
+    if(T.step === 'take' && T.type === 'sly'){
+      const a = T.acts.find(x => x.target === T.target && x.take === choice.card);
+      return finishTarget(a, el);
+    }
+    if(T.step === 'take' && T.type === 'forced'){
+      T.take = choice.card; T.step = 'give'; T.text = 'Forced Deal: now tap one of yours to give.';
+      closeSheet(false); draw(); showBanner();
+      setTimeout(() => openSheet(viewer(), 'give'), 240);
+      return;
+    }
+    if(T.step === 'give'){
+      const a = T.acts.find(x => x.target === T.target && x.take === T.take && x.give === choice.card);
+      return finishTarget(a, el);
+    }
+  }
+  async function finishTarget(a, el){
+    if(!a) return;
+    G.target = null; hideBanner();
+    closeSheet(false);
+    await wait(180);
+    await act(a);
+  }
+  function cancelTarget(){ if(!G) return; G.target = null; hideBanner(); closeSheet(false); draw(); }
+  function showBanner(){
+    const T = G.target, b = $$('#dd-banner');
+    if(!T){ hideBanner(); return; }
+    const A = ACT[T.type];
+    b.innerHTML = '<span class="ic" style="background:' + A[0] + '"><svg viewBox="0 0 24 24">' + A[2] + '</svg></span><div><b>' + PICK[T.type].title + '</b><span>' + esc(T.text.replace(/^[^:]+: /, '')) + '</span></div>';
+    const c = mk('button', '', 'Cancel'); c.addEventListener('click', cancelTarget); b.appendChild(c);
+    b.hidden = false;
+  }
+  function hideBanner(){ $$('#dd-banner').hidden = true; }
 
   /* ---------- paying and discarding ---------- */
-  let picker = null;   /* {mode, pool, chosen:Set, need} */
-
+  let picker = null;
   function openPay(){
     const s = G.state, d = s.pending.demands[s.pending.at];
-    const me = DEAL.seat(s, G.me);
-    picker = {mode:'pay', pool:DEAL.assets(me), chosen:new Set(), need:d.amount};
-    $$('#pay-title').textContent = 'Pay ' + who(s.pending.from);
-    renderPicker();
-    $$('#paysheet').hidden = false;
+    picker = {mode:'pay', pool:DEAL.assets(DEAL.seat(s, viewer())), chosen:new Set(), need:d.amount};
+    $$('#pay-title').textContent = 'Pay ' + seatName(s.pending.from);
+    renderPicker(); $$('#paysheet').hidden = false;
   }
   function openDiscard(){
-    const me = DEAL.seat(G.state, G.me);
-    picker = {mode:'discard', pool:me.hand.slice(), chosen:new Set(),
-              need:me.hand.length - DEAL.HAND_LIMIT};
+    const me = DEAL.seat(G.state, viewer());
+    picker = {mode:'discard', pool:me.hand.slice(), chosen:new Set(), need:me.hand.length - DEAL.HAND_LIMIT};
     $$('#pay-title').textContent = 'Discard';
-    renderPicker();
-    $$('#paysheet').hidden = false;
+    renderPicker(); $$('#paysheet').hidden = false;
   }
   function renderPicker(){
-    const chosen = [...picker.chosen];
-    const total = DEAL.worth(chosen);
+    const chosen = [...picker.chosen], total = DEAL.worth(chosen);
     if(picker.mode === 'pay'){
-      const max = DEAL.worth(picker.pool);
-      const short = max < picker.need;
-      $$('#pay-note').textContent = short
-        ? 'You owe ' + picker.need + 'M but only have ' + max + 'M. Hand over everything.'
-        : 'You owe ' + picker.need + 'M. Chosen: ' + total + 'M.'
-          + (total > picker.need ? ' No change given.' : '');
+      const max = DEAL.worth(picker.pool), short = max < picker.need;
+      $$('#pay-note').textContent = short ? 'You owe ' + picker.need + 'M but only have ' + max + 'M. Hand over everything.'
+        : 'You owe ' + picker.need + 'M. Chosen: ' + total + 'M.' + (total > picker.need ? ' No change given.' : '');
       $$('#pay-go').disabled = short ? chosen.length < picker.pool.length : total < picker.need;
       $$('#pay-go').textContent = 'Pay ' + total + 'M';
     } else {
@@ -8256,13 +8759,11 @@ if(typeof module !== 'undefined' && module.exports) module.exports = DEAL;
       $$('#pay-go').textContent = 'Discard ' + chosen.length;
     }
     const box = $$('#pay-pool'); box.innerHTML = '';
-    const grid = mk('div','dgrid');
-    picker.pool.forEach(cid=>{
-      const el = cardEl(cid, {on:picker.chosen.has(cid)});
-      el.addEventListener('click', ()=>{
-        picker.chosen.has(cid) ? picker.chosen.delete(cid) : picker.chosen.add(cid);
-        renderPicker();
-      });
+    const grid = mk('div', 'dpick');
+    picker.pool.forEach(cid => {
+      const el = cardEl(cid);
+      if(picker.chosen.has(cid)) el.classList.add('chosen');
+      el.addEventListener('click', () => { picker.chosen.has(cid) ? picker.chosen.delete(cid) : picker.chosen.add(cid); renderPicker(); });
       grid.appendChild(el);
     });
     box.appendChild(grid);
@@ -8270,212 +8771,378 @@ if(typeof module !== 'undefined' && module.exports) module.exports = DEAL;
   function commitPicker(){
     const cards = [...picker.chosen];
     $$('#paysheet').hidden = true;
-    act(picker.mode === 'pay' ? {type:'pay', cards} : {type:'discard', cards});
+    const a = picker.mode === 'pay' ? {type:'pay', cards} : {type:'discard', cards};
     picker = null;
+    act(a);
   }
 
-  /* ---------- who won ----------
-     The same card chess and the other live games use: it comes up over the
-     table, says who took it and how, and closes with an x so the final
-     position is still there to look at. */
-  function showResult(){
-    if(!G || G.shown || !G.state.winner) return;
-    G.shown = true;
-    const s = G.state;
-    const won = s.winner === G.me;
-    const winner = DEAL.seat(s, s.winner);
-    const sets = DEAL.completeSets(winner);
-
-    $$('#dr-head').textContent = won ? 'You won' : who(s.winner) + ' won';
-    $$('#dr-sub').textContent = sets.length + ' complete sets'
-      + (won ? '.' : ' \u2014 before you got there.');
-
-    /* The winning sets themselves, in their own colours: the thing that
-       actually ended the game rather than a generic trophy. */
-    const mark = $$('#dr-mark');
-    mark.innerHTML = '';
-    sets.slice(0, 4).forEach((colour, i)=>{
-      const set = mk('span', 'drset');
-      set.style.setProperty('--cc', DEAL.SETS[colour].hex);
-      set.style.animationDelay = (i * 0.1) + 's';
-      const held = (winner.sets[colour] || {cards:[]}).cards.length;
-      for(let c = 0; c < held; c++) set.appendChild(mk('span', 'drcard'));
-      mark.appendChild(set);
-    });
-
-    const turns = s.log.filter(line => / ended their turn| drew /.test(line)).length;
-    const bits = [DEAL.worth(winner.bank) + 'M banked'];
-    if(turns) bits.push(turns + (turns === 1 ? ' turn' : ' turns'));
-    bits.push(s.players.length + ' players');
-    $$('#dr-stats').textContent = bits.join(' \u00b7 ');
-
-    const box = $$('#d-result');
+  /* ---------- pass and play ---------- */
+  function showPass(pid){
+    const s = G.state, box = $$('#dd-pass');
+    let last = '';
+    if(s.pending){
+      const d = s.pending.demands[s.pending.at];
+      if(d.to === pid) last = demandText(s.pending, d).replace(/^(.)/, x => x).replace(/\byou\b/g, seatName(pid)).replace(/\byour\b/g, seatName(pid) + '’s');
+    } else if(s.log.length) last = logLine(s.log[s.log.length - 1]);
+    const first = !s.log.length;
+    box.innerHTML = '<small>Pass and play · Deal</small><div class="big">' + esc(initial(pid)) + '</div><h1>' + (first ? esc(seatName(pid)) + ' goes first' : 'Pass to ' + esc(seatName(pid))) + '</h1>' +
+      '<p>Hand the ' + (window.innerWidth > 700 ? 'iPad' : 'phone') + ' to ' + esc(seatName(pid)) + '. Everyone else, no peeking!</p>' +
+      (last ? '<div class="last">' + esc(last) + '</div>' : '');
+    const b = mk('button', '', 'I’m ' + esc(seatName(pid)) + ', show my cards');
+    b.addEventListener('click', () => { G.viewer = pid; box.classList.remove('on'); setTimeout(() => { box.hidden = true; }, 200); sfx('tap'); draw(); });
+    box.appendChild(b);
     box.hidden = false;
-    requestAnimationFrame(()=>box.classList.add('on'));
+    requestAnimationFrame(() => box.classList.add('on'));
   }
-  function hideResult(){
-    const box = $$('#d-result');
-    box.classList.remove('on');
-    setTimeout(()=>{ box.hidden = true; }, 260);
-  }
-
-  /* ---------- the log ---------- */
-  function openLog(){
-    const box = $$('#lg-list'); box.innerHTML = '';
-    const lines = G.state.log.slice().reverse();
-    if(!lines.length) box.appendChild(mk('div','empty','Nothing yet.'));
-    lines.forEach(t=>{
-      /* the engine logs player ids; swap in the names people use */
-      let text = t;
-      G.state.players.forEach(p => { text = text.split(p.id).join(who(p.id)); });
-      box.appendChild(mk('div','logline', esc(text)));
-    });
-    $$('#logsheet').hidden = false;
-  }
+  const needPass = () => G.mode === 'local' && !G.state.winner && DEAL.waitingOn(G.state) !== G.viewer;
 
   /* ---------- acting ---------- */
-  async function act(a){
-    if(G.busy) return;
+  async function act(a, src){
+    if(!G || G.busy) return;
     G.busy = true;
+    const mine = gen;
     try{
-      const next = DEAL.apply(G.state, a);
-      G.state = next;
+      const before = G.state, had = DEAL.seat(before, viewer()).hand.slice();
+      G.state = DEAL.apply(G.state, a);
+      reactSound(before, G.state, a);
+      const fresh = (a.type === 'draw' || a.type === 'passgo') && !reduced() ? DEAL.seat(G.state, viewer()).hand.filter(id => !had.includes(id)) : [];
+      G.hide = new Set(fresh.concat(src && a.card && !reduced() ? [a.card] : []));
       draw();
-      if(G.state.winner) showResult();
-      await persist();
+      if(src && a.card) await playIn(a.card, src);
+      if(fresh.length) await dealIn(fresh);
+      G.hide = null;
+      document.querySelectorAll('#deal .dk').forEach(e => { if(e.style.visibility === 'hidden') e.style.visibility = ''; });
+      if(G.mode === 'online') await persist();
     }catch(e){
-      window.__banner('That move did not go through — ' + e.message, 'bad');
-      await sync(true);
+      window.__banner && window.__banner('That move did not go through: ' + e.message, 'bad');
+      if(G.mode === 'online') await sync(true);
     }
+    if(!G || mine !== gen) return;
     G.busy = false;
+    afterMove();
+  }
+  function reactSound(b, s, a){
+    if(a.type === 'jsn') sfx('buzz');
+    else if(a.type === 'pay' || a.type === 'bank') sfx('drop');
+    else if(['sly','forced','breaker','rent','debt','birthday'].includes(a.type)) sfx('flip');
+    else sfx('tap');
+    if(s.winner && !b.winner) sfx(s.winner === viewer() || G.mode === 'local' ? 'cheer' : 'lose');
+  }
+  function afterMove(){
+    if(!G) return;
+    if(G.state.winner){ setTimeout(showResult, 900); return; }
+    if(needPass()){ setTimeout(() => { if(G && needPass()) showPass(DEAL.waitingOn(G.state)); }, 450); return; }
+    if(G.mode === 'solo' && isBot(DEAL.waitingOn(G.state))) botLoop();
   }
 
-  /* Guard the write with the row version we last read. If the row moved on,
-     somebody else got there first and our state is stale, so take theirs
-     rather than stamping over it. */
+  /* ---------- the computer players ----------
+     Sensible, not ruthless: build towards sets, steal what finishes one,
+     charge the biggest rent it can, pay with the smallest money first and
+     say no to the things that really hurt. */
+  async function botLoop(){
+    if(G.botBusy) return;
+    G.botBusy = true;
+    const mine = gen;
+    while(G && mine === gen && !G.state.winner){
+      const w = DEAL.waitingOn(G.state);
+      if(!w || !isBot(w)) break;
+      await wait(G.state.phase === 'draw' && !G.state.pending ? 650 : 800);
+      if(!G || mine !== gen) break;
+      const a = botPick(G.state, w);
+      if(!a) break;
+      const before = G.state;
+      try{ G.state = DEAL.apply(G.state, a); }catch(e){ break; }
+      reactSound(before, G.state, a);
+      draw();
+    }
+    if(G && mine === gen){ G.botBusy = false; afterMove(); }
+  }
+  function botPick(s, id){
+    const acts = DEAL.actions(s, id);
+    if(!acts.length) return null;
+    const p = DEAL.seat(s, id);
+    if(s.pending){
+      const d = s.pending.demands[s.pending.at];
+      if(d.status === 'respond'){
+        const j = acts.find(a => a.type === 'jsn');
+        const hurts = s.pending.kind === 'breaker' || s.pending.kind === 'sly' || s.pending.kind === 'forced' || (d.amount || 0) >= 4;
+        if(j && (hurts || d.to === s.pending.from)) return j;
+        return {type:'accept'};
+      }
+      if(d.status === 'pay') return {type:'pay', cards:botPay(p, d.amount)};
+    }
+    if(s.phase === 'draw') return {type:'draw'};
+    if(s.phase === 'discard') return {type:'discard', cards:botDiscard(p)};
+    const have = c => (p.sets[c] ? p.sets[c].cards.length : 0);
+    const needs = c => DEAL.SETS[c].size - have(c);
+    const richest = () => s.players.filter(x => x.id !== id).sort((a, b) => DEAL.worth(DEAL.assets(b)) - DEAL.worth(DEAL.assets(a)))[0];
+    const score = a => {
+      const c = a.card ? DEAL.card(a.card) : null;
+      switch(a.type){
+        case 'prop': {
+          if(DEAL.isComplete(p, a.colour)) return 5;
+          const done = needs(a.colour) === 1 ? 120 : 0;
+          return (c.kind === 'wild' && c.colours === 'any' ? 30 : 55) + have(a.colour) * 18 + done;
+        }
+        case 'breaker': return 220;
+        case 'sly': return 80 + (needs(a.colour) === 1 ? 70 : 0) + DEAL.card(a.take).value * 3;
+        case 'forced': return needs(a.takeColour) === 1 && !DEAL.isComplete(p, a.giveColour) && needs(a.giveColour) > 1 ? 75 : -1;
+        case 'rent': {
+          const amt = DEAL.rentFor(p, a.colour) * Math.pow(2, s.doubles);
+          if(amt < 2) return 8;
+          return 40 + amt * 8 + (a.target && a.target === (richest() || {}).id ? 6 : 0);
+        }
+        case 'doublerent': return s.plays <= 1 && p.hand.some(x => DEAL.card(x).kind === 'rent' && x !== a.card) ? 36 : -1;
+        case 'debt': return 62 + (a.target === (richest() || {}).id ? 5 : 0);
+        case 'birthday': return 56;
+        case 'house': case 'hotel': return 70;
+        case 'passgo': return 48 - p.hand.length * 2;
+        case 'bank': {
+          if(c.kind === 'action' && (c.act === 'jsn' || c.act === 'breaker')) return -1;
+          if(c.kind === 'money') return (DEAL.worth(p.bank) < 8 ? 34 : 14) + c.value * 2;
+          return c.value >= 3 ? 6 : 2;
+        }
+      }
+      return -1;
+    };
+    let best = null, bs = 0;
+    acts.forEach(a => { if(a.type === 'movewild' || a.type === 'endturn') return; const v = score(a); if(v > bs){ bs = v; best = a; } });
+    return best || {type:'endturn'};
+  }
+  function botPay(p, amount){
+    const all = DEAL.assets(p);
+    if(DEAL.worth(all) <= amount) return all;
+    const bank = p.bank.slice().sort((a, b) => DEAL.card(a).value - DEAL.card(b).value);
+    const out = [];
+    let sum = 0;
+    for(const id of bank){ if(sum >= amount) break; out.push(id); sum += DEAL.card(id).value; }
+    /* give back anything the total didn't need */
+    out.slice().sort((a, b) => DEAL.card(b).value - DEAL.card(a).value).forEach(id => {
+      if(sum - DEAL.card(id).value >= amount){ out.splice(out.indexOf(id), 1); sum -= DEAL.card(id).value; }
+    });
+    if(sum >= amount) return out;
+    /* not enough money: give up property, from the sets furthest from done */
+    const props = [];
+    DEAL.COLOURS.forEach(c => { if(p.sets[c] && !DEAL.isComplete(p, c)) p.sets[c].cards.forEach(id => props.push({id, far:DEAL.SETS[c].size - p.sets[c].cards.length})); });
+    props.sort((a, b) => b.far - a.far || DEAL.card(a.id).value - DEAL.card(b.id).value);
+    for(const x of props){ if(sum >= amount) break; out.push(x.id); sum += DEAL.card(x.id).value; }
+    if(sum >= amount) return out;
+    return all;
+  }
+  function botDiscard(p){
+    const need = p.hand.length - DEAL.HAND_LIMIT;
+    const keep = id => { const c = DEAL.card(id); if(c.kind === 'prop' || c.kind === 'wild') return 50; if(c.kind === 'action' && (c.act === 'jsn' || c.act === 'breaker')) return 60; return c.value + (c.kind === 'money' ? 5 : 0); };
+    return p.hand.slice().sort((a, b) => keep(a) - keep(b)).slice(0, need);
+  }
+
+  /* ---------- online ---------- */
   async function persist(){
     if(!G.match) return;
-    const turnId = DEAL.waitingOn(G.state);
     const rows = await window.__API.patch(
       'matches?id=eq.' + G.match.id + '&updated_at=eq.' + encodeURIComponent(G.seen),
-      {state:G.state, turn_user_id:turnId,
-       status:G.state.winner ? 'complete' : 'open'});
-    if(!rows || !rows.length){
-      window.__banner('Someone moved first — catching up.', 'bad');
-      await sync(true);
-      return;
-    }
+      {state:G.state, turn_user_id:DEAL.waitingOn(G.state), status:G.state.winner ? 'complete' : 'open'});
+    if(!rows || !rows.length){ window.__banner('Someone moved first — catching up.', 'bad'); await sync(true); return; }
     G.seen = rows[0].updated_at;
     G.match.state = G.state;
     if(G.state.winner) await recordResult();
   }
-
   async function sync(force){
-    if(!G.match) return;
+    if(!G || !G.match) return;
     let rows;
-    try{
-      rows = await window.__API.get_('matches?id=eq.' + G.match.id + '&select=state,updated_at,status');
-    }catch(e){ return; }
+    try{ rows = await window.__API.get_('matches?id=eq.' + G.match.id + '&select=state,updated_at,status'); }catch(e){ return; }
     const row = rows && rows[0];
-    if(!row) return;
-    if(!force && row.updated_at === G.seen) return;
+    if(!row || (!force && row.updated_at === G.seen)) return;
     G.seen = row.updated_at;
-    G.state = row.state;
-    G.match.state = row.state;
+    G.state = row.state; G.match.state = row.state;
+    if(G.target) cancelTarget();
     draw();
     if(G.state.winner) showResult();
   }
-
-  /* Write the result onto each seat so Home and the head-to-head records
-     can count a Deal win the same way they count any other game. */
   async function recordResult(){
     for(const p of G.match.players){
-      try{
-        await window.__API.patch(
-          'match_players?match_id=eq.' + G.match.id + '&user_id=eq.' + p.user_id,
-          {status:'done', score:p.user_id === G.state.winner ? 100 : 0,
-           correct:null, base:null, bonus:null, played_at:new Date().toISOString()});
-      }catch(e){}
+      try{ await window.__API.patch('match_players?match_id=eq.' + G.match.id + '&user_id=eq.' + p.user_id,
+        {status:'done', score:p.user_id === G.state.winner ? 100 : 0, correct:null, base:null, bonus:null, played_at:new Date().toISOString()}); }catch(e){}
     }
   }
+  async function nudge(){
+    const other = DEAL.waitingOn(G.state), name = who(other);
+    const url = (typeof APP_URL === 'string' && APP_URL) || location.href.split('#')[0];
+    const text = 'Your move in Deal, ' + name + '! ' + url;
+    try{ if(navigator.share){ await navigator.share({text}); return; } }catch(e){ if(e && e.name === 'AbortError') return; }
+    try{ await navigator.clipboard.writeText(text); window.__banner && window.__banner('Copied. Paste it in a message to ' + name + '.', 'good'); }
+    catch(e){ location.href = 'sms:?&body=' + encodeURIComponent(text); }
+  }
+
+  /* ---------- who won ---------- */
+  const SOLO_KEY = 'gr.deal.solo';
+  const soloRec = () => { try{ return Object.assign({w:0, l:0}, JSON.parse(localStorage.getItem(SOLO_KEY) || '{}')); }catch(e){ return {w:0, l:0}; } };
+  function showResult(){
+    if(!G || G.shown || !G.state.winner) return;
+    G.shown = true;
+    const s = G.state, winner = DEAL.seat(s, s.winner), sets = DEAL.completeSets(winner);
+    const mineWon = s.winner === viewer() && G.mode !== 'local';
+    if(G.mode === 'solo' && !G.recorded){ G.recorded = true; const r = soloRec(); s.winner === meId() ? r.w++ : r.l++; try{ localStorage.setItem(SOLO_KEY, JSON.stringify(r)); }catch(e){} }
+    $$('#dr-head').textContent = mineWon ? 'You won!' : seatName(s.winner) + ' won!';
+    $$('#dr-sub').textContent = 'Three full sets' + (G.mode === 'local' || mineWon ? '.' : ' — before you got there.');
+    const mark = $$('#dr-mark'); mark.innerHTML = '';
+    sets.slice(0, 4).forEach((colour, i) => {
+      const set = mk('span', 'drset'); set.style.setProperty('--cc', hex(colour)); set.style.animationDelay = (i * 0.1) + 's';
+      const held = (winner.sets[colour] || {cards:[]}).cards.length;
+      for(let c = 0; c < held; c++) set.appendChild(mk('span', 'drcard'));
+      mark.appendChild(set);
+    });
+    const bits = [DEAL.worth(winner.bank) + 'M banked', s.players.length + ' players'];
+    if(G.mode === 'solo'){ const r = soloRec(); bits.push('You vs GameRoom ' + r.w + '–' + r.l); }
+    $$('#dr-stats').textContent = bits.join(' · ');
+    $$('#dr-again').hidden = G.mode === 'online';
+    const box = $$('#d-result'); box.hidden = false;
+    requestAnimationFrame(() => box.classList.add('on'));
+  }
+  function hideResult(){ const box = $$('#d-result'); box.classList.remove('on'); setTimeout(() => { box.hidden = true; }, 260); }
+
+  /* ---------- the log ---------- */
+  function logLine(t){
+    let text = t;
+    G.state.players.forEach(p => { text = text.split(p.id).join(seatName(p.id)); });
+    return text;
+  }
+  function openLog(){
+    const box = $$('#lg-list'); box.innerHTML = '';
+    const lines = G.state.log.slice().reverse();
+    if(!lines.length) box.appendChild(mk('div', 'empty', 'Nothing yet.'));
+    lines.forEach(t => box.appendChild(mk('div', 'logline', esc(logLine(t)))));
+    $$('#logsheet').hidden = false;
+  }
+
+  /* ---------- settings ---------- */
+  function applySettings(){
+    document.querySelectorAll('#dd-names .ddname').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.names === namesPref())));
+    $$('#dd-togsound').setAttribute('aria-checked', String(POPSFX.on()));
+    $$('#dd-togtable').setAttribute('aria-checked', String(tableOn()));
+  }
+  function openSettings(){
+    const list = $$('#dd-names'); list.innerHTML = '';
+    Object.keys(NAMESETS).forEach(k => {
+      const b = mk('button', 'ddname', '<span class="sw">' + ['brown','lblue','red','green'].map(c => '<i style="background:' + hex(c) + '"></i>').join('') + '</span><b>' + esc(NAMESETS[k].label) + '</b><small>' + esc(NAMESETS[k].sets.lblue[0]) + ', ' + esc(NAMESETS[k].sets.red[0]) + '…</small>');
+      b.dataset.names = k;
+      b.addEventListener('click', () => { try{ localStorage.setItem(NAME_KEY, k); }catch(e){} applySettings(); if(G) draw(); });
+      list.appendChild(b);
+    });
+    applySettings();
+    const box = $$('#dd-settings'); box.hidden = false; requestAnimationFrame(() => box.classList.add('on'));
+  }
+  function closeSettings(){ const box = $$('#dd-settings'); box.classList.remove('on'); setTimeout(() => { box.hidden = true; }, 250); }
 
   /* ---------- opening and closing ---------- */
-  function openTable(match){
-    G = {match, state:match.state, me:meId(), seen:match.updated_at,
-         busy:false, timer:null, shown:false};
+  function openTable(opts){
+    gen++;
+    if(G && G.timer) clearInterval(G.timer);
+    G = Object.assign({mode:'online', busy:false, timer:null, shown:false, target:null, botBusy:false}, opts);
+    if(G.mode === 'local') G.viewer = null;
     document.querySelectorAll('.screen').forEach(s => s.hidden = true);
     $$('#deal').hidden = false;
     $$('#nav').hidden = true;
     document.body.classList.add('at-table');
-    $$('#d-result').hidden = true;
-    $$('#d-result').classList.remove('on');
+    $$('#d-result').hidden = true; $$('#d-result').classList.remove('on');
+    $$('#dd-pass').hidden = true; $$('#dd-sheet').hidden = true; hideBanner();
+    if(G.mode === 'local') G.viewer = DEAL.waitingOn(G.state) || G.state.players[0].id;
     draw();
     if(G.state.winner) showResult();
-    G.timer = setInterval(()=>{ if(!G.busy) sync(false); }, POLL_MS);
+    else if(G.mode === 'local') showPass(G.viewer);
+    else if(G.mode === 'solo') afterMove();
+    if(G.mode === 'online') G.timer = setInterval(() => { if(G && !G.busy) sync(false); }, POLL_MS);
   }
   function closeTable(){
+    gen++;
     if(G && G.timer) clearInterval(G.timer);
     G = null;
+    CARDS.close && CARDS.close();
     $$('#deal').hidden = true;
     $$('#nav').hidden = false;
     document.body.classList.remove('at-table');
-    window.__dealLobby();
+    window.__dealLobby(lobbyMode);
     window.__show('deal');
+  }
+  const COUNT_KEY = 'gr.deal.count';
+  const countPref = () => { try{ const n = +localStorage.getItem(COUNT_KEY); return n >= 2 && n <= 4 ? n : 2; }catch(e){ return 2; } };
+  const seed = () => (meId() || 'x').slice(0, 6) + '-' + Date.now();
+  function startLocal(n){ n = n || countPref(); openTable({mode:'local', state:DEAL.newGame(['p1','p2','p3','p4'].slice(0, n), seed())}); }
+  function startSolo(n){ n = n || countPref(); openTable({mode:'solo', state:DEAL.newGame([meId()].concat(BOTS.slice(0, n - 1)), seed())}); }
+  function rematch(){
+    const was = G; hideResult();
+    const n = was.state.players.length;
+    if(was.mode === 'local') return startLocal(n);
+    if(was.mode === 'solo') return startSolo(n);
   }
 
   /* ---------- lobby ---------- */
-  window.__dealLobby = async function(){
+  window.__dealLobby = async function(mode){
+    lobbyMode = mode || lobbyMode; mode = lobbyMode;
     const actions = $$('#dl-actions');
     actions.innerHTML = '';
-    const t = mk('button','tile primary');
-    t.appendChild(mk('h3','','New game'));
-    t.appendChild(mk('p','','Pick two to four people. Everyone plays in the same sitting.'));
-    t.addEventListener('click', ()=>window.__dealInvite());
-    actions.appendChild(t);
+    $$('#dl-countwrap').hidden = mode === 'online';
+    $$('#dl-count').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.n === countPref())));
+    const n = countPref();
+    const tile = (title, blurb, fn) => { const t = mk('button', 'tile primary'); t.append(mk('h3', '', title), mk('p', '', blurb)); t.addEventListener('click', fn); actions.appendChild(t); };
+    if(mode === 'local') tile('Pass and play', 'One phone or iPad, passed round. A cover screen hides your cards between turns.', () => startLocal());
+    else if(mode === 'solo') tile('Play GameRoom', 'You, ' + BOTS.slice(0, n - 1).map(id => BOTNAME[id]).join(n === 3 ? ' and ' : ', ').replace(/, (\w+)$/, ' and $1') + '.', () => startSolo());
+    else tile('New game', 'Pick one to three people. Everyone takes a turn whenever they get a minute.', () => window.__dealInvite());
 
     $$('#dl-rules').innerHTML =
       'Draw two, then play up to three cards. Bank money, lay down property, or fire off an action. ' +
       'Rent, debt collectors and birthdays make people pay you; steals take property outright. ' +
-      'A <strong>Just Say No</strong> cancels anything aimed at you — and can be answered with another. ' +
+      'A <strong>Just Say No</strong> cancels anything aimed at you, and can be answered with another. ' +
       'First to <strong>three complete sets</strong> of different colours wins.';
 
-    const games = (window.__myDealGames ? window.__myDealGames() : []);
+    const games = mode === 'online' && window.__myDealGames ? window.__myDealGames() : [];
     $$('#dl-gameslabel').hidden = !games.length;
     const feed = $$('#dl-games');
     feed.innerHTML = '';
-    games.forEach(m=>{
-      const row = mk('button','match card');
-      const stripe = mk('div','stripe'); stripe.style.background = 'var(--g-deal, var(--acc))';
+    games.forEach(m => {
+      const row = mk('button', 'match card');
+      const stripe = mk('div', 'stripe'); stripe.style.background = 'var(--g-deal, var(--acc))';
       const mid = mk('div');
       const names = m.players.filter(p => p.user_id !== meId()).map(p => who(p.user_id));
-      mid.appendChild(mk('div','cat', names.join(', ') || 'Deal'));
+      mid.appendChild(mk('div', 'cat', esc(names.join(', ') || 'Deal')));
       const st = m.state || {};
-      const turnName = m.status === 'complete'
-        ? (st.winner ? who(st.winner) + ' won' : 'Finished')
+      const turnName = m.status === 'complete' ? (st.winner ? (st.winner === meId() ? 'You won' : who(st.winner) + ' won') : 'Finished')
         : (m.turn_user_id === meId() ? 'Your move' : who(m.turn_user_id) + ' to move');
-      mid.appendChild(mk('div','sub','Deal · ' + (st.players ? st.players.length : 0) + ' players'));
+      mid.appendChild(mk('div', 'sub', 'Deal · ' + (st.players ? st.players.length : 0) + ' players'));
       const sl = mk('div'); sl.style.marginTop = '7px';
       sl.appendChild(mk('span', m.turn_user_id === meId() && m.status !== 'complete' ? 'pill wait' : 'pill done', turnName));
       mid.appendChild(sl);
       row.append(stripe, mid);
-      row.addEventListener('click', ()=>openTable(m));
+      row.addEventListener('click', () => openTable({mode:'online', match:m, state:m.state, seen:m.updated_at}));
       feed.appendChild(row);
     });
   };
+  $$('#dl-count').querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+    try{ localStorage.setItem(COUNT_KEY, b.dataset.n); }catch(e){}
+    window.__dealLobby(lobbyMode);
+  }));
 
-  /* Which table is open, for the test harness — it has to write to the row
-     the client is actually polling, and there may be several Deal rows. */
-  window.__dealMatchId = ()=> G && G.match && G.match.id;
-  window.__dealOpenMatch = openTable;
-  window.__dealNewState  = (ids, seed) => DEAL.newGame(ids, seed);
+  window.__dealMatchId = () => G && G.match && G.match.id;
+  window.__dealOpenMatch = m => openTable({mode:'online', match:m, state:m.state, seen:m.updated_at});
+  window.__dealNewState = (ids, seed) => DEAL.newGame(ids, seed);
+  window.__dealTest = {get G(){ return G; }, botPick, startSolo, startLocal, draw};
 
   $$('#d-exit').addEventListener('click', closeTable);
   $$('#dr-close').addEventListener('click', hideResult);
-  $$('#d-loot').addEventListener('click', openLog);
-  $$('#pay-close').addEventListener('click', ()=>{ $$('#paysheet').hidden = true; picker = null; });
+  $$('#dr-again').addEventListener('click', rematch);
+  $$('#dr-done').addEventListener('click', () => { hideResult(); setTimeout(closeTable, 200); });
+  $$('#d-loot').addEventListener('click', () => G && openLog());
+  $$('#dd-gear').addEventListener('click', openSettings);
+  $$('#dd-setclose').addEventListener('click', closeSettings);
+  $$('#dd-setdone').addEventListener('click', closeSettings);
+  $$('#dd-togsound').addEventListener('click', () => { POPSFX.set(!POPSFX.on()); syncAppSound(); applySettings(); sfx('tap'); });
+  $$('#dd-togtable').addEventListener('click', () => { TABLEVIEW.set(!TABLEVIEW.on()); applySettings(); });
+  $$('#dd-deck').addEventListener('click', () => { if(G && !G.busy && G.state.phase === 'draw' && !G.state.pending && DEAL.waitingOn(G.state) === viewer()) doDraw(); });
+  $$('#pay-close').addEventListener('click', () => { $$('#paysheet').hidden = true; picker = null; });
   $$('#pay-go').addEventListener('click', commitPicker);
-  $$('#lg-close').addEventListener('click', ()=>{ $$('#logsheet').hidden = true; });
-  $$('#dl-back').addEventListener('click', ()=>{ window.__renderPlay(); window.__show('play'); });
+  $$('#lg-close').addEventListener('click', () => { $$('#logsheet').hidden = true; });
+  $$('#dl-back').addEventListener('click', () => { window.__renderPlay(); window.__show('play'); });
+  window.addEventListener('gr-tableview', () => { if(G && !$$('#deal').hidden) draw(); });
+  window.addEventListener('gr-relayout', () => { if(G && !$$('#deal').hidden) draw(); });
 })();
 
 </script>
