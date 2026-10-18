@@ -1011,13 +1011,13 @@ function reviewFeed(startId){
   let box=$("#rxFeed");if(!box){box=document.createElement("div");box.id="rxFeed";document.body.appendChild(box)}
   const list=waitingShares().sort((a,b)=>b.at-a.at);
   box.innerHTML=`<div class="top"><button class="rx-back" id="rfClose" aria-label="Close">‹</button><b>To review (${list.length})</b></div>
-    <div class="scroller">${list.map(s=>{const v=s.video;return `<section class="sl" data-s="${s.id}">
-      ${v.demo?fakeStage(v):(v.postId?`<iframe src="${playerSrc(v.postId)}" allow="autoplay; encrypted-media" title="${esc(v.title||"Video")}"></iframe>`:"🎬")}
+    <div class="scroller">${list.map(s=>{const v=s.video;return `<section class="sl" data-s="${s.id}" data-pid="${v.postId||""}" data-ttl="${esc(v.title||"Video")}">
+      ${v.demo?fakeStage(v):(v.postId?"":"🎬")}
       <div class="cap">${v.handle?`<b>@${esc(v.handle)}</b>`:""}${esc(v.title||"")}<br><small>${esc(s.fromName)} (${esc(famById(s.fromFam)?.name||"")} family) sent this to ${esc(s.toName)}</small></div>
       <div class="rr"><button class="ok" data-rok="${s.id}"><span class="ic" style="background:#3BD17F">${OK_ICON}</span>Allow</button><button class="del" data-rno="${s.id}"><span class="ic">${NO_ICON}</span>No</button></div></section>`}).join("")}</div>`;
   box.hidden=false;document.body.style.overflow="hidden";document.body.classList.add("rx-feedopen");
-  const start=box.querySelector(`[data-s="${startId}"]`);if(start)start.scrollIntoView();
-  const close=()=>{box.hidden=true;box.innerHTML="";document.body.style.overflow="";document.body.classList.remove("rx-feedopen");renderPLibrary();renderNav()};
+  const start=box.querySelector(`[data-s="${startId}"]`);if(start)start.scrollIntoView();lazyFeed(box);
+  const close=()=>{box._lazyStop&&box._lazyStop();box.hidden=true;box.innerHTML="";document.body.style.overflow="";document.body.classList.remove("rx-feedopen");renderPLibrary();renderNav()};
   const done=(b,msg)=>{const sl=b.closest(".sl"),next=sl.nextElementSibling||sl.previousElementSibling;sl.remove();toast(msg);
     const left=box.querySelectorAll(".sl").length;box.querySelector(".top b").textContent=`To review (${left})`;renderNav();if(!left)close();else next&&next.scrollIntoView({behavior:"smooth"})};
   $("#rfClose").onclick=close;
@@ -1092,13 +1092,13 @@ function adminFeed(startId){
   let box=$("#rxFeed");if(!box){box=document.createElement("div");box.id="rxFeed";document.body.appendChild(box)}
   const F=S.fam[adminFam],f=famById(adminFam),vids=[...F.videos].sort((a,b)=>b.addedAt-a.addedAt);
   box.innerHTML=`<div class="top"><button class="rx-back" id="rfClose" aria-label="Close">‹</button><b>The ${esc(f.name)} family</b></div>
-    <div class="scroller">${vids.map(v=>`<section class="sl" data-v="${v.id}" style="background:${v.demo?`linear-gradient(160deg,${v.scene.bg[0]},${v.scene.bg[1]})`:"#111"}">
-      ${v.demo?v.scene.emoji:(v.postId?`<iframe src="${playerSrc(v.postId)}" allow="autoplay; encrypted-media" title="${esc(v.title||"Video")}"></iframe>`:"🎬")}
+    <div class="scroller">${vids.map(v=>`<section class="sl" data-v="${v.id}" data-pid="${v.postId||""}" data-ttl="${esc(v.title||"Video")}" style="background:${v.demo?`linear-gradient(160deg,${v.scene.bg[0]},${v.scene.bg[1]})`:"#111"}">
+      ${v.demo?v.scene.emoji:(v.postId?"":"🎬")}
       <div class="cap">${v.handle?`<b>@${esc(v.handle)}</b>`:""}${esc(v.title||"")}<br><small>${esc(audLabel(v))}${v.sentBy?" · sent by "+esc(v.sentBy):""}</small></div>
       <div class="rr"><button class="fam" data-fam="${v.id}"><span class="ic">${FAMILY_ICON}</span>Families</button><button class="del" data-del="${v.id}"><span class="ic">${TRASH_ICON}</span>Delete</button></div></section>`).join("")}</div>`;
   box.hidden=false;document.body.style.overflow="hidden";document.body.classList.add("rx-feedopen");
-  const start=box.querySelector(`[data-v="${startId}"]`);if(start)start.scrollIntoView();
-  const close=()=>{box.hidden=true;box.innerHTML="";document.body.style.overflow="";document.body.classList.remove("rx-feedopen");renderAdminFamily()};
+  const start=box.querySelector(`[data-v="${startId}"]`);if(start)start.scrollIntoView();lazyFeed(box);
+  const close=()=>{box._lazyStop&&box._lazyStop();box.hidden=true;box.innerHTML="";document.body.style.overflow="";document.body.classList.remove("rx-feedopen");renderAdminFamily()};
   $("#rfClose").onclick=close;
   box.querySelectorAll("[data-fam]").forEach(b=>b.onclick=()=>familyPicker(F.videos.find(x=>x.id===b.dataset.fam)));
   box.querySelectorAll("[data-del]").forEach(b=>b.onclick=async()=>{const v=F.videos.find(x=>x.id===b.dataset.del);if(!v)return;
@@ -1422,7 +1422,7 @@ function sndBtnHTML(on){return `<span class="ico">${soundIcon(on)}</span>${on?"S
 function setSlideSnd(sl,on,prompt){if(!sl)return;const b=sl.querySelector(".snd");if(b){b.innerHTML=sndBtnHTML(on);b.setAttribute("aria-label",on?"Mute":"Turn sound on")}const c=sl.querySelector(".snd-cta");if(c)c.hidden=!prompt}
 /* Phones block sound on a video that starts without a tap. When that happens the video plays muted and its button says so; one tap brings the sound back. */
 function restoreSound(p){if(!p||!p.autoMuted||!soundOn)return false;p.autoMuted=false;p.tappedAt=Date.now();p.tries=0;setSlideSnd(p.slide,true);
-  if(p.playing)send(p,"unMute");else{p.pendingUnmute=true;send(p,"play")}return true}
+  if(!wantPlay(p))return true;if(p.playing)send(p,"unMute");else{p.pendingUnmute=true;send(p,"play")}return true}
 const justTapped=p=>p.tappedAt&&Date.now()-p.tappedAt<2500;
 function soundIcon(on=soundOn){return on
   ?`<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="#fff"/><path d="M16 9a4 4 0 010 6M18.5 6.5a7.5 7.5 0 010 11"/></svg>`
@@ -1449,8 +1449,8 @@ function wireSlide(sl){
     if(currentList[activeIdx]?.demo)toast(soundOn?"Sound on (sample videos are silent)":"Muted");
   });
 }
-function playerSrc(postId){
-  const q=new URLSearchParams({controls:"0",autoplay:"1",loop:"1",description:"0",music_info:"0",rel:"0",native_context_menu:"0",closed_caption:"0"});
+function playerSrc(postId,auto=true){
+  const q=new URLSearchParams({controls:"0",autoplay:auto?"1":"0",loop:"1",description:"0",music_info:"0",rel:"0",native_context_menu:"0",closed_caption:"0"});
   return `https://www.tiktok.com/player/v1/${postId}?${q}`;
 }
 let seenTimer=null;
@@ -1464,7 +1464,8 @@ function activate(i){
   }
   const slides=[...document.querySelectorAll("#feed .slide")];
   slides.forEach((sl,k)=>{const near=Math.abs(k-i)<=1;if(near&&!players.has(k))mount(sl,k);if(!near&&players.has(k))unmount(k)});
-  players.forEach((p,k)=>{p.want=k===i;if(p.kind==="demo"||p.ready){if(k===i){if(p.kind==="tt")send(p,soundOn?"unMute":"mute");ctl(p,"play")}else ctl(p,"pause")}});
+  players.forEach((p,k)=>{p.want=k===i;p.pendingUnmute=p.pendingUnmute&&k===i;p.strays=0;if(p.kind==="demo"||p.ready){if(k===i){if(p.kind==="tt")send(p,soundOn?"unMute":"mute");ctl(p,"play")}else{ctl(p,"pause");if(p.kind==="tt")send(p,"mute")}}});
+  [400,1200].forEach(ms=>setTimeout(()=>{if(activeIdx!==i)return;players.forEach((p,k)=>{if(k!==i&&p.kind==="tt"&&p.ready){send(p,"pause");send(p,"mute")}})},ms));
 }
 function mount(sl,k){
   const v=currentList[k];if(!v||v.divider)return;
@@ -1491,6 +1492,11 @@ function ctl(p,action){
     p.slide.querySelector(".paused-badge").classList.toggle("show",!p.playing&&p.want);
   }else send(p,action);
 }
+/* Only the video on screen, on the Home feed, should ever make a sound. */
+const wantPlay=p=>!!p&&p.want&&tab==="feed"&&players.get(activeIdx)===p;
+/* A video you swiped away from that keeps going gets told again, and reloaded if it still won't stop. */
+function hush(p){if(p.kind!=="tt")return;send(p,"pause");send(p,"mute");p.strays=(p.strays||0)+1;
+  if(p.strays>3){const k=[...players.entries()].find(([,x])=>x===p);if(k){const sl=p.slide;unmount(k[0]);if(Math.abs(k[0]-activeIdx)<=1)mount(sl,k[0])}}}
 function send(p,type,value){try{p.iframe.contentWindow.postMessage({type,value,"x-tiktok-player":true},"*")}catch(e){}}
 function pauseAll(){players.forEach(p=>{p.want=false;if(p.kind==="demo"||p.ready)ctl(p,"pause")})}
 window.addEventListener("message",ev=>{
@@ -1500,12 +1506,12 @@ window.addEventListener("message",ev=>{
   const sl=p.slide;
   switch(d.type){
     case "onPlayerReady":p.ready=true;clearTimeout(p.fail);sl.querySelector(".fail").classList.remove("show");send(p,soundOn?"unMute":"mute");send(p,p.want&&tab==="feed"?"play":"pause");break;
-    case "onStateChange":p.playing=d.value===1;if(p.playing&&p.pendingUnmute){p.pendingUnmute=false;send(p,"unMute")}sl.querySelector(".paused-badge").classList.toggle("show",d.value===2&&p.want);break;
-    case "onCurrentTime":{const v=d.value||{};if(v.duration)sl.querySelector(".progress i").style.width=(100*v.currentTime/v.duration)+"%";break}
+    case "onStateChange":p.playing=d.value===1;if(p.playing&&!wantPlay(p)){p.pendingUnmute=false;hush(p);break}if(p.playing)p.strays=0;if(p.playing&&p.pendingUnmute){p.pendingUnmute=false;send(p,"unMute")}sl.querySelector(".paused-badge").classList.toggle("show",d.value===2&&p.want);break;
+    case "onCurrentTime":{const v=d.value||{};if(!wantPlay(p)){if(p.lastT!=null&&v.currentTime>p.lastT+.05)hush(p);p.lastT=v.currentTime;break}p.lastT=null;if(v.duration)sl.querySelector(".progress i").style.width=(100*v.currentTime/v.duration)+"%";break}
     case "onMute":{const m=d.value===true||d.value===1;
-      if(m&&soundOn&&justTapped(p)&&p.tries<2){p.tries++;setTimeout(()=>{if(p.playing)send(p,"unMute");else{p.pendingUnmute=true;send(p,"play")}},250);break}
+      if(m&&soundOn&&justTapped(p)&&p.tries<2){p.tries++;setTimeout(()=>{if(!wantPlay(p))return;if(p.playing)send(p,"unMute");else{p.pendingUnmute=true;send(p,"play")}},250);break}
       if(m&&soundOn&&p.want&&!p.autoMuted){p.autoMuted=true;setSlideSnd(sl,false,"Tap for sound")}else if(!m&&p.autoMuted){p.autoMuted=false;setSlideSnd(sl,soundOn)}break}
-    case "onPlayerError":{const code=d.value&&d.value.errorCode;if(code===3002){send(p,"mute");send(p,"play");
+    case "onPlayerError":{const code=d.value&&d.value.errorCode;if(code===3002){send(p,"mute");if(!wantPlay(p))break;send(p,"play");
         if(justTapped(p)&&p.tries<2){p.tries++;p.pendingUnmute=true;break}
         p.autoMuted=true;if(soundOn)setSlideSnd(sl,false,"Tap for sound");break}sl.querySelector(".fail").classList.add("show");break}
   }
@@ -1835,16 +1841,52 @@ function renderPLibrary(){
     const v=S.videos.find(x=>x.id===b.dataset.del);if(!await ask({title:`Remove "${v.title||"this video"}"?`,body:"It will disappear from every child's feed, favorites and collections.",ok:"Remove",danger:true}))return;
     S.videos.splice(0,S.videos.length,...S.videos.filter(x=>x.id!==v.id));purgeVideoIds(new Set([v.id]));save();renderPLibrary()});
 }
+/* Parent viewers (Videos, To review, a family's videos): only the video on screen and the ones
+   just above and below it are loaded. Loading a player for every video at once looks like a bot
+   to TikTok, which answers "Access Denied". Only the one on screen plays, with sound. */
+function lazyFeed(box){
+  box._lazyStop&&box._lazyStop();
+  const scroller=box.querySelector(".scroller");if(!scroller)return;
+  let cur=null;
+  const tell=(f,type)=>{try{f.contentWindow.postMessage({type,"x-tiktok-player":true},"*")}catch(e){}};
+  const frame=sl=>sl&&sl.querySelector(":scope > iframe");
+  function show(sl){
+    if(!sl||sl===cur)return;cur=sl;
+    const keep=new Set([sl,sl.previousElementSibling,sl.nextElementSibling].filter(Boolean));
+    scroller.querySelectorAll(".sl[data-pid]").forEach(x=>{
+      if(!x.dataset.pid)return;let f=frame(x);
+      if(!keep.has(x)){if(f)f.remove();return}
+      if(!f){f=document.createElement("iframe");f.src=playerSrc(x.dataset.pid,x===sl);f.title=x.dataset.ttl||"Video";
+        f.allow="autoplay; encrypted-media; fullscreen";f.setAttribute("referrerpolicy","strict-origin-when-cross-origin");x.prepend(f);return}
+      if(x===sl){tell(f,"unMute");tell(f,"play")}else{tell(f,"pause");tell(f,"mute")}
+    });
+  }
+  const onMsg=ev=>{let d=ev.data;if(typeof d==="string"){try{d=JSON.parse(d)}catch(e){return}}
+    if(!d||d["x-tiktok-player"]!==true)return;
+    const f=[...scroller.querySelectorAll(".sl > iframe")].find(x=>x.contentWindow===ev.source);if(!f)return;
+    const mine=f.parentNode===cur;
+    if(d.type==="onPlayerReady"){if(mine){tell(f,"unMute");tell(f,"play")}else{tell(f,"mute");tell(f,"pause")}}
+    else if(d.type==="onStateChange"&&d.value===1&&!mine){tell(f,"pause");tell(f,"mute")}
+    else if(d.type==="onCurrentTime"&&!mine){tell(f,"pause")}};
+  window.addEventListener("message",onMsg);
+  const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting&&e.intersectionRatio>.6)show(e.target)})},{root:scroller,threshold:[.6]});
+  const watch=()=>scroller.querySelectorAll(".sl").forEach(x=>io.observe(x));watch();
+  /* Allow / No in the review viewer removes slides; keep the neighbours loaded */
+  const mo=new MutationObserver(()=>{if(cur&&!cur.isConnected){cur=null}requestAnimationFrame(()=>{const r=scroller.getBoundingClientRect();const el=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);const sl=el&&el.closest(".sl");if(sl)show(sl)})});
+  mo.observe(scroller,{childList:true});
+  requestAnimationFrame(()=>{const r=scroller.getBoundingClientRect();const el=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);show((el&&el.closest(".sl"))||scroller.querySelector(".sl"))});
+  box._lazyStop=()=>{io.disconnect();mo.disconnect();window.removeEventListener("message",onMsg);scroller.querySelectorAll("iframe").forEach(f=>f.remove());box._lazyStop=null};
+}
 /* Parents: watch the family's videos full screen, swiping through the list on screen. */
 function libFeed(list,startId){
   let box=$("#rxFeed");if(!box){box=document.createElement("div");box.id="rxFeed";document.body.appendChild(box)}
   box.innerHTML=`<div class="top"><button class="rx-back" id="lfClose" aria-label="Close">‹</button><b>Videos</b></div>
-    <div class="scroller">${list.map(v=>`<section class="sl" data-v="${v.id}" style="background:#111">
-      ${v.demo?fakeStage(v):(v.postId?`<iframe src="${playerSrc(v.postId)}" allow="autoplay; encrypted-media; fullscreen" title="${esc(v.title||"Video")}"></iframe>`:"🎬")}
+    <div class="scroller">${list.map(v=>`<section class="sl" data-v="${v.id}" data-pid="${v.postId||""}" data-ttl="${esc(v.title||"Video")}" style="background:#111">
+      ${v.demo?fakeStage(v):(v.postId?"":"🎬")}
       <div class="cap">${v.handle?`<b>@${esc(v.handle)}</b>`:""}${esc(v.title||"")}<br><small>For ${esc(forLabel(v))}${v.sentBy?" · sent by "+esc(v.sentBy):""}</small></div></section>`).join("")}</div>`;
   box.hidden=false;document.body.style.overflow="hidden";document.body.classList.add("rx-feedopen");
-  const start=box.querySelector(`[data-v="${startId}"]`);if(start)start.scrollIntoView();
-  $("#lfClose").onclick=()=>{box.hidden=true;box.innerHTML="";document.body.style.overflow="";document.body.classList.remove("rx-feedopen")};
+  const start=box.querySelector(`[data-v="${startId}"]`);if(start)start.scrollIntoView();lazyFeed(box);
+  $("#lfClose").onclick=()=>{box._lazyStop&&box._lazyStop();box.hidden=true;box.innerHTML="";document.body.style.overflow="";document.body.classList.remove("rx-feedopen")};
 }
 function renderPCreators(){
   const el=$("#p-creators");
