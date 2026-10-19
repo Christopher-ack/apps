@@ -200,6 +200,8 @@ form.stack{display:flex;flex-direction:column;gap:14px}
 label{font-weight:600;font-size:.88rem;display:flex;flex-direction:column;gap:6px;color:var(--ink2)}
 input,select{font:inherit;color:var(--ink);background:var(--surface2);border:1px solid transparent;border-radius:8px;padding:12px;width:100%}
 input:focus{border-color:var(--muted);outline:none}
+/* iPhone zooms into any text box under 16px; keep them all at 16px so it doesn't */
+input:not([type=checkbox]):not([type=radio]):not([type=range]),select,textarea{font-size:16px}
 input::placeholder{color:#6A6A6A}
 .row{display:flex;gap:10px}
 .row>*{flex:1}
