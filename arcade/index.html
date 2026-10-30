@@ -1,4 +1,3 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
@@ -357,13 +356,13 @@ const $=id=>document.getElementById(id);
 // ---- the game shelf. Add a game: put its page in games/ and add an entry here. Games that speak the GP protocol get full controller support.
 // gp:false = the game doesn't speak the controller connection yet: it opens in full screen with its own touch controls, and a small ☰ opens the Arcade panel
 const GAMES=[
-  {id:'big-year',title:'Big Year',src:'games/big-year/index.html',gp:false,
+  {id:'big-year',saves:['birding-journal-v1','birding-kit-v1','birding-settings'],title:'Big Year',src:'games/big-year/index.html',gp:false,
    blurb:'Walk or drive the East Coast, listen for birds, raise your binoculars, scope or camera to find them, and log every species in your field journal.',tags:['Explore','Nature'],
    art:'birds',logo:{text:'Big Year',font:'italic 600 X "Crimson Pro",Georgia,serif',ink:'#2f3a2a',strip:'#f3ead2'},buttons:{}},
-  {id:'dino-world',title:'Dino World',src:'games/dino-world/index.html',gp:false,
+  {id:'dino-world',saves:['dino-save','dino-settings'],title:'Dino World',src:'games/dino-world/index.html',gp:false,
    blurb:'Tranquilize dinosaurs and sample their DNA on a wild island, then fly to Port Meridian and bring the escaped ones back to the Institute.',tags:['Adventure','Dinosaurs'],
    art:'dino',logo:{text:'Dino World',font:'"Lilita One",Fredoka,system-ui,sans-serif',ink:'#ffe9b0',strip:'#123a2b'},buttons:{}},
-  {id:'pirate-seas',title:'Pirate Seas',src:'games/pirate-seas/index.html',blurb:'Wash up on the Isle of First Tides, fix your rowboat and sail an open world of islands, forts and sea monsters.',tags:['Adventure','Story'],
+  {id:'pirate-seas',saves:['pirate-settings'],title:'Pirate Seas',src:'games/pirate-seas/index.html',blurb:'Wash up on the Isle of First Tides, fix your rowboat and sail an open world of islands, forts and sea monsters.',tags:['Adventure','Story'],
    art:'sea',logo:{text:'Pirate Seas',font:'"Pirata One",Georgia,serif',ink:'#3b2410',strip:'#f1dfb3'},
    buttons:{a:'Attack',b:'Interact',l:'Dig',r:'Bag',select:'Map',start:'Log'}}
 ].sort((a,b)=>a.title.localeCompare(b.title));
@@ -519,9 +518,9 @@ let inserting=false;
 function insertCart(){if(inserting)return;const el=document.querySelector(`.cart[data-i="${libSel}"]`),G=GAMES[libSel];if(!G)return;
   const quick=matchMedia('(prefers-reduced-motion: reduce)').matches;inserting=true;el?.classList.add('inserting');
   setTimeout(()=>{inserting=false;launch(G);el?.classList.remove('inserting')},quick?0:280)}
-function showLibrary(){if(current){send({type:'pause',paused:true})}frame.hidden=true;frame.src='about:blank';current=null;labels={};setLabels({});
+function showLibrary(){if(current){send({type:'pause',paused:true});const was=current;captureGame(was);setTimeout(()=>captureGame(was),600)}frame.hidden=true;frame.src='about:blank';current=null;labels={};setLabels({});
   lib.hidden=false;loading.hidden=true;setTop('Library','Choose a game');$('meter').hidden=true;clearToast();hasTab=gameReady=false;tabClass();document.body.classList.remove('full');P.game=null;save();applyCaps();closeSheet(false)}
-function launch(G){current=G;labels={};lib.hidden=true;loading.hidden=false;frame.hidden=false;frame.src=G.src;setTop(G.title,'Loading');$('meter').hidden=true;clearToast();hasTab=gameReady=false;tabClass();
+function launch(G){restoreGame(G);current=G;labels={};lib.hidden=true;loading.hidden=false;frame.hidden=false;frame.src=G.src;setTop(G.title,'Loading');$('meter').hidden=true;clearToast();hasTab=gameReady=false;tabClass();
   setLabels(G.buttons);applyMode();P.game=G.id;save()}
 frame.addEventListener('load',()=>{if(current){send({type:'hello'});send({type:'mode',mode:P.mode});setTimeout(()=>{loading.hidden=true;if($('nowDetail').textContent==='Loading')setTop(current.title,'')},400);try{if(sheet.hidden)frame.contentWindow.focus()}catch(_){}}});
 function applyCaps(){if(!current)setLabels({a:'Play',b:'',l:'',r:'',select:'',start:'Arcade'})}
@@ -657,9 +656,35 @@ $('signOutBtn').onclick=async()=>{closeSheet(false);await flushSync();await WA.s
 // Saving: one row per person in arcade_state; this browser keeps a copy so it opens instantly and works offline
 const cacheKey=()=>'arcade.state.'+ME.id;
 let syncT=0,dirty=false;
-function stateNow(){return{v:1,prefs:{mode:P.mode,skin:P.skin,haptic:P.haptic,game:P.game}}}
+// Game saves: each game keeps its progress in this browser under the keys in its GAMES entry (saves:[...]).
+// The arcade copies those keys into the person's account (state.games.<id>) and puts them back before the
+// game starts, so progress follows the person to any device and two people on one device stay apart.
+let GS={};                                           // { <game id>: { keys: { <key>: <stored text> }, at } }
+const ownerKey=id=>'arcade.owner.'+id;               // whose save is in this browser for that game
+function readKeys(G){const o={};for(const k of G.saves||[]){let v=null;try{v=localStorage.getItem(k)}catch(_){}if(v!==null)o[k]=v}return o}
+function restoreGame(G){if(!ME||!G.saves||!G.saves.length)return;
+  const mine=GS[G.id];let owner=null;try{owner=localStorage.getItem(ownerKey(G.id))}catch(_){}
+  try{
+    if(mine&&mine.keys){for(const k of G.saves){if(k in mine.keys)localStorage.setItem(k,mine.keys[k]);else localStorage.removeItem(k)}}
+    else if(owner&&owner!==ME.id){for(const k of G.saves)localStorage.removeItem(k)}   // someone else's progress: start fresh
+    // nothing saved yet and nobody else's: keep what's here, it becomes this person's save
+    localStorage.setItem(ownerKey(G.id),ME.id);
+  }catch(_){}}
+function captureGame(G,quiet){if(!ME||!G||!G.saves||!G.saves.length)return false;
+  let owner=null;try{owner=localStorage.getItem(ownerKey(G.id))}catch(_){}
+  if(owner&&owner!==ME.id)return false;
+  const keys=readKeys(G),old=GS[G.id]&&GS[G.id].keys||{};
+  const same=Object.keys(keys).length===Object.keys(old).length&&Object.keys(keys).every(k=>old[k]===keys[k]);
+  if(same)return false;
+  if(JSON.stringify(keys).length>900000){console.warn('Pocket Arcade: '+G.title+' save is too big to copy to the account');return false}
+  GS[G.id]={keys,at:new Date().toISOString()};
+  if(quiet){try{localStorage.setItem(cacheKey(),JSON.stringify(stateNow()))}catch(_){}dirty=true}else queueSync();
+  return true}
+function captureCurrent(quiet){if(current)captureGame(current,quiet)}
+setInterval(()=>captureCurrent(false),20000);
+function stateNow(){return{v:1,prefs:{mode:P.mode,skin:P.skin,haptic:P.haptic,game:P.game},games:GS}}
 function queueSync(){if(!ME)return;try{localStorage.setItem(cacheKey(),JSON.stringify(stateNow()))}catch(_){}dirty=true;clearTimeout(syncT);syncT=setTimeout(flushSync,800)}
-async function flushSync(){clearTimeout(syncT);if(!ME||!dirty||!WA||WA.mode!=='supabase'||!WA.client)return;dirty=false;
+async function flushSync(){clearTimeout(syncT);captureCurrent(true);if(!ME||!dirty||!WA||WA.mode!=='supabase'||!WA.client)return;dirty=false;
   try{const r=await WA.client.from('arcade_state').upsert({user_id:ME.id,state:stateNow(),updated_at:new Date().toISOString()});if(r.error)throw r.error}
   catch(e){dirty=true;console.warn('Pocket Arcade: settings not saved to the account yet',e&&e.message)}}
 addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flushSync()});
@@ -669,11 +694,12 @@ async function loadState(){let st=null;
   if(WA.mode==='supabase'&&WA.client){try{const r=await WA.client.from('arcade_state').select('state').eq('user_id',ME.id).maybeSingle();if(r.error)throw r.error;if(r.data&&r.data.state)st=r.data.state}
     catch(e){console.warn('Pocket Arcade: using this browser\'s copy of your settings',e&&e.message)}}
   if(st&&st.prefs){Object.assign(P,PREF_DEFAULT,st.prefs);fixPrefs()}
+  GS=(st&&st.games&&typeof st.games==='object')?st.games:{};
   try{localStorage.setItem('pocket-prefs',JSON.stringify(P))}catch(_){}
   applySkin();hb.setAttribute('aria-pressed',P.haptic);applyMode()}
 async function startSession(){
   const me=WA.me;
-  if(!me){ME=null;MEMBER=null;renderAccount();return showSignIn()}
+  if(!me){ME=null;MEMBER=null;GS={};renderAccount();return showSignIn()}
   ME=me;
   let app=(await WA.apps()).find(a=>a.slug===APP);
   if(app&&!app.status){await WA.join(APP);app=(await WA.apps()).find(a=>a.slug===APP)}   // open app: join automatically the first time
@@ -691,5 +717,3 @@ else{lib.hidden=true;loading.hidden=false;
     WA.onChange(async me=>{const id=me&&me.id;if(id===lastId){if(me){ME=me;renderAccount()}return}lastId=id;await startSession()})})()}
 })();
 </script>
-
-</body></html>
