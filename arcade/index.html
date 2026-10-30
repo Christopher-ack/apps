@@ -43,7 +43,7 @@ button{font:inherit;color:inherit}
 [data-btn]:focus,[data-btn]:focus-visible{outline:none!important}
 
 #app{height:100%;display:grid;place-items:center;padding-left:max(0px,env(safe-area-inset-left,0px));padding-right:max(0px,env(safe-area-inset-right,0px))}
-.device{position:relative;width:min(100%,440px);height:min(100%,920px);display:grid;grid-template-rows:minmax(0,1fr) auto;
+.device{position:relative;width:min(100%,440px);height:100%;display:grid;grid-template-rows:minmax(0,1fr) auto;
   background:var(--skin-hi);overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.06)}
 @media (min-width:520px) and (min-height:700px){.device{border-radius:34px;height:min(calc(100% - 40px),900px)}}
 /* iPad and larger: a bigger handheld, so the shelf fits three cartridges a row */
@@ -138,6 +138,8 @@ body.clear .pad::after{content:"";position:absolute;inset:0;pointer-events:none;
 /* only Select and Start keep a label under them */
 .dpad-wrap .cap,.face .cap{display:none!important}
 .is-down{transform:translateY(3px);box-shadow:0 1px 0 var(--btn-lo),0 2px 6px rgba(0,0,0,.3)!important}
+/* Select/Start: only the pill moves; the button around it (pill + label) never gets a shadow or box */
+.pill.is-down{transform:none;box-shadow:none!important}
 .pill.is-down i{transform:translateY(2px);box-shadow:none}
 
 /* library, shown on the screen when no game is running */
