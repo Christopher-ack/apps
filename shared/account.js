@@ -83,7 +83,8 @@
     const KEY = 'webapps.local.v1';
     const APPS = [{ slug: 'brick-builds', name: 'Brick Builds', join_mode: 'open', sort: 1 },
                   { slug: 'gameroom', name: 'GameRoom', join_mode: 'open', sort: 2 },
-                  { slug: 'remix', name: 'Remix', join_mode: 'request', sort: 3 }];
+                  { slug: 'remix', name: 'Remix', join_mode: 'request', sort: 3 },
+                  { slug: 'arcade', name: 'Pocket Arcade', join_mode: 'open', sort: 6 }];
     const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || null; } catch (_) { return null; } };
     const db = () => load() || { accounts: [], members: [], settings: { allow_signups: true }, session: null };
     const save = d => localStorage.setItem(KEY, JSON.stringify(d));
