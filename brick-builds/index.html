@@ -309,6 +309,9 @@ a.arow:hover,button.arow:hover{border-color:var(--line2);background:var(--s2)}
 .btn.dangerline.armed{background:var(--danger);color:#1a0705}
 .loading{color:var(--muted);padding:70px 0;text-align:center}
 .empty2{color:var(--muted);font-size:14.5px;margin:0}
+
+/* iPhone zooms into any text box under 16px; keep them all at 16px so it doesn't */
+input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]),select,textarea{font-size:16px!important}
 </style>
 </head>
 <body>
