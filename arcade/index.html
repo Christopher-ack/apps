@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pocket Arcade">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="theme-color" content="#14121c">
 <title>Pocket Arcade</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -43,7 +43,7 @@ button{font:inherit;color:inherit}
 [data-btn]:focus,[data-btn]:focus-visible{outline:none!important}
 
 #app{height:100%;display:grid;place-items:center;padding-left:max(0px,env(safe-area-inset-left,0px));padding-right:max(0px,env(safe-area-inset-right,0px))}
-.device{position:relative;width:min(100%,440px);height:100%;display:grid;grid-template-rows:minmax(0,1fr) auto;
+.device{position:relative;width:min(100%,440px);height:min(100%,920px);display:grid;grid-template-rows:minmax(0,1fr) auto;
   background:var(--skin-hi);overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.06)}
 @media (min-width:520px) and (min-height:700px){.device{border-radius:34px;height:min(calc(100% - 40px),900px)}}
 /* iPad and larger: a bigger handheld, so the shelf fits three cartridges a row */
