@@ -1,0 +1,695 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Pocket Arcade">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#14121c">
+<title>Pocket Arcade</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Nunito:wght@500;700;800&family=Pirata+One&family=Lilita+One&family=Crimson+Pro:ital,wght@1,600&display=swap">
+<style>
+/* Layout: a handheld. Portrait = black screen bezel on top, coloured controller below; landscape = controller clusters either side of the screen. Full screen mode drops the shell. */
+:root{
+  --room:#14121c; --room2:#221d33;
+  --bezel:#08080c; --screen:#000;
+  --skin:#169e8f; --skin-hi:#2fc4b2; --skin-lo:#0b7569;
+  --btn:#3b3346; --btn-hi:#5a5068; --btn-lo:#231d2c; --btn-ink:#16121c;
+  --ink:#f3eefc; --ink-dim:rgba(243,238,252,.62); --label:rgba(20,10,40,.62);
+  --accent:#ffd166;
+  --face-hi:#5a5068; --face:#3b3346; --face-lo:#231d2c; --face-ink:#16121c;
+  --pill-hi:#5a5068; --pill:#3b3346; --pill-lo:#231d2c;
+  --fx:linear-gradient(transparent,transparent); /* extra shell layer: see-through insides on the clear colours */
+  --frame:6px; /* thin controller-colour frame around the top and sides of the screen area */
+  --f-mark:'Chakra Petch',ui-monospace,monospace; --f-ui:'Nunito',system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{background:radial-gradient(120% 80% at 50% 10%,var(--room2),var(--room));color:var(--ink);font-family:var(--f-ui);overflow:hidden;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+/* controller buttons never show a focus box or tap highlight; pressing shows on the button itself */
+[data-btn],.dpad{-webkit-tap-highlight-color:transparent;outline:none!important}
+[data-btn]:focus,[data-btn]:focus-visible{outline:none!important}
+
+#app{height:100%;display:grid;place-items:center;padding-left:max(0px,env(safe-area-inset-left,0px));padding-right:max(0px,env(safe-area-inset-right,0px))}
+.device{position:relative;width:min(100%,440px);height:min(100%,920px);display:grid;grid-template-rows:minmax(0,1fr) auto;
+  background:var(--skin-hi);overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.06)}
+@media (min-width:520px) and (min-height:700px){.device{border-radius:34px;height:min(calc(100% - 40px),900px)}}
+/* iPad and larger: a bigger handheld, so the shelf fits three cartridges a row */
+@media (min-width:700px) and (min-height:700px){.device{width:min(100%,540px);height:min(calc(100% - 48px),1060px)}}
+/* Web Apps house rule: text fields at 16px or more so iPhone doesn't zoom in */
+input:not([type=checkbox]):not([type=radio]):not([type=range]),select,textarea{font-size:16px}
+
+/* top bar inside the bezel */
+.top{position:relative;background:var(--bezel);margin:var(--frame) var(--frame) 0;border-radius:24px 24px 0 0;display:flex;align-items:center;gap:12px;
+  padding:calc(8px + env(safe-area-inset-top,0px)) 18px 6px;min-height:calc(54px + env(safe-area-inset-top,0px))}
+/* only shown for a game whose own menu has no Arcade tab (older games); everything else opens the Arcade panel with Start */
+.menu-btn{display:none;flex:none;width:36px;height:36px;border-radius:50%;border:0;background:rgba(255,255,255,.08);place-items:center;cursor:pointer}
+body.no-tab .menu-btn{display:grid}
+.menu-btn:hover{background:rgba(255,255,255,.14)}
+.menu-btn svg{width:20px;height:20px}
+.now{flex:1;min-width:0;display:grid;gap:2px}
+.now-title{display:flex;align-items:center;gap:7px;min-width:0;font:800 15px/1.2 var(--f-ui);color:var(--ink)}
+.now-title span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.now-title.danger{color:#ff8a7a}
+.now-title.danger::before{content:"";flex:none;width:7px;height:7px;border-radius:50%;background:currentColor;animation:blink 1s infinite}
+.now-detail{font:600 11px/1.3 var(--f-mark);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.now-detail:empty{display:none}
+.meter{flex:none;display:grid;gap:4px;justify-items:end}
+.meter small{font:700 10px var(--f-mark);letter-spacing:.14em;color:var(--ink-dim)}
+.meter i{display:block;width:72px;height:6px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden}
+.meter i b{display:block;height:100%;border-radius:3px;background:#22c4a0;transition:width .2s}
+/* game messages flash in the bar instead of covering the play area */
+.toast-bar{position:absolute;left:10px;right:10px;top:calc(6px + env(safe-area-inset-top,0px));bottom:4px;display:flex;align-items:center;justify-content:center;text-align:center;
+  padding:2px 16px;border-radius:18px;background:var(--accent);color:#2a1a00;font:800 14px/1.2 var(--f-ui);opacity:0;transform:translateY(-6px);transition:opacity .18s,transform .18s;pointer-events:none}
+.toast-bar.on{opacity:1;transform:none}
+@keyframes blink{50%{opacity:.3}}
+
+/* screen */
+/* no bar above the screen: the screen area starts right under the thin colour frame */
+.top{display:none!important}
+.screen-wrap{display:flex;flex-direction:column;min-height:0;padding:calc(12px + env(safe-area-inset-top,0px)) 12px 0;margin:var(--frame) var(--frame) 0;background:var(--bezel);border-radius:24px 24px 28px 28px}
+.screen{position:relative;flex:1;min-height:0;background:var(--screen);border-radius:10px 10px 4px 4px;overflow:hidden;box-shadow:inset 0 0 0 2px #000,0 0 0 1px rgba(255,255,255,.05)}
+.screen iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:#000}
+.mark{text-align:center;padding:10px 0 12px;font:700 13px var(--f-mark);letter-spacing:.42em;color:#fff;text-indent:.42em}
+.mark i{font-style:normal;color:var(--accent)}
+
+/* controller */
+.pad{position:relative;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:minmax(0,1fr) auto;column-gap:8px;background:var(--fx),linear-gradient(180deg,var(--skin-hi),var(--skin) 40%,var(--skin-lo));
+  border-radius:0;padding:22px max(18px,env(safe-area-inset-left,0px)) calc(14px + env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-right,0px));min-height:268px}
+.cluster{position:relative;z-index:1;display:grid;align-content:center;min-width:0}
+.cluster.left{justify-items:start}.cluster.right{justify-items:end}
+.pill small,.face small{font:600 10px var(--f-mark);letter-spacing:.08em;text-transform:uppercase}
+/* Select + Start: one centred row along the bottom of the controller */
+.sys{position:relative;z-index:1;grid-column:1/-1;display:flex;justify-content:center;gap:34px;padding-top:14px}
+
+/* Clear colours: the board sits inside the shell with a small gap, and tinted plastic (with a shine and a bright rim) lies over it */
+body.clear .pad{background:var(--pcb-gap)}
+body.clear .pad::before{content:"";position:absolute;inset:14px 12px calc(10px + env(safe-area-inset-bottom,0px));border-radius:22px;
+  background:var(--pcb) 0 0/220px 220px,var(--pcb-board);box-shadow:0 10px 22px rgba(0,0,0,.35),0 0 0 1px rgba(0,0,0,.18)}
+body.clear .pad::after{content:"";position:absolute;inset:0;pointer-events:none;background:var(--sheen),var(--tint);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.5),inset 0 0 0 1.5px rgba(255,255,255,.2),inset 0 -14px 26px rgba(255,255,255,.1)}
+
+/* D-pad: one moulded plus (SVG) with a lip, a dished centre and four small arrows */
+.dpad{position:relative;width:min(40vw,152px);aspect-ratio:1;touch-action:none;cursor:pointer;filter:drop-shadow(0 6px 8px rgba(0,0,0,.28))}
+.dpad svg{display:block;width:100%;height:100%;overflow:visible}
+/* the dark base stays fixed in the handheld; only the top surface rocks, so the pressed side sinks into it */
+/* C2.5: the dark side is a stack of thin layers. The bottom layer (--k:0) stays fixed in the handheld, 4% below the top;
+   the top layer (--k:1) moves with the surface. Pressing sinks the surface a little (--dy) and rocks it toward the pressed side,
+   so the side stays joined to the top while its bottom edge stays put. */
+.dpad .dp-side,.dpad .dp-top{transform-origin:50% 50%;transition:transform .07s ease-out}
+.dpad .dp-side{position:absolute;inset:0;
+  transform:perspective(320px) translateY(calc(var(--dy,0%) * var(--k) + 4% * (1 - var(--k)))) rotateX(calc(var(--rx,0deg) * var(--k))) rotateY(calc(var(--ry,0deg) * var(--k)))}
+.dpad .dp-top{position:relative;transform:perspective(320px) translateY(var(--dy,0%)) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg))}
+.dpad[data-up],.dpad[data-down],.dpad[data-left],.dpad[data-right]{--dy:1.6%}
+/* C2.5 subtle rocker tilt: the pad rocks slightly toward the side being pressed (diagonals tilt both ways) */
+.dpad[data-up]{--rx:5deg}.dpad[data-down]{--rx:-5deg}.dpad[data-left]{--ry:-5deg}.dpad[data-right]{--ry:5deg}
+.dpad .lip{fill:var(--btn-lo)}
+.dpad .arr{fill:var(--btn-ink);stroke:var(--btn-ink);stroke-width:3;stroke-linejoin:round;opacity:.55;transition:opacity .08s,fill .08s}
+.dpad[data-up] .arr.up,.dpad[data-down] .arr.down,.dpad[data-left] .arr.left,.dpad[data-right] .arr.right{stroke:var(--accent)}
+.dpad .shade{fill:#000;opacity:0;transition:opacity .08s}
+.dpad[data-up] .arr.up,.dpad[data-down] .arr.down,.dpad[data-left] .arr.left,.dpad[data-right] .arr.right{fill:var(--accent);opacity:1}
+.dpad[data-up] .shade.up,.dpad[data-down] .shade.down,.dpad[data-left] .shade.left,.dpad[data-right] .shade.right{opacity:.16}
+.dpad-wrap{display:grid;justify-items:center;gap:8px}
+.cap{font:600 10px var(--f-mark);letter-spacing:.12em;text-transform:uppercase;color:var(--label);min-height:12px;white-space:nowrap}
+
+.faces{position:relative;width:min(44vw,172px);aspect-ratio:1.1}
+.face{position:absolute;width:44%;aspect-ratio:1;border-radius:50%;border:0;cursor:pointer;touch-action:none;display:grid;place-items:center;
+  background:radial-gradient(circle at 38% 30%,var(--face-hi),var(--face) 60%,var(--face-lo));box-shadow:0 5px 0 var(--face-lo),0 8px 16px rgba(0,0,0,.3);
+  font:700 26px var(--f-mark);color:var(--face-ink)}
+.face.is-down{box-shadow:0 1px 0 var(--face-lo),0 2px 6px rgba(0,0,0,.3)!important}
+.face .cap{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:8px}
+.face.a{right:0;top:2%}.face.b{left:4%;bottom:8%}
+.pills{display:flex;gap:16px}
+.pill{display:grid;justify-items:center;gap:5px;background:none;border:0;padding:0;cursor:pointer;touch-action:none}
+.pill i{display:block;width:44px;height:13px;border-radius:8px;background:linear-gradient(180deg,var(--pill-hi),var(--pill));box-shadow:0 2px 0 var(--pill-lo)}
+.pill .cap{color:var(--label)}
+/* only Select and Start keep a label under them */
+.dpad-wrap .cap,.face .cap{display:none!important}
+.is-down{transform:translateY(3px);box-shadow:0 1px 0 var(--btn-lo),0 2px 6px rgba(0,0,0,.3)!important}
+.pill.is-down i{transform:translateY(2px);box-shadow:none}
+
+/* library, shown on the screen when no game is running */
+.library{position:absolute;inset:0;display:flex;flex-direction:column;background:linear-gradient(180deg,#191426,#0d0b14);overflow:hidden}
+.lib-head{display:flex;align-items:baseline;justify-content:space-between;padding:16px 16px 10px;font:700 12px var(--f-mark);letter-spacing:.2em;text-transform:uppercase;color:var(--ink-dim)}
+.lib-head b{font:800 20px var(--f-ui);letter-spacing:0;text-transform:none;color:var(--ink)}
+/* L1 cartridge shelf: as many columns as fit (one on a small phone, two on most phones, three in landscape) */
+.carts{flex:1;min-height:0;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:18px 14px;align-content:start;justify-items:center;
+  padding:12px 16px 20px;scroll-padding:16px}
+.cart{width:100%;max-width:min(200px,62vw);display:grid;justify-items:center;gap:7px;padding:8px 4px 4px;border:0;background:none;color:inherit;cursor:pointer;text-align:center;border-radius:14px}
+.cart:focus-visible{outline:none}
+.cart canvas{display:block;width:100%;height:auto;aspect-ratio:680/690;filter:drop-shadow(0 8px 9px rgba(0,0,0,.5));transition:transform .2s cubic-bezier(.3,1.4,.5,1),filter .2s,opacity .2s}
+.cart.sel canvas,.cart:focus-visible canvas{transform:translateY(-6px);
+  filter:drop-shadow(0 0 1.5px var(--accent)) drop-shadow(0 0 1.5px var(--accent)) drop-shadow(0 0 1px var(--accent)) drop-shadow(0 14px 12px rgba(0,0,0,.55))}
+.cart-name{font:800 15px/1.2 var(--f-ui);color:var(--ink);text-wrap:balance}
+.cart.sel .cart-name{color:var(--accent)}
+.cart-tags{font:600 9.5px var(--f-mark);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-dim);margin-top:-3px}
+.cart.empty{cursor:default}
+.cart.empty canvas{filter:none}
+.cart.empty .cart-name{color:var(--ink-dim)}
+/* pressing A: the cartridge drops into the slot before the game loads */
+.cart.inserting canvas{transform:translateY(46px) scale(.9);opacity:0;transition:transform .26s ease-in,opacity .26s ease-in}
+.lib-blurb{margin:0;font:600 12.5px/1.4 var(--f-ui);letter-spacing:0;text-transform:none;color:var(--ink-dim);
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.8em}
+.lib-foot{padding:8px 16px 12px;font:600 11px var(--f-mark);letter-spacing:.08em;color:var(--ink-dim);text-transform:uppercase;border-top:1px solid rgba(255,255,255,.06)}
+.lib-foot kbd{font:inherit;color:var(--accent)}
+.loading{position:absolute;inset:0;display:grid;place-items:center;background:#000;font:600 12px var(--f-mark);letter-spacing:.3em;color:var(--ink-dim);text-transform:uppercase}
+
+/* Arcade panel: the universal menu, laid over the game screen (opened by a game's Arcade tab, Start in the library, Esc or a controller's Home) */
+.sheet-back{position:absolute;inset:0;z-index:30;background:linear-gradient(180deg,#191426,#0d0b14);overflow:auto;overscroll-behavior:contain}
+.sheet{max-width:420px;margin:0 auto;padding:16px 16px 22px;display:grid;gap:14px}
+.sheet-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.sheet h2{margin:0;font:800 22px var(--f-ui);color:var(--ink)}
+.sheet-mark{font:700 10px var(--f-mark);letter-spacing:.3em;color:var(--ink-dim)}
+.sheet-mark i{font-style:normal;color:var(--accent)}
+.sheet .row{display:grid;gap:8px}
+.sheet .lbl{font:700 13px var(--f-ui)}
+.skin-name{font-weight:500;color:var(--ink-dim)}
+.big{display:flex;align-items:center;gap:10px;width:100%;padding:12px 14px;border-radius:12px;border:0;background:rgba(255,255,255,.07);font:700 15px var(--f-ui);cursor:pointer;text-align:left}
+.big:hover{background:rgba(255,255,255,.12)}
+.big svg{width:18px;height:18px;flex:none;color:var(--accent)}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:12px;background:rgba(255,255,255,.06)}
+.seg button{padding:9px 8px;border-radius:9px;border:0;background:none;font:700 13px var(--f-ui);cursor:pointer;color:var(--ink-dim)}
+.seg button:disabled{opacity:.4;cursor:default}
+.seg button[aria-pressed="true"]{background:var(--accent);color:#2a1a00}
+.swatches{display:flex;gap:10px;flex-wrap:wrap}
+.swatch{width:32px;height:32px;flex:none;border-radius:50%;border:3px solid transparent;cursor:pointer}
+.swatch[aria-pressed="true"]{border-color:#fff}
+.toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.05);border:0;cursor:pointer;font:700 14px var(--f-ui);width:100%}
+.toggle i{width:42px;height:24px;border-radius:12px;background:rgba(255,255,255,.2);position:relative;flex:none}
+.toggle i::after{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .15s}
+.toggle[aria-pressed="true"] i{background:#2fbf71}.toggle[aria-pressed="true"] i::after{transform:translateX(18px)}
+.map{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13px;margin:0}
+.map dt{font:700 11px var(--f-mark);letter-spacing:.06em;color:var(--accent);text-transform:uppercase;padding-top:1px}
+.map dd{margin:0;color:var(--ink-dim)}
+.hint{font-size:12px;color:var(--ink-dim);line-height:1.45;margin:0}
+/* A1 sign-in screen, shown on the handheld's screen until someone signs in with their Web Apps account */
+.auth{position:absolute;inset:0;z-index:20;overflow:auto;background:linear-gradient(180deg,#191426,#0d0b14);overscroll-behavior:contain}
+.auth-in{max-width:380px;margin:0 auto;padding:22px 18px 26px;display:grid;gap:14px}
+.auth-mark{font:700 11px var(--f-mark);letter-spacing:.32em;color:var(--ink-dim)}.auth-mark i{font-style:normal;color:var(--accent)}
+.auth h1{margin:0;font:800 24px/1.15 var(--f-ui);text-wrap:balance}
+.auth p{margin:0;font-size:13.5px;line-height:1.45;color:var(--ink-dim)}
+.auth form{display:grid;gap:10px;padding:16px;border-radius:18px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
+.auth h2{margin:0 0 2px;font:800 16px var(--f-ui)}
+.fld{display:grid;gap:5px;font:700 12px var(--f-ui);color:var(--ink-dim)}.fld em{font-style:normal;font-weight:600;opacity:.8}
+.fld input{width:100%;padding:11px 14px;border-radius:12px;border:1.5px solid rgba(255,255,255,.14);background:rgba(0,0,0,.35);color:var(--ink);font-family:var(--f-ui);font-weight:700;outline:none}
+.fld input:focus{border-color:var(--accent)}
+.auth .err{margin:0;min-height:1.2em;font:700 12.5px var(--f-ui);color:#ff8a7a}
+.btn-main{padding:12px 16px;border-radius:999px;border:0;background:var(--accent);color:#2a1a00;font:800 15px var(--f-ui);cursor:pointer}
+.btn-main:disabled{opacity:.6;cursor:wait}
+.linkbtn{border:0;background:none;padding:6px;font:700 13px var(--f-ui);color:var(--ink);text-decoration:underline;text-underline-offset:3px;cursor:pointer;justify-self:center}
+.auth .note{font-size:12px}
+/* A2 account block at the top of the Arcade panel (avatar styles are each app's own; this is Pocket Arcade's) */
+.acct{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.05)}
+.acct-txt{flex:1;min-width:0}.acct-txt b{display:block;font:800 15px var(--f-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.acct-txt small{font:600 12px var(--f-ui);color:var(--ink-dim)}
+.wa-av{--h:#9B8CFF;flex:none;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;overflow:hidden;background:var(--h);color:#14121c;font:800 18px var(--f-ui)}
+.wa-av img{width:100%;height:100%;object-fit:cover}.wa-av.wa-anon{background:rgba(255,255,255,.12)}.wa-av svg{width:60%;height:60%;fill:var(--ink-dim)}
+.acct-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.big.small{padding:10px 12px;font-size:14px;justify-content:center;text-decoration:none;color:var(--ink)}
+.auth a.linkbtn{color:var(--ink-dim)}
+
+/* full screen mode: the screen fills the window and the shell is hidden */
+.fs-btn{display:none}
+body.full .device{width:100%;height:100%;border-radius:0;box-shadow:none;grid-template-rows:minmax(0,1fr)}
+body.full .top,body.full .mark,body.full .pad{display:none}
+body.full .screen-wrap{padding:0;border-radius:0;margin:0}
+body.full .device{background:var(--bezel)}
+body.full .screen{border-radius:0;box-shadow:none}
+body.full .fs-btn{display:grid;position:absolute;z-index:25;left:calc(8px + env(safe-area-inset-left,0px));top:calc(10px + env(safe-area-inset-top,0px));width:44px;height:44px;border-radius:50%;
+  border:1.5px solid rgba(255,255,255,.3);background:rgba(10,8,18,.55);place-items:center;cursor:pointer;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+body.full .fs-btn svg{width:20px;height:20px}
+body.full:not(.no-tab) .fs-btn{display:none}
+/* games without the controller connection keep their own top-left menu button, so the arcade's ☰ sits at the bottom centre instead */
+body.full.no-tab .fs-btn{left:50%;top:auto;bottom:calc(10px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:40px;height:40px}
+body.no-tab:not(.full) .fs-btn{display:grid;position:absolute;z-index:25;left:calc(var(--frame) + 20px);top:calc(var(--frame) + 20px + env(safe-area-inset-top,0px));width:40px;height:40px;border-radius:50%;
+  border:1.5px solid rgba(255,255,255,.3);background:rgba(10,8,18,.55);place-items:center;cursor:pointer}
+body.no-tab:not(.full) .fs-btn svg{width:20px;height:20px}
+
+/* landscape phones: controller clusters either side of the screen */
+@media (orientation:landscape) and (max-height:560px){
+  .device{width:100%;height:100%;border-radius:0;grid-template-rows:minmax(0,1fr) auto;grid-template-columns:minmax(150px,1fr) minmax(0,2.6fr) minmax(150px,1fr);background:var(--bezel)}
+  .cluster{background:var(--fx),linear-gradient(180deg,var(--skin-hi),var(--skin) 40%,var(--skin-lo))}
+  .top{grid-column:2;grid-row:1;margin:0;border-radius:0;min-height:0;padding:calc(6px + env(safe-area-inset-top,0px)) 10px 0}
+  .now-title{font-size:13px}.now-detail{font-size:10px}
+  .screen-wrap{grid-column:2;grid-row:1;padding:calc(8px + env(safe-area-inset-top,0px)) 6px 0;border-radius:0;margin:0}
+  .mark{padding:6px 0 0;font-size:11px}
+  .pad{display:contents}
+  .cluster{grid-row:1/3;padding:12px 12px calc(12px + env(safe-area-inset-bottom,0px));align-content:center}
+  .cluster.left,.cluster.right{justify-items:center}
+  body.clear .pad::before,body.clear .pad::after{display:none}
+  .sys{grid-column:2;grid-row:2;padding:4px 0 calc(8px + env(safe-area-inset-bottom,0px))}
+  .cluster.left{grid-column:1;padding-left:max(12px,env(safe-area-inset-left,0px))}.cluster.right{grid-column:3;padding-right:max(12px,env(safe-area-inset-right,0px))}
+  .dpad{width:min(19vw,132px)}.faces{width:min(21vw,150px)}
+  .cap{color:rgba(255,255,255,.75)}.pill .cap{color:rgba(255,255,255,.75)}
+  body.full .device{grid-template-columns:1fr;background:var(--bezel)}
+  body.full .screen-wrap{grid-column:1;grid-row:1/3}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}.cart.sel canvas{transform:none}}
+</style>
+
+<div id="app">
+  <div class="device" id="device">
+    <div class="top">
+      <div class="now"><div class="now-title" id="nowTitle"><span id="nowText">Library</span></div><div class="now-detail" id="nowDetail">Choose a game</div></div>
+      <div class="meter" id="meter" hidden><small id="meterLbl"></small><i><b id="meterBar"></b></i></div>
+      <button class="menu-btn" id="menuBtn" aria-label="Open the Arcade menu" aria-haspopup="dialog"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      <div class="toast-bar" id="toastBar" role="status" aria-live="polite"></div>
+    </div>
+    <div class="screen-wrap">
+      <div class="screen" id="screen">
+        <iframe id="frame" title="Game" allow="autoplay; fullscreen; gamepad" hidden></iframe>
+        <div class="loading" id="loading" hidden>Loading</div>
+        <div class="sheet-back" id="sheetBack" hidden>
+          <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+            <div class="sheet-head"><h2 id="sheetTitle">Arcade</h2><span class="sheet-mark">POCKET<i>·</i>ARCADE</span></div>
+            <div class="row" id="acctRow" hidden><div class="acct"><span id="acctAv"></span><div class="acct-txt"><b id="acctName"></b><small id="acctUser"></small></div></div>
+              <div class="acct-row"><a class="big small" href="../" id="hubLink">Web Apps home</a><button class="big small" id="signOutBtn">Sign out</button></div>
+              <p class="hint" id="syncHint">Your arcade settings are saved to your account.</p></div>
+            <button class="big" id="resumeBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>Back to game</button>
+            <button class="big" id="libBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="4" y="4" width="6" height="16" rx="1.5"/><rect x="12" y="4" width="4" height="16" rx="1"/><path d="M17.5 5.5l3 .8-3.6 13.6-3-.8z"/></svg>Quit to library</button>
+            <div class="row"><span class="lbl">Display</span>
+              <div class="seg" role="group" aria-label="Display"><button id="modeConsole" aria-pressed="true">Handheld</button><button id="modeFull" aria-pressed="false">Full screen</button></div>
+              <p class="hint" id="modeHint">Full screen hides the controller and uses the game's own touch controls.</p></div>
+            <div class="row"><span class="lbl">Controller colour <span class="skin-name" id="skinName"></span></span><div class="swatches" id="swatches"></div></div>
+            <button class="toggle" id="hapticBtn" aria-pressed="true">Vibrate on press <i></i></button>
+            <div class="row" id="ctlRow"><span class="lbl">Controls</span><dl class="map" id="ctlMap"></dl>
+              <p class="hint">Keyboard: arrows or WASD move · X or Space A · Z B · Shift Select · Enter Start · Esc Arcade. Q and C (or a controller's bumpers) give L and R. Game controllers work too.</p></div>
+          </div>
+        </div>
+
+        <div class="auth" id="auth" hidden></div>
+        <div class="library" id="library">
+          <div class="lib-head"><b>Your games</b><span id="libCount">1 game</span></div>
+          <div class="carts" id="carts" role="listbox" aria-label="Games"></div>
+          <div class="lib-foot"><p class="lib-blurb" id="libBlurb"></p></div>
+        </div>
+      </div>
+      <div class="mark">POCKET<i>·</i>ARCADE</div>
+    </div>
+    <div class="pad" id="pad">
+      <div class="cluster left">
+        <div class="dpad-wrap">
+          <div class="dpad" id="dpad" role="group" aria-label="Directional pad">
+            <svg class="dp-side" style="--k:0.000" viewBox="0 0 100 100" aria-hidden="true"><g class="lip"><rect x="0" y="33" width="100" height="34" rx="9"/><rect x="33" y="0" width="34" height="100" rx="9"/></g></svg>
+            <svg class="dp-side" style="--k:0.125" viewBox="0 0 100 100" aria-hidden="true"><g class="lip"><rect x="0" y="33" width="100" height="34" rx="9"/><rect x="33" y="0" width="34" height="100" rx="9"/></g></svg>
+            <svg class="dp-side" style="--k:0.250" viewBox="0 0 100 100" aria-hidden="true"><g class="lip"><rect x="0" y="33" width="100" height="34" rx="9"/><rect x="33" y="0" width="34" height="100" rx="9"/></g></svg>
+            <svg class="dp-side" style="--k:0.375" viewBox="0 0 100 100" aria-hidden="true"><g class="lip"><rect x="0" y="33" width="100" height="34" rx="9"/><rect x="33" y="0" width="34" height="100" rx="9"/></g></svg>
+            <svg class="dp-side" style="--k:0.500" viewBox="0 0 100 100" aria-hidden="true"><g class="lip"><rect x="0" y="33" width="100" height="34" rx="9"/><rect x="33" y="0" width="34" height="100" rx="9"/></g></svg>
+            <svg class="dp-side" style="--k:0.625" viewBox="0 0 100 100" aria-hidden="true"><g class="lip"><rect x="0" y="33" width="100" height="34" rx="9"/><rect x="33" y="0" width="34" height="100" rx="9"/></g></svg>
+            <svg class="dp-side" style="--k:0.750" viewBox="0 0 100 100" aria-hidden="true"><g class="lip"><rect x="0" y="33" width="100" height="34" rx="9"/><rect x="33" y="0" width="34" height="100" rx="9"/></g></svg>
+            <svg class="dp-side" style="--k:0.875" viewBox="0 0 100 100" aria-hidden="true"><g class="lip"><rect x="0" y="33" width="100" height="34" rx="9"/><rect x="33" y="0" width="34" height="100" rx="9"/></g></svg>
+            <svg class="dp-side" style="--k:1.000" viewBox="0 0 100 100" aria-hidden="true"><g class="lip"><rect x="0" y="33" width="100" height="34" rx="9"/><rect x="33" y="0" width="34" height="100" rx="9"/></g></svg>
+            <svg class="dp-top" viewBox="0 0 100 100" aria-hidden="true">
+              <defs>
+                <linearGradient id="dpFill" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="100"><stop offset="0" style="stop-color:var(--btn-hi)"/><stop offset="1" style="stop-color:var(--btn)"/></linearGradient>
+                <radialGradient id="dpDish" cx=".5" cy=".42" r=".6"><stop offset="0" style="stop-color:var(--btn-lo)"/><stop offset="1" style="stop-color:var(--btn)"/></radialGradient>
+                <clipPath id="dpClip"><rect x="0" y="33" width="100" height="34" rx="9"/><rect x="33" y="0" width="34" height="100" rx="9"/></clipPath>
+              </defs>
+              <g fill="url(#dpFill)"><rect x="0" y="33" width="100" height="34" rx="9"/><rect x="33" y="0" width="34" height="100" rx="9"/></g>
+              <g clip-path="url(#dpClip)">
+                <rect class="shade up" x="33" y="0" width="34" height="33"/><rect class="shade down" x="33" y="67" width="34" height="33"/>
+                <rect class="shade left" x="0" y="33" width="33" height="34"/><rect class="shade right" x="67" y="33" width="33" height="34"/>
+              </g>
+              <circle cx="50" cy="50" r="11" fill="url(#dpDish)"/>
+              <path class="arr up" d="M50 10 57 19H43Z"/><path class="arr down" d="M50 90 43 81H57Z"/>
+              <path class="arr left" d="M10 50 19 43V57Z"/><path class="arr right" d="M90 50 81 57V43Z"/>
+            </svg>
+          </div>
+          <span class="cap" data-cap="dpad">Move</span>
+        </div>
+      </div>
+      <div class="cluster right">
+        <div class="faces">
+          <button class="face a" data-btn="a" aria-label="A button">A<span class="cap" data-cap="a"></span></button>
+          <button class="face b" data-btn="b" aria-label="B button">B<span class="cap" data-cap="b"></span></button>
+        </div>
+      </div>
+      <div class="sys">
+        <button class="pill" data-btn="select" aria-label="Select"><i></i><span class="cap" data-cap="select">Select</span></button>
+        <button class="pill" data-btn="start" aria-label="Start"><i></i><span class="cap" data-cap="start">Start</span></button>
+      </div>
+    </div>
+    <button class="fs-btn" id="fsBtn" aria-label="Open arcade menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+
+  </div>
+</div>
+
+<!-- Web Apps shared account code (one sign-in for every app on the site). Must load before Pocket Arcade's own script. -->
+<script src="../shared/config.js"></script>
+<script src="../shared/vendor/supabase.js"></script>
+<script src="../shared/account.js"></script>
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+// ---- the game shelf. Add a game: put its page in games/ and add an entry here. Games that speak the GP protocol get full controller support.
+// gp:false = the game doesn't speak the controller connection yet: it opens in full screen with its own touch controls, and a small ☰ opens the Arcade panel
+const GAMES=[
+  {id:'big-year',title:'Big Year',src:'games/big-year/index.html',gp:false,
+   blurb:'Walk or drive the East Coast, listen for birds, raise your binoculars, scope or camera to find them, and log every species in your field journal.',tags:['Explore','Nature'],
+   art:'birds',logo:{text:'Big Year',font:'italic 600 X "Crimson Pro",Georgia,serif',ink:'#2f3a2a',strip:'#f3ead2'},buttons:{}},
+  {id:'dino-world',title:'Dino World',src:'games/dino-world/index.html',gp:false,
+   blurb:'Tranquilize dinosaurs and sample their DNA on a wild island, then fly to Port Meridian and bring the escaped ones back to the Institute.',tags:['Adventure','Dinosaurs'],
+   art:'dino',logo:{text:'Dino World',font:'"Lilita One",Fredoka,system-ui,sans-serif',ink:'#ffe9b0',strip:'#123a2b'},buttons:{}},
+  {id:'pirate-seas',title:'Pirate Seas',src:'games/pirate-seas/index.html',blurb:'Wash up on the Isle of First Tides, fix your rowboat and sail an open world of islands, forts and sea monsters.',tags:['Adventure','Story'],
+   art:'sea',logo:{text:'Pirate Seas',font:'"Pirata One",Georgia,serif',ink:'#3b2410',strip:'#f1dfb3'},
+   buttons:{a:'Attack',b:'Interact',l:'Dig',r:'Bag',select:'Map',start:'Log'}}
+].sort((a,b)=>a.title.localeCompare(b.title));
+// Controller colours. shell = highlight/base/shadow. Optional: btn (D-pad) and face (A/B) as hi/base/lo/ink, pill (Select/Start) as hi/base/lo,
+// bezel (screen surround), label (caption ink), clear (see-through shell with faint insides).
+const BTN0=['#5a5068','#3b3346','#231d2c','#16121c'];
+const SKINS=[
+  {id:'lagoon',name:'Lagoon',shell:['#2fc4b2','#169e8f','#0b7569']},
+  {id:'grape',name:'Grape',shell:['#a35cff','#8a3df2','#6a22d8']},
+  {id:'red',name:'Red',shell:['#ff5c62','#e2323c','#b11d28'],label:'rgba(45,0,6,.62)'},
+  {id:'clear-purple',name:'Clear Purple',clear:{board:'#4a3a6e',trace:'#8f78c6',chip:'#21182f',pad:'#d2bf90',gap:'#5e4890'},shell:['#cdb9ee','#ac90da','#8667bd'],label:'rgba(40,18,80,.62)',
+   btn:['rgba(102,92,118,.92)','rgba(66,58,80,.9)','rgba(38,32,50,.95)','#120e18']},
+  {id:'clear-blue',name:'Clear Blue',clear:{board:'#3f5482',trace:'#8399cc',chip:'#1b2340',pad:'#d0c9a6',gap:'#6476a6'},shell:['#d6e0f3','#b4c3e4','#8fa1cd'],label:'rgba(24,36,80,.6)',bezel:'#161b38',
+   btn:['rgba(250,252,255,.94)','rgba(222,229,244,.9)','rgba(150,163,198,.95)','#6f7c9f']},
+  {id:'classic',name:'Classic',shell:['#e2dfd6','#d0ccc2','#b6b2a7'],label:'rgba(40,36,70,.66)',bezel:'#6c6a7b',
+   btn:['#4c4952','#302d35','#19171c','#0b0a0d'],face:['#d24a7e','#ac2058','#7a1440','#5a0d2e'],pill:['#a9a6ad','#8d8a93','#6c6974']},
+  {id:'slate',name:'Slate',shell:['#5d6475','#454b5a','#2d313d'],label:'rgba(236,240,248,.62)'}
+];
+// Clear shells: a circuit board drawn in the shell's own colours, sitting under tinted see-through plastic.
+const hexA=(h,a)=>{const n=parseInt(h.slice(1),16);return `rgba(${n>>16},${n>>8&255},${n&255},${a})`};
+function pcbURI(c){const tr=['M10 40H70L90 60V110','M130 10V45L150 65H210','M20 150H60L75 135H120','M170 120V170L155 185H110','M40 205H95','M200 90V140','M95 110H125','M0 95H22','M60 220V180L75 165'];
+  const vias=[[70,40],[90,110],[130,10],[210,65],[20,150],[120,135],[170,120],[110,185],[40,205],[95,205],[200,90],[200,140],[125,110],[22,95]];
+  let g=`<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><g fill='none' stroke='${c.trace}' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round' opacity='.8'>${tr.map(d=>`<path d='${d}'/>`).join('')}</g>`;
+  g+=`<rect x='104' y='76' width='56' height='38' rx='3' fill='${c.chip}'/>`;for(let k=0;k<6;k++){g+=`<rect x='${108+k*9}' y='70' width='4' height='6' fill='${c.pad}'/><rect x='${108+k*9}' y='114' width='4' height='6' fill='${c.pad}'/>`}
+  g+=`<rect x='28' y='112' width='22' height='16' rx='2' fill='${c.chip}'/>`;for(const[x,y]of[[30,60],[150,150],[56,178],[176,24]])g+=`<rect x='${x}' y='${y}' width='16' height='7' rx='1.5' fill='${c.chip}'/><rect x='${x}' y='${y}' width='3.5' height='7' fill='${c.pad}'/><rect x='${x+12.5}' y='${y}' width='3.5' height='7' fill='${c.pad}'/>`;
+  g+=vias.map(([x,y])=>`<circle cx='${x}' cy='${y}' r='3.4' fill='${c.pad}'/><circle cx='${x}' cy='${y}' r='1.3' fill='${c.board}'/>`).join('');
+  g+=`<circle cx='190' cy='200' r='7' fill='none' stroke='${c.pad}' stroke-width='2.2'/></svg>`;
+  return `url("data:image/svg+xml,${encodeURIComponent(g)}")`}
+const SHEEN='linear-gradient(115deg,rgba(255,255,255,.34) 0 9%,rgba(255,255,255,0) 24% 74%,rgba(255,255,255,.16) 86%,rgba(255,255,255,0))';
+const BTN=['up','down','left','right','a','b','l','r','select','start'];
+// ---- prefs (per browser)
+// Preferences. This browser keeps a copy ('pocket-prefs') so the shell looks right before sign-in;
+// once someone signs in, their own copy is loaded from their account (arcade_state) and saved back there.
+const PREF_DEFAULT={mode:'console',skin:'lagoon',haptic:true,game:null};
+const P={...PREF_DEFAULT};
+const fixPrefs=()=>{if(typeof P.skin==='number')P.skin=['grape','lagoon','red','grape','slate'][P.skin]||'grape'}; // older saves stored a list position
+try{Object.assign(P,JSON.parse(localStorage.getItem('pocket-prefs')||'{}'))}catch(_){}fixPrefs();
+const save=()=>{try{localStorage.setItem('pocket-prefs',JSON.stringify(P))}catch(_){}queueSync()};
+
+const frame=$('frame'),lib=$('library'),loading=$('loading'),sheet=$('sheetBack');
+let current=null,labels={},libSel=0,hasTab=false,gameReady=false;
+
+// ---- talking to the game (GP v1)
+function send(m){m={gp:1,...m};const w=frame.contentWindow;if(!w)return;
+  try{if(w.GP&&w.GP.receive){w.GP.receive(m);return}}catch(_){}try{w.postMessage(m,'*')}catch(_){}}
+addEventListener('message',e=>{const m=e.data;if(!m||m.gp!==1||e.source!==frame.contentWindow)return;
+  if(m.type==='ready'){if(m.buttons)setLabels(m.buttons);hasTab=!!m.arcadeTab;gameReady=true;tabClass();send({type:'mode',mode:P.mode});loading.hidden=true}
+  else if(m.type==='labels')setLabels(m.buttons);
+  else if(m.type==='status')setStatus(m);
+  else if(m.type==='toast')showToast(m.text);
+  else if(m.type==='menu')sheet.hidden?openSheet():closeSheet()});
+// ---- top bar: where the game is, its current goal, a meter, and short messages
+function setTop(title,detail,tone){$('nowText').textContent=title||'';$('nowDetail').textContent=detail||'';$('nowTitle').classList.toggle('danger',tone==='danger')}
+function setStatus(m){setTop(m.text||(current&&current.title),m.detail,m.tone);const mt=m.meter,box=$('meter');box.hidden=!mt;
+  if(mt){const v=Math.max(0,Math.min(1,+mt.value||0));$('meterLbl').textContent=mt.label||'';const b=$('meterBar');b.style.width=(v*100).toFixed(1)+'%';b.style.background=v>.5?'#22c4a0':v>.25?'#ffc93c':'#ff6b5b'}}
+let toastTimer=0;function showToast(t){const el=$('toastBar');if(!t)return;el.textContent=t;el.classList.add('on');clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove('on'),Math.max(2400,Math.min(5000,t.length*65)))}
+function clearToast(){clearTimeout(toastTimer);$('toastBar').classList.remove('on')}
+const noGP=()=>!!current&&current.gp===false;
+function tabClass(){document.body.classList.toggle('no-tab',!!current&&(noGP()||(gameReady&&!hasTab)))}
+function setLabels(b){labels={...labels,...b};document.querySelectorAll('[data-cap]').forEach(el=>{const k=el.dataset.cap;if(k==='dpad')return;const v=labels[k]||'';el.textContent=k==='select'?'Select':k==='start'?'Start':v});renderCtlMap()}
+function renderCtlMap(){const L=current?{...current.buttons,...labels}:{};$('ctlRow').hidden=!current;
+  $('ctlMap').innerHTML=[['D-pad','Move'],['A',L.a],['B',L.b],['Select',L.select],['Start',L.start],['L · Q',L.l],['R · C',L.r]].filter(r=>r[1]).map(([k,v])=>`<dt>${k}</dt><dd>${v}</dd>`).join('')}
+
+// ---- library
+function drawArt(c,kind,k=1){const g=c.getContext('2d'),W=192,H=144;c.width=W*k;c.height=H*k;g.scale(k,k);
+  if(!kind||kind==='blank'){const s=g.createLinearGradient(0,0,0,H);s.addColorStop(0,'#2a2340');s.addColorStop(1,'#14101f');g.fillStyle=s;g.fillRect(0,0,W,H);return}
+  if(kind==='dino'){ // Dino World: jungle at golden hour, a sauropod and pteranodons
+    const s=g.createLinearGradient(0,0,0,H*.7);s.addColorStop(0,'#1f5a4c');s.addColorStop(.6,'#c8a85a');s.addColorStop(1,'#ffd28a');g.fillStyle=s;g.fillRect(0,0,W,H);
+    g.fillStyle='#ffe9b0';g.beginPath();g.arc(146,64,15,0,Math.PI*2);g.fill();
+    g.fillStyle='#5f7f5a';g.beginPath();g.moveTo(0,92);g.lineTo(28,66);g.lineTo(52,80);g.lineTo(84,54);g.lineTo(116,78);g.lineTo(150,62);g.lineTo(192,86);g.lineTo(192,144);g.lineTo(0,144);g.fill();
+    g.fillStyle='#3f6a4a';g.beginPath();g.moveTo(0,104);g.quadraticCurveTo(60,90,120,100);g.quadraticCurveTo(160,104,192,98);g.lineTo(192,144);g.lineTo(0,144);g.fill();
+    // sauropod
+    g.fillStyle='#24402c';g.beginPath();g.ellipse(84,98,24,11,0,0,Math.PI*2);g.fill();
+    g.lineCap='round';g.strokeStyle='#24402c';g.lineWidth=7;g.beginPath();g.moveTo(100,94);g.quadraticCurveTo(116,84,118,58);g.stroke();
+    g.lineWidth=5;g.beginPath();g.moveTo(62,100);g.quadraticCurveTo(44,104,30,112);g.stroke();
+    g.beginPath();g.ellipse(121,56,6,3.6,-.3,0,Math.PI*2);g.fill();
+    for(const lx of[70,78,92,100]){g.fillRect(lx-2.5,100,5,14)}
+    // pteranodons
+    g.strokeStyle='#24402c';g.lineWidth=2;for(const[px,py,k] of[[46,38,1],[62,30,.8],[160,30,.7]]){g.beginPath();g.moveTo(px-9*k,py-3*k);g.quadraticCurveTo(px-4*k,py-5*k,px,py);g.quadraticCurveTo(px+4*k,py-5*k,px+9*k,py-3*k);g.stroke()}
+    // jungle foreground
+    const leaf=['#173f1d','#285f27','#3f8434'];for(let i=0;i<26;i++){const x=(i*37)%200-4,y=120+((i*13)%22),r=9+(i%4)*3;g.fillStyle=leaf[i%3];g.beginPath();g.arc(x,y,r,0,Math.PI*2);g.fill()}
+    g.fillStyle='#76b44c';for(let i=0;i<14;i++){const x=(i*29+7)%192,y=118+((i*17)%14);g.beginPath();g.ellipse(x,y,4,2,.4,0,Math.PI*2);g.fill()}
+    return}
+  if(kind==='birds'){ // Big Year: a warbler seen through binoculars
+    const sc=document.createElement('canvas');sc.width=W*k;sc.height=H*k;const q=sc.getContext('2d');q.scale(k,k);
+    const s=q.createLinearGradient(0,0,0,H);s.addColorStop(0,'#cfe4e8');s.addColorStop(1,'#eef1dc');q.fillStyle=s;q.fillRect(0,0,W,H);
+    for(const[x,y,r,c] of[[30,40,26,'rgba(111,154,74,.45)'],[160,30,30,'rgba(77,110,53,.4)'],[150,118,34,'rgba(111,154,74,.4)'],[20,120,28,'rgba(77,110,53,.35)'],[96,22,18,'rgba(140,180,90,.35)']]){q.fillStyle=c;q.beginPath();q.arc(x,y,r,0,Math.PI*2);q.fill()}
+    q.strokeStyle='#6a4a2e';q.lineCap='round';q.lineWidth=6;q.beginPath();q.moveTo(-4,104);q.quadraticCurveTo(70,92,150,100);q.stroke();q.lineWidth=3;q.beginPath();q.moveTo(120,98);q.lineTo(140,84);q.stroke();
+    q.fillStyle='#5f9a38';for(const[x,y,a] of[[140,82,-.6],[146,86,.3],[40,98,-.2],[30,102,.6]]){q.beginPath();q.ellipse(x,y,7,3,a,0,Math.PI*2);q.fill()}
+    // black-throated blue warbler on the branch (original drawing)
+    const bx=94,by=82;q.fillStyle='#2b4a86';q.beginPath();q.moveTo(bx-20,by+4);q.lineTo(bx-34,by+12);q.lineTo(bx-31,by+6);q.closePath();q.fill();
+    q.beginPath();q.ellipse(bx-6,by,17,11,-.15,0,Math.PI*2);q.fill();
+    q.fillStyle='#f4f4ee';q.beginPath();q.ellipse(bx-3,by+5,13,6.5,-.1,0,Math.PI);q.fill();
+    q.fillStyle='#2b4a86';q.beginPath();q.arc(bx+10,by-8,8.5,0,Math.PI*2);q.fill();
+    q.fillStyle='#14161a';q.beginPath();q.moveTo(bx+3,by-6);q.quadraticCurveTo(bx+14,by-4,bx+17,by-8);q.quadraticCurveTo(bx+16,by+4,bx+6,by+6);q.quadraticCurveTo(bx-2,by+4,bx+3,by-6);q.fill();
+    q.fillStyle='#f4f4ee';q.fillRect(bx-10,by-2,5,3);
+    q.fillStyle='#14161a';q.beginPath();q.moveTo(bx+17,by-10);q.lineTo(bx+24,by-8);q.lineTo(bx+17,by-6);q.fill();
+    q.fillStyle='#fff';q.beginPath();q.arc(bx+12,by-10,1.4,0,Math.PI*2);q.fill();
+    q.strokeStyle='#3a2a1a';q.lineWidth=1.6;q.beginPath();q.moveTo(bx-4,by+10);q.lineTo(bx-5,by+15);q.moveTo(bx+2,by+10);q.lineTo(bx+2,by+15);q.stroke();
+    // binocular view
+    g.fillStyle='#1b201d';g.fillRect(0,0,W,H);g.save();g.beginPath();g.arc(66,72,58,0,Math.PI*2);g.arc(126,72,58,0,Math.PI*2);g.clip();g.drawImage(sc,0,0,W,H);
+    const v=g.createRadialGradient(96,72,40,96,72,92);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,0,0,.35)');g.fillStyle=v;g.fillRect(0,0,W,H);g.restore();
+    return}
+  if(kind==='sea'){const s=g.createLinearGradient(0,0,0,H*.62);s.addColorStop(0,'#2c3f7a');s.addColorStop(.55,'#e2875a');s.addColorStop(1,'#ffd59a');g.fillStyle=s;g.fillRect(0,0,W,H);
+    g.fillStyle='#fff1c8';g.beginPath();g.arc(W*.7,H*.56,18,0,Math.PI*2);g.fill();
+    for(let i=0;i<4;i++){g.fillStyle=['#2b7186','#1f5f74','#174c5e','#103a49'][i];g.beginPath();g.moveTo(0,H);for(let x=0;x<=W;x+=6)g.lineTo(x,H*(.6+i*.09)+Math.sin(x*.07+i*1.7)*3);g.lineTo(W,H);g.fill()}
+    g.fillStyle='#1a1020';g.beginPath();g.moveTo(52,92);g.lineTo(122,92);g.quadraticCurveTo(118,104,104,106);g.lineTo(64,106);g.closePath();g.fill();
+    g.fillRect(84,44,3,48);g.fillRect(104,52,3,40);g.beginPath();g.moveTo(70,50);g.lineTo(100,50);g.quadraticCurveTo(96,66,100,82);g.lineTo(70,82);g.quadraticCurveTo(74,66,70,50);g.fill();
+    g.beginPath();g.moveTo(98,58);g.lineTo(118,58);g.quadraticCurveTo(115,70,118,84);g.lineTo(98,84);g.fill();
+    g.fillStyle='#d63a2a';g.fillRect(86,38,12,6)}}
+// Cartridge, drawn to match the home-screen icon (same shape, in the icon's own 1024 units, cropped to the cartridge)
+const CART_PATH='M190,170 H834 Q852,170 852,188 V790 H802 V846 Q802,860 788,860 H236 Q222,860 222,846 V790 H172 V188 Q172,170 190,170 Z';
+const rr=(g,x,y,w,h,r)=>{g.beginPath();g.roundRect?g.roundRect(x,y,w,h,r):g.rect(x,y,w,h)};
+function drawCart(c,G){const g=c.getContext('2d');c.width=680;c.height=690;g.clearRect(0,0,680,690);g.save();g.translate(-172,-170);const body=new Path2D(CART_PATH);
+  if(!G){ // empty slot for the next game
+    g.setLineDash([22,16]);g.lineWidth=7;g.strokeStyle='rgba(255,255,255,.22)';g.stroke(body);rr(g,252,218,520,462,10);g.stroke();g.setLineDash([]);
+    g.strokeStyle='rgba(255,255,255,.35)';g.lineWidth=12;g.lineCap='round';g.beginPath();g.moveTo(512,400);g.lineTo(512,500);g.moveTo(462,450);g.lineTo(562,450);g.stroke();g.restore();return}
+  const sh=G.shell||'#7c7a76';g.fillStyle=sh;g.fill(body);
+  g.save();g.clip(body);g.fillStyle='#9a9893';g.fillRect(172,170,680,6);g.fillStyle='rgba(85,83,79,.4)';g.fillRect(840,170,12,620);g.fillStyle='rgba(85,83,79,.45)';g.fillRect(172,784,680,6);g.fillRect(222,848,580,12);g.restore();
+  g.fillStyle='#55534f';rr(g,186,170,44,22,4);g.fill();rr(g,794,170,44,22,4);g.fill();
+  g.fillStyle='#6a6864';rr(g,242,208,540,482,16);g.fill();g.fillStyle='rgba(85,83,79,.7)';rr(g,242,208,540,7,3);g.fill();
+  g.fillStyle='#f3efe6';rr(g,252,218,520,462,8);g.fill();
+  // label picture
+  g.save();rr(g,266,232,492,344,6);g.clip();const a=document.createElement('canvas');drawArt(a,G.art,3);const sc=Math.max(492/192,344/144),dw=192*sc,dh=144*sc;
+  g.drawImage(a,266+(492-dw)/2,232+(344-dh)/2,dw,dh);g.restore();
+  // logo strip
+  const L=G.logo||{text:G.title,font:'Nunito,system-ui,sans-serif',ink:'#2f2838',strip:'#ffd166'};g.fillStyle=L.strip;rr(g,266,586,492,80,8);g.fill();
+  const fnt=n=>L.font.includes(' X ')?L.font.replace(' X ',` ${n}px `):`${n}px ${L.font}`;let fs=62;g.font=fnt(fs);while(g.measureText(L.text).width>456&&fs>24){fs-=2;g.font=fnt(fs)}
+  g.fillStyle=L.ink;g.textAlign='center';g.textBaseline='middle';g.fillText(L.text,512,628);
+  g.fillStyle='#55534f';g.beginPath();g.moveTo(482,714);g.lineTo(542,714);g.lineTo(512,748);g.closePath();g.fill();
+  g.fillStyle='#6a6864';rr(g,452,806,120,42,6);g.fill();g.restore()}
+function paintCarts(){document.querySelectorAll('.cart canvas').forEach(c=>drawCart(c,GAMES[c.dataset.i]))}
+function renderLib(){const box=$('carts');box.innerHTML='';
+  GAMES.forEach((G,i)=>{const b=document.createElement('button');b.className='cart';b.setAttribute('role','option');b.dataset.i=i;b.setAttribute('aria-label',G.title);
+    const c=document.createElement('canvas');c.dataset.i=i;b.append(c);
+    b.insertAdjacentHTML('beforeend',`<span class="cart-name">${G.title}</span><span class="cart-tags">${G.tags.join(' · ')}</span>`);
+    b.onclick=()=>{libSel=i;markSel();insertCart()};b.onfocus=()=>{libSel=i;markSel()};box.append(b)});
+  box.insertAdjacentHTML('beforeend','<div class="cart empty" aria-hidden="true"><canvas></canvas><span class="cart-name">Next game</span><span class="cart-tags">Coming soon</span></div>');
+  paintCarts();$('libCount').textContent=GAMES.length===1?'1 game':GAMES.length+' games';markSel()}
+// redraw the logos once the cartridge fonts have loaded
+try{document.fonts&&Promise.all(['40px "Pirata One"','40px "Lilita One"','italic 600 40px "Crimson Pro"'].map(f=>document.fonts.load(f))).then(()=>{if(!lib.hidden)paintCarts()}).catch(()=>{})}catch(_){}
+function markSel(){document.querySelectorAll('.cart[data-i]').forEach(c=>{const on=+c.dataset.i===libSel;c.classList.toggle('sel',on);c.setAttribute('aria-selected',on)});
+  const G=GAMES[libSel];$('libBlurb').textContent=G?G.blurb:''}
+// D-pad on the shelf: left/right step along, up/down move a whole row
+function shelfCols(){const els=[...document.querySelectorAll('#carts .cart')];if(!els.length)return 1;const t=els[0].offsetTop;return Math.max(1,els.filter(e=>e.offsetTop===t).length)}
+function shelfMove(id){const n=GAMES.length,cols=shelfCols();let i=libSel;
+  if(id==='left')i=Math.max(0,i-1);else if(id==='right')i=Math.min(n-1,i+1);
+  else if(id==='up'){if(i-cols>=0)i-=cols}
+  else if(id==='down'){if(i+cols<n)i+=cols;else if(Math.floor((n-1)/cols)>Math.floor(i/cols))i=n-1}
+  if(i!==libSel){libSel=i;markSel();document.querySelector(`.cart[data-i="${i}"]`)?.scrollIntoView({block:'nearest',behavior:'smooth'})}}
+let inserting=false;
+function insertCart(){if(inserting)return;const el=document.querySelector(`.cart[data-i="${libSel}"]`),G=GAMES[libSel];if(!G)return;
+  const quick=matchMedia('(prefers-reduced-motion: reduce)').matches;inserting=true;el?.classList.add('inserting');
+  setTimeout(()=>{inserting=false;launch(G);el?.classList.remove('inserting')},quick?0:280)}
+function showLibrary(){if(current){send({type:'pause',paused:true})}frame.hidden=true;frame.src='about:blank';current=null;labels={};setLabels({});
+  lib.hidden=false;loading.hidden=true;setTop('Library','Choose a game');$('meter').hidden=true;clearToast();hasTab=gameReady=false;tabClass();document.body.classList.remove('full');P.game=null;save();applyCaps();closeSheet(false)}
+function launch(G){current=G;labels={};lib.hidden=true;loading.hidden=false;frame.hidden=false;frame.src=G.src;setTop(G.title,'Loading');$('meter').hidden=true;clearToast();hasTab=gameReady=false;tabClass();
+  setLabels(G.buttons);applyMode();P.game=G.id;save()}
+frame.addEventListener('load',()=>{if(current){send({type:'hello'});send({type:'mode',mode:P.mode});setTimeout(()=>{loading.hidden=true;if($('nowDetail').textContent==='Loading')setTop(current.title,'')},400);try{if(sheet.hidden)frame.contentWindow.focus()}catch(_){}}});
+function applyCaps(){if(!current)setLabels({a:'Play',b:'',l:'',r:'',select:'',start:'Arcade'})}
+
+// ---- display mode, skin, haptics
+function applyMode(){const full=!!current&&(P.mode==='fullscreen'||noGP());document.body.classList.toggle('full',full);
+  $('modeConsole').disabled=noGP();$('modeConsole').setAttribute('aria-pressed',!full&&P.mode==='console');$('modeFull').setAttribute('aria-pressed',full);
+  $('modeHint').textContent=noGP()?"This game doesn't work with the arcade controller yet, so it plays full screen with its own touch controls.":"Full screen hides the controller and uses the game's own touch controls.";
+  if(current)send({type:'mode',mode:P.mode})}
+function setMode(m){P.mode=m;save();applyMode()}
+$('modeConsole').onclick=()=>setMode('console');$('modeFull').onclick=()=>{setMode('fullscreen');if(current)closeSheet(true)};
+function applySkin(){const s=SKINS.find(k=>k.id===P.skin)||SKINS[0],r=document.documentElement.style,set=(k,v)=>r.setProperty(k,v);
+  const b=s.btn||BTN0,f=s.face||b,pl=s.pill||b;
+  set('--skin-hi',s.shell[0]);set('--skin',s.shell[1]);set('--skin-lo',s.shell[2]);
+  set('--btn-hi',b[0]);set('--btn',b[1]);set('--btn-lo',b[2]);set('--btn-ink',b[3]);
+  set('--face-hi',f[0]);set('--face',f[1]);set('--face-lo',f[2]);set('--face-ink',f[3]);
+  set('--pill-hi',pl[0]);set('--pill',pl[1]);set('--pill-lo',pl[2]);
+  set('--bezel',s.bezel||'#08080c');set('--label',s.label||'rgba(20,10,40,.62)');document.body.classList.toggle('clear',!!s.clear);
+  if(s.clear){const c=s.clear,tint=`linear-gradient(180deg,${hexA(s.shell[0],.6)},${hexA(s.shell[1],.46)} 45%,${hexA(s.shell[2],.58)})`;
+    set('--pcb',pcbURI(c));set('--pcb-board',c.board);set('--pcb-gap',c.gap);set('--sheen',SHEEN);set('--tint',tint);
+    set('--fx',`${SHEEN},${tint},${pcbURI(c)} 0 0/220px 220px,linear-gradient(${c.board},${c.board})`)}
+  else set('--fx','linear-gradient(transparent,transparent)');
+  $('skinName').textContent='· '+s.name;
+  document.querySelectorAll('.swatch').forEach(el=>el.setAttribute('aria-pressed',el.dataset.skin===s.id))}
+SKINS.forEach(s=>{const el=document.createElement('button');el.className='swatch';el.dataset.skin=s.id;
+  const dot=s.face?`radial-gradient(circle at 66% 64%,${s.face[1]} 0 20%,transparent 22%),`:'',shine=s.clear?'linear-gradient(135deg,rgba(255,255,255,.6) 0 20%,transparent 21%),':'';
+  el.style.background=`${shine}${dot}linear-gradient(180deg,${s.shell[0]},${s.shell[2]})`;el.setAttribute('aria-label',s.name);el.title=s.name;
+  el.onclick=()=>{P.skin=s.id;save();applySkin()};$('swatches').append(el)});
+const hb=$('hapticBtn');hb.setAttribute('aria-pressed',P.haptic);hb.onclick=()=>{P.haptic=!P.haptic;hb.setAttribute('aria-pressed',P.haptic);save()};
+const buzz=()=>{if(P.haptic&&navigator.vibrate)try{navigator.vibrate(9)}catch(_){}};
+
+// ---- menu sheet
+function openSheet(){sheet.hidden=false;sheet.scrollTop=0;$('resumeBtn').hidden=$('libBtn').hidden=!current;renderCtlMap();if(current)send({type:'pause',paused:true});(current?$('resumeBtn'):$('modeConsole')).focus({preventScroll:true})}
+function closeSheet(resume=true){if(sheet.hidden)return;sheet.hidden=true;if(current&&resume)send({type:'pause',paused:false});if(current)frame.focus?.();else document.querySelector('.cart.sel')?.focus({preventScroll:true})}
+$('menuBtn').onclick=$('fsBtn').onclick=()=>{if($('auth').hidden)sheet.hidden?openSheet():closeSheet()};
+$('resumeBtn').onclick=()=>closeSheet();$('libBtn').onclick=()=>showLibrary();
+sheet.addEventListener('pointerdown',e=>{if(e.target===sheet)closeSheet()});
+
+// ---- one place every press goes: menu sheet, library or game
+const held=new Set();
+function sheetNav(id){const els=[...sheet.querySelectorAll('button,a[href]')].filter(b=>!b.hidden&&b.getClientRects().length);let i=els.indexOf(document.activeElement);
+  if(id==='up'||id==='left')els[Math.max(0,i-1)]?.focus();else if(id==='down'||id==='right')els[Math.min(els.length-1,i+1)]?.focus();
+  else if(id==='a')document.activeElement?.click();else if(id==='b'||id==='start')closeSheet()}
+function press(id){if(held.has(id))return;held.add(id);buzz();vis(id,true);
+  if(!$('auth').hidden)return;
+  if(!sheet.hidden){sheetNav(id);return}
+  if(!current){if(['up','down','left','right'].includes(id))shelfMove(id);else if(id==='a')insertCart();else if(id==='start')openSheet();return}
+  send({type:'button',id,down:true})}
+function release(id){if(!held.delete(id))return;vis(id,false);if(current&&sheet.hidden)send({type:'button',id,down:false})}
+function releaseAll(){for(const id of[...held])release(id)}
+function vis(id,on){if(['up','down','left','right'].includes(id)){const d=$('dpad');on?d.setAttribute('data-'+id,''):d.removeAttribute('data-'+id);return}
+  document.querySelectorAll(`[data-btn="${id}"]`).forEach(b=>b.classList.toggle('is-down',on))}
+
+// buttons: press on touch-down, release on lift (multi-touch friendly)
+document.querySelectorAll('[data-btn]').forEach(b=>{const id=b.dataset.btn;
+  b.addEventListener('pointerdown',e=>{e.preventDefault();try{b.setPointerCapture(e.pointerId)}catch(_){}press(id)});
+  for(const ev of['pointerup','pointercancel','lostpointercapture'])b.addEventListener(ev,()=>release(id));
+  b.addEventListener('contextmenu',e=>e.preventDefault());b.addEventListener('click',e=>e.preventDefault())});
+// d-pad: 8 directions from where the thumb sits, slide to change direction
+const dpad=$('dpad');let dpId=null;
+function dpadAt(e){const r=dpad.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5,want=new Set();
+  if(Math.hypot(x,y)>.1){const a=Math.atan2(y,x),s=Math.round(a/(Math.PI/4));const m={0:['right'],1:['right','down'],2:['down'],3:['left','down'],4:['left'],'-4':['left'],'-3':['left','up'],'-2':['up'],'-1':['right','up']};(m[s]||[]).forEach(d=>want.add(d))}
+  for(const d of['up','down','left','right'])want.has(d)?press(d):release(d)}
+dpad.addEventListener('pointerdown',e=>{e.preventDefault();dpId=e.pointerId;try{dpad.setPointerCapture(e.pointerId)}catch(_){}dpadAt(e)});
+dpad.addEventListener('pointermove',e=>{if(e.pointerId===dpId)dpadAt(e)});
+for(const ev of['pointerup','pointercancel','lostpointercapture'])dpad.addEventListener(ev,e=>{if(e.pointerId!==dpId)return;dpId=null;['up','down','left','right'].forEach(release)});
+
+// keyboard (when the player has focus; when the game screen has focus, the game reads keys itself)
+const KEYS={ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down',ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',KeyX:'a',Space:'a',KeyZ:'b',KeyQ:'l',KeyC:'r',ShiftLeft:'select',ShiftRight:'select',Enter:'start'};
+const typing=e=>/^(INPUT|TEXTAREA|SELECT)$/.test(e.target&&e.target.tagName||'');
+addEventListener('keydown',e=>{if(typing(e)||!$('auth').hidden)return;if(e.code==='Escape'){e.preventDefault();sheet.hidden?openSheet():closeSheet();return}
+  const id=KEYS[e.code];if(!id||e.metaKey||e.ctrlKey)return;if(!sheet.hidden&&(e.code==='Enter'||e.code==='Space')&&document.activeElement?.tagName==='BUTTON')return;e.preventDefault();if(!e.repeat)press(id)});
+addEventListener('keyup',e=>{if(typing(e))return;const id=KEYS[e.code];if(id)release(id)});
+addEventListener('blur',releaseAll);
+
+// game controllers (standard mapping): south=A, east=B, bumpers L/R, back/start, d-pad or left stick
+const GPM={0:'a',1:'b',4:'l',5:'r',8:'select',9:'start',12:'up',13:'down',14:'left',15:'right'};const padHeld=new Set();
+function pollPads(){const pads=navigator.getGamepads?navigator.getGamepads():[];const want=new Set();
+  for(const g of pads){if(!g)continue;for(const k in GPM)if(g.buttons[k]?.pressed)want.add(GPM[k]);const x=g.axes[0]||0,y=g.axes[1]||0;if(x<-.5)want.add('left');if(x>.5)want.add('right');if(y<-.5)want.add('up');if(y>.5)want.add('down');
+    if(g.buttons[16]?.pressed&&!padHeld.has('home')){want.add('home')}}
+  for(const id of want)if(!padHeld.has(id)){padHeld.add(id);if(id==='home'){if($('auth').hidden)sheet.hidden?openSheet():closeSheet()}else press(id)}
+  for(const id of[...padHeld])if(!want.has(id)){padHeld.delete(id);if(id!=='home')release(id)}
+  requestAnimationFrame(pollPads)}
+requestAnimationFrame(pollPads);
+
+// ---- Web Apps: shared sign-in, membership and saving (see WebApps_integration_for_Pocket_Arcade.md)
+const APP='arcade';
+const WA=window.WebApps||null;            // null when the shared scripts didn't load (for example a quick preview): play as a guest
+let ME=null,MEMBER=null;
+const esc=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const authEl=$('auth');
+function showShelf(){authEl.hidden=true;authEl.innerHTML='';lib.hidden=!!current;
+  const last=GAMES.find(g=>g.id===P.game);if(last){libSel=GAMES.indexOf(last)}markSel();if(!current)document.querySelector('.cart.sel')?.focus({preventScroll:true})}
+// A1: sign in / create an account (same accounts as every Web Apps app)
+let SI={mode:'in',err:''};
+async function showSignIn(){
+  if(current)showLibrary();closeSheet(false);lib.hidden=true;authEl.hidden=false;
+  const allow=await WA.signupsAllowed();if(SI.mode==='up'&&!allow)SI.mode='in';
+  authEl.innerHTML=`<div class="auth-in"><div class="auth-mark">POCKET<i>·</i>ARCADE</div>
+    <h1>Sign in to play</h1><p>Use your Web Apps account. The same username and password work in every app on the site.</p>
+    ${SI.mode==='in'?`<form id="siForm"><h2>Sign in</h2>
+      <label class="fld">Username<input id="siU" autocomplete="username" autocapitalize="none" spellcheck="false" required></label>
+      <label class="fld">Password<input id="siP" type="password" autocomplete="current-password" required></label>
+      <p class="err" id="siErr">${esc(SI.err)}</p><button class="btn-main" type="submit">Sign in</button>
+      ${allow?'<button class="linkbtn" type="button" id="toUp">New here? Create an account</button>':'<p class="note">New accounts are made by an admin. Ask them to set one up for you.</p>'}</form>`
+    :`<form id="suForm"><h2>Create an account</h2>
+      <label class="fld">Your name<input id="suN" maxlength="40" autocomplete="name" required></label>
+      <label class="fld">Username<input id="suU" maxlength="20" autocomplete="username" autocapitalize="none" spellcheck="false" required></label>
+      <label class="fld">Password <em>6 or more characters</em><input id="suP" type="password" autocomplete="new-password" required></label>
+      <label class="fld">Confirm password<input id="suP2" type="password" autocomplete="new-password" required></label>
+      <p class="err" id="siErr">${esc(SI.err)}</p><button class="btn-main" type="submit">Create account</button>
+      <button class="linkbtn" type="button" id="toIn">Already have an account? Sign in</button></form>`}
+    ${WA.mode==='local'?'<p class="note">Accounts are saved in this browser until the site is connected to Supabase.</p>':''}
+    <a class="linkbtn" href="../">Back to Web Apps</a></div>`;
+  const busy=async(f,fn)=>{const b=f.querySelector('.btn-main');b.disabled=true;try{await fn()}finally{if(b.isConnected)b.disabled=false}};
+  const err=t=>{const e=$('siErr');if(e)e.textContent=t};
+  $('toUp')?.addEventListener('click',()=>{SI={mode:'up',err:''};showSignIn()});
+  $('toIn')?.addEventListener('click',()=>{SI={mode:'in',err:''};showSignIn()});
+  $('siForm')?.addEventListener('submit',e=>{e.preventDefault();busy(e.target,async()=>{try{await WA.signIn($('siU').value,$('siP').value);SI={mode:'in',err:''}}catch(x){err(x.message);$('siP').value='';$('siP').focus()}})});
+  $('suForm')?.addEventListener('submit',e=>{e.preventDefault();busy(e.target,async()=>{
+    if($('suP').value!==$('suP2').value){err("The two passwords don't match.");return}
+    try{await WA.signUp({display_name:$('suN').value,username:$('suU').value,password:$('suP').value});SI={mode:'in',err:''}}catch(x){err(x.message)}})});
+  ($('siU')||$('suN'))?.focus()}
+function showNotice(title,text){if(current)showLibrary();lib.hidden=true;authEl.hidden=false;
+  authEl.innerHTML=`<div class="auth-in"><div class="auth-mark">POCKET<i>·</i>ARCADE</div><h1>${esc(title)}</h1><p>${esc(text)}</p>
+    <button class="linkbtn" type="button" id="noticeOut">Sign out</button><a class="linkbtn" href="../">Back to Web Apps</a></div>`;
+  $('noticeOut').onclick=()=>WA.signOut()}
+// A2: who's signed in, shown at the top of the Arcade panel
+function renderAccount(){const on=!!ME;$('acctRow').hidden=!on;if(!on)return;
+  $('acctAv').innerHTML=WA.avatarHTML(ME);$('acctName').textContent=ME.display_name||ME.username;$('acctUser').textContent='@'+ME.username;
+  $('syncHint').textContent=WA.mode==='local'?'Your arcade settings are saved in this browser until the site is connected to Supabase.':'Your arcade settings are saved to your account, so they follow you to any device.'}
+$('signOutBtn').onclick=async()=>{closeSheet(false);await flushSync();await WA.signOut()};
+// Saving: one row per person in arcade_state; this browser keeps a copy so it opens instantly and works offline
+const cacheKey=()=>'arcade.state.'+ME.id;
+let syncT=0,dirty=false;
+function stateNow(){return{v:1,prefs:{mode:P.mode,skin:P.skin,haptic:P.haptic,game:P.game}}}
+function queueSync(){if(!ME)return;try{localStorage.setItem(cacheKey(),JSON.stringify(stateNow()))}catch(_){}dirty=true;clearTimeout(syncT);syncT=setTimeout(flushSync,800)}
+async function flushSync(){clearTimeout(syncT);if(!ME||!dirty||!WA||WA.mode!=='supabase'||!WA.client)return;dirty=false;
+  try{const r=await WA.client.from('arcade_state').upsert({user_id:ME.id,state:stateNow(),updated_at:new Date().toISOString()});if(r.error)throw r.error}
+  catch(e){dirty=true;console.warn('Pocket Arcade: settings not saved to the account yet',e&&e.message)}}
+addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flushSync()});
+addEventListener('pagehide',()=>{flushSync()});
+async function loadState(){let st=null;
+  try{st=JSON.parse(localStorage.getItem(cacheKey())||'null')}catch(_){}
+  if(WA.mode==='supabase'&&WA.client){try{const r=await WA.client.from('arcade_state').select('state').eq('user_id',ME.id).maybeSingle();if(r.error)throw r.error;if(r.data&&r.data.state)st=r.data.state}
+    catch(e){console.warn('Pocket Arcade: using this browser\'s copy of your settings',e&&e.message)}}
+  if(st&&st.prefs){Object.assign(P,PREF_DEFAULT,st.prefs);fixPrefs()}
+  try{localStorage.setItem('pocket-prefs',JSON.stringify(P))}catch(_){}
+  applySkin();hb.setAttribute('aria-pressed',P.haptic);applyMode()}
+async function startSession(){
+  const me=WA.me;
+  if(!me){ME=null;MEMBER=null;renderAccount();return showSignIn()}
+  ME=me;
+  let app=(await WA.apps()).find(a=>a.slug===APP);
+  if(app&&!app.status){await WA.join(APP);app=(await WA.apps()).find(a=>a.slug===APP)}   // open app: join automatically the first time
+  if(app&&app.status==='pending'){MEMBER=null;renderAccount();return showNotice('Waiting for an admin','You asked to join Pocket Arcade. An admin needs to let you in first.')}
+  // until Pocket Arcade is registered in the apps list, signed-in people can still play
+  MEMBER=app&&app.status==='active'?{role:app.role}:{role:'member'};
+  await loadState();renderAccount();showShelf()}
+// ---- boot
+renderLib();applySkin();applyCaps();renderCtlMap();
+const last=GAMES.find(g=>g.id===P.game);if(last){libSel=GAMES.indexOf(last);markSel()}
+if(!WA){document.querySelector('.cart[data-i]')?.focus({preventScroll:true})}
+else{lib.hidden=true;loading.hidden=false;
+  (async()=>{try{await WA.ready;await startSession()}catch(e){console.error(e);showNotice("Couldn't start",e.message||'Something went wrong. Reload the page to try again.')}finally{loading.hidden=true}
+    let lastId=WA.me&&WA.me.id;
+    WA.onChange(async me=>{const id=me&&me.id;if(id===lastId){if(me){ME=me;renderAccount()}return}lastId=id;await startSession()})})()}
+})();
+</script>
+
+</body></html>
