@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="GIFbox">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#141118">
+<title>GIFbox</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#141118; --s1:#1D1923; --s2:#26212E; --s3:#312A3B; --line:#352E40; --line2:#463D54;
+  --ink:#F6F2FA; --muted:#AFA4BD; --dim:#7D7290;
+  --pink:#FF5FA2; --violet:#8D6BFF; --sun:#FFD23F; --mint:#3FD9A6; --red:#FF6B6B;
+  --acc:var(--pink); --acc-ink:#2A0717;
+  --display:"Fredoka","Avenir Next Rounded","Trebuchet MS",sans-serif;
+  --body:"Nunito Sans","Segoe UI","Helvetica Neue",Arial,sans-serif;
+  --r:18px; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{background:var(--bg);-webkit-text-size-adjust:100%}
+body{margin:0;min-height:100vh;color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;-webkit-tap-highlight-color:transparent;
+  background:radial-gradient(800px 420px at 100% -10%,rgba(141,107,255,.16),transparent 60%),radial-gradient(700px 380px at -10% 0%,rgba(255,95,162,.12),transparent 60%),var(--bg);
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:calc(80px + env(safe-area-inset-bottom,0px))}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0}
+input,textarea,select{font:inherit;color:inherit}
+a{color:inherit}
+[hidden]{display:none!important}
+:focus-visible{outline:2px solid var(--sun);outline-offset:3px;border-radius:8px}
+.wrap{max-width:1100px;margin:0 auto;padding:0 14px}
+
+.appbar{position:sticky;top:0;z-index:30;background:rgba(20,17,24,.84);backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--line)}
+.appbar .wrap{display:flex;align-items:center;gap:10px;height:56px}
+.brand{display:flex;align-items:center;gap:9px;text-decoration:none;font-family:var(--display);font-weight:700;font-size:23px;letter-spacing:.01em}
+.brand svg{width:32px;height:32px}
+.me{margin-left:auto;display:flex;text-decoration:none}
+.me .signin{border:1px solid var(--line2);background:var(--s2);border-radius:999px;padding:7px 14px;font-weight:700;font-size:14px}
+.wa-av{width:34px;height:34px;border-radius:50%;display:inline-grid;place-items:center;background:var(--h,#556);color:#1a1020;font-weight:800;overflow:hidden;flex:none}
+.wa-av img{width:100%;height:100%;object-fit:cover}.wa-av.xl{width:62px;height:62px;font-size:26px}.wa-av svg{width:70%;fill:var(--muted)}
+
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;background:rgba(20,17,24,.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.tabs .in{max-width:480px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr 1fr;align-items:center}
+.tabs a{display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 0 8px;text-decoration:none;color:var(--dim);font-size:11.5px;font-weight:800;letter-spacing:.02em}
+.tabs a svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tabs a[aria-current="page"]{color:var(--ink)}
+.tabs a[aria-current="page"] svg{stroke:var(--pink)}
+.tabs a.add .plus{width:50px;height:38px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,var(--pink),var(--violet));box-shadow:0 6px 18px rgba(255,95,162,.35)}
+.tabs a.add .plus svg{stroke:#fff;stroke-width:2.6}
+
+.head{display:flex;align-items:center;gap:10px;padding:18px 0 12px}
+.head h1{font-family:var(--display);font-weight:600;font-size:28px;line-height:1.1;margin:0;flex:1;min-width:0;overflow-wrap:anywhere}
+.head .sub{display:block;font-family:var(--body);font-size:13.5px;font-weight:600;color:var(--muted);margin-top:3px}
+.back{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--s1);border:1px solid var(--line);flex:none;text-decoration:none}
+.back svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:14px;font-weight:800;background:var(--s2);border:1px solid var(--line2);white-space:nowrap;text-decoration:none}
+.btn.pri{background:linear-gradient(135deg,var(--pink),#FF7E8F);color:#fff;border-color:transparent}
+.btn.danger{color:#FFB0B0;border-color:rgba(255,107,107,.45);background:rgba(255,107,107,.08)}
+.btn.armed{background:var(--red);color:#fff;border-color:transparent}
+.btn.sm{min-height:36px;padding:0 13px;font-size:14px;border-radius:11px}
+.btn.wide{width:100%}.btn.icon{width:44px;padding:0}.btn.sm.icon{width:36px}
+.btn svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.btn:disabled{opacity:.45;cursor:default}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.muted{color:var(--muted)}
+.card{background:var(--s1);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.empty{text-align:center;padding:34px 18px;color:var(--muted)}
+.empty b{display:block;font-family:var(--display);font-size:22px;font-weight:600;color:var(--ink);margin-bottom:6px}
+.sect{font-family:var(--display);font-size:16px;font-weight:600;color:var(--muted);margin:22px 0 10px}
+
+/* search + chips */
+.searchbar{position:sticky;top:56px;z-index:20;padding:10px 0 8px;background:linear-gradient(var(--bg) 80%,rgba(20,17,24,0))}
+.search{display:flex;align-items:center;gap:8px;background:var(--s1);border:1px solid var(--line2);border-radius:14px;padding:0 12px;height:46px}
+.search svg{width:19px;height:19px;fill:none;stroke:var(--muted);stroke-width:2.2;stroke-linecap:round;flex:none}
+.search input{flex:1;min-width:0;background:none;border:0;outline:0;font-size:16px;height:100%}
+.search .x{width:28px;height:28px;border-radius:50%;background:var(--s3);display:grid;place-items:center;color:var(--muted);font-size:15px;font-weight:800}
+.chips{display:flex;gap:7px;overflow-x:auto;padding:8px 0 2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 13px;border-radius:999px;background:var(--s1);border:1px solid var(--line2);font-weight:700;font-size:13.5px;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--ink);color:#1a1320;border-color:transparent}
+.chip.tag{color:var(--muted)}.chip.tag[aria-pressed="true"]{color:#1a1320}
+.chip small{font-weight:700;opacity:.7}
+.count{font-size:13px;color:var(--muted);font-weight:700;margin:4px 2px 10px}
+
+/* grid of gifs */
+.gifs{columns:2 150px;column-gap:8px}
+@media (min-width:640px){.gifs{columns:3 180px}}
+@media (min-width:980px){.gifs{columns:5 180px}}
+.g{display:block;width:100%;margin:0 0 8px;break-inside:avoid;border-radius:14px;overflow:hidden;position:relative;background:var(--s2);border:0;padding:0}
+.g img{display:block;width:100%;height:auto;min-height:60px}
+.g .badge{position:absolute;left:7px;top:7px;font-size:10.5px;font-weight:800;letter-spacing:.04em;padding:2px 7px;border-radius:7px;background:rgba(20,17,24,.78);color:#fff;text-transform:uppercase}
+.g .badge.fam{color:var(--sun)}
+.g .sel{position:absolute;right:7px;top:7px;width:26px;height:26px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.3)}
+.g.on .sel{background:var(--pink);border-color:#fff}
+.g.on .sel::after{content:"";position:absolute;left:7px;top:3px;width:6px;height:11px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:rotate(45deg)}
+
+/* collections */
+.cols{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.col{display:block;text-decoration:none;background:var(--s1);border:1px solid var(--line);border-radius:18px;overflow:hidden;text-align:left;width:100%;padding:0}
+.col .cover{aspect-ratio:1.25;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:2px;background:var(--s2)}
+.col .cover img{width:100%;height:100%;object-fit:cover;display:block}
+.col .cover.one{grid-template-columns:1fr;grid-template-rows:1fr}
+.col .cover .em{grid-column:1/-1;grid-row:1/-1;display:grid;place-items:center;font-size:44px}
+.col .cover .em.ltr{font-family:var(--display);font-weight:600;color:var(--dim);font-size:48px}
+.col .t{padding:10px 12px 12px}
+.col b{display:block;font-family:var(--display);font-weight:600;font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.col span{font-size:12.5px;color:var(--muted);font-weight:700}
+.col.new{display:grid;place-items:center;min-height:180px;border-style:dashed;border-color:var(--line2);color:var(--muted);font-weight:800}
+.col.new i{font-style:normal;display:block;font-size:34px;text-align:center;color:var(--pink)}
+
+/* add */
+.drop{border:2px dashed var(--line2);border-radius:22px;background:rgba(255,95,162,.04);padding:22px 16px;text-align:center;outline:none;min-height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:text}
+.drop:focus{border-color:var(--pink);background:rgba(255,95,162,.08)}
+.drop b{font-family:var(--display);font-size:20px;font-weight:600}
+.drop span{color:var(--muted);font-size:14px;max-width:34ch}
+.drop img{display:none}
+.ways{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.linkrow{display:flex;gap:8px;margin-top:10px}
+.linkrow input{flex:1;min-width:0;background:var(--s1);border:1px solid var(--line2);border-radius:14px;padding:0 12px;height:44px;font-size:16px}
+.pend{display:grid;grid-template-columns:96px minmax(0,1fr);gap:12px;padding:12px;background:var(--s1);border:1px solid var(--line);border-radius:18px;margin-top:10px}
+.pend .pv{width:96px;border-radius:12px;overflow:hidden;background:var(--s2);align-self:start}
+.pend .pv img{width:100%;display:block}
+.pend .x{float:right;width:30px;height:30px;border-radius:50%;background:var(--s3);font-weight:800;color:var(--muted)}
+.pend .dup{color:var(--sun);font-weight:700;font-size:13px}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;font-size:12.5px;font-weight:800;color:var(--muted);letter-spacing:.02em}
+.field input,.field select{background:var(--bg);border:1px solid var(--line2);border-radius:12px;padding:10px 12px;font-size:16px;color:var(--ink);font-weight:600;letter-spacing:0}
+.tagbox{display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:var(--bg);border:1px solid var(--line2);border-radius:12px;padding:6px}
+.tagbox input{flex:1;min-width:90px;border:0!important;background:none!important;padding:5px 4px!important;outline:0}
+.tg{display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 6px 0 10px;border-radius:999px;background:rgba(141,107,255,.2);color:#CDBFFF;font-weight:800;font-size:13px}
+.tg button{width:20px;height:20px;border-radius:50%;font-size:12px;line-height:1;color:#CDBFFF}
+.sugg{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.sugg button{height:28px;padding:0 10px;border-radius:999px;border:1px dashed var(--line2);color:var(--muted);font-weight:700;font-size:13px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{padding:8px 12px;border-radius:11px;background:var(--bg);border:1px solid var(--line2);font-weight:800;font-size:14px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:#1a1320;border-color:transparent}
+.savebar{position:sticky;bottom:calc(84px + env(safe-area-inset-bottom,0px));margin-top:14px;z-index:5}
+
+/* viewer + sheets */
+.sheetwrap{position:fixed;inset:0;z-index:60}
+.scrim{position:absolute;inset:0;background:rgba(6,3,10,.66);opacity:0;transition:opacity .2s}
+.sheet{position:absolute;left:0;right:0;bottom:0;max-height:92vh;overflow:auto;background:var(--s1);border-top:1px solid var(--line2);border-radius:24px 24px 0 0;
+  padding:10px 16px calc(22px + env(safe-area-inset-bottom,0px));transform:translateY(100%);transition:transform .24s cubic-bezier(.3,.7,.2,1);max-width:640px;margin:0 auto}
+.sheetwrap.on .scrim{opacity:1}.sheetwrap.on .sheet{transform:none}
+.sheet .grab{width:40px;height:5px;border-radius:3px;background:var(--line2);margin:0 auto 12px}
+.sheet h2{font-family:var(--display);font-weight:600;font-size:23px;margin:0 0 4px}
+.sheet p.lead{margin:0 0 14px;color:var(--muted);font-size:14px}
+.big{border-radius:16px;overflow:hidden;background:#000;display:grid;place-items:center;max-height:52vh}
+.big img{max-width:100%;max-height:52vh;display:block}
+.vmeta{display:flex;align-items:center;gap:8px;margin:12px 0 4px}
+.vmeta b{flex:1;font-family:var(--display);font-weight:600;font-size:19px;overflow-wrap:anywhere}
+.pill{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:3px 8px;border-radius:7px;background:var(--s3);color:var(--muted)}
+.pill.fam{background:rgba(255,210,63,.15);color:var(--sun)}
+.acts{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;margin:10px 0 4px}
+.acts .btn{min-height:50px}
+.colpick{display:flex;flex-wrap:wrap;gap:7px}
+.colpick button{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 12px;border-radius:999px;background:var(--bg);border:1px solid var(--line2);font-weight:800;font-size:14px}
+.colpick button[aria-pressed="true"]{background:rgba(255,95,162,.18);border-color:var(--pink);color:#FFC2DB}
+.colpick button[aria-pressed="true"]::before{content:"✓"}
+.pick{display:flex;flex-direction:column;gap:6px;margin:10px 0}
+.pick button{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:14px;background:var(--bg);border:1px solid var(--line);text-align:left}
+.pick button .t{flex:1}.pick button .t b{display:block}.pick button .t span{font-size:12.5px;color:var(--muted)}
+.emojis{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.emojis button{width:42px;height:42px;border-radius:12px;background:var(--bg);border:1px solid var(--line);font-size:22px}
+.emojis button[aria-pressed="true"]{border-color:var(--pink);background:rgba(255,95,162,.15)}
+.err{color:#FF9C9C;font-size:13.5px;min-height:18px;margin:0 0 8px}
+.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);opacity:0;z-index:80;background:var(--ink);color:#1a1320;font-weight:800;padding:10px 16px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.45);transition:.2s;pointer-events:none;max-width:90vw;text-align:center}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.selbar{position:fixed;left:0;right:0;bottom:calc(70px + env(safe-area-inset-bottom,0px));z-index:31;display:flex;justify-content:center;padding:0 14px}
+.selbar .in{display:flex;gap:8px;align-items:center;background:var(--s2);border:1px solid var(--line2);border-radius:16px;padding:8px 8px 8px 14px;box-shadow:0 10px 30px rgba(0,0,0,.4);font-weight:800}
+.authcard{max-width:420px;margin:0 auto 40px}
+.authcard h2{font-family:var(--display);margin:0 0 14px}
+.linkbtn{display:block;margin:14px auto 0;color:var(--pink);font-weight:800}
+.hero{padding:30px 0 18px;text-align:center}
+.hero h1{font-family:var(--display);font-size:clamp(34px,8vw,52px);margin:0;line-height:1.05}
+.hero h1 em{font-style:normal;background:linear-gradient(90deg,var(--pink),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{color:var(--muted);max-width:44ch;margin:10px auto 0}
+.loading{padding:60px 0;text-align:center;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* iPhone zooms into any text box under 16px; keep them all at 16px so it doesn't */
+input:not([type=checkbox]):not([type=radio]):not([type=range]),select,textarea{font-size:16px}
+</style>
+</head>
+<body>
+<header class="appbar"><div class="wrap">
+  <a class="brand" href="#/" aria-label="GIFbox home"><svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="jg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF5FA2"/><stop offset="1" stop-color="#8D6BFF"/></linearGradient></defs>
+    <path d="M4 11l12-5 12 5v13.5L16 30 4 24.5z" fill="url(#jg)"/><path d="M4 11l12 5 12-5M16 16v14" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="1.4" stroke-linejoin="round"/>
+    <path d="M4 11l-2.5 4.5L13.5 21 16 16zM28 11l2.5 4.5L18.5 21 16 16z" fill="#FFD23F"/></svg>GIFbox</a>
+  <a class="me" id="navMe" href="#/me" aria-label="Your account"></a>
+</div></header>
+<main id="app"><div class="wrap"><p class="loading">Opening your GIFbox…</p></div></main>
+<nav class="tabs" id="tabs" aria-label="Sections" hidden><div class="in">
+  <a href="#/" data-tab="lib"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7.5" height="9" rx="2"/><rect x="13.5" y="3" width="7.5" height="5.5" rx="2"/><rect x="3" y="15" width="7.5" height="6" rx="2"/><rect x="13.5" y="11.5" width="7.5" height="9.5" rx="2"/></svg>GIFs</a>
+  <a href="#/add" data-tab="add" class="add" aria-label="Add GIFs"><span class="plus"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span></a>
+  <a href="#/collections" data-tab="cols"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M8 13l2.5 2.5L16 10"/></svg>Collections</a>
+</div></nav>
+
+<script src="../shared/config.js"></script>
+<script src="../shared/vendor/supabase.js"></script>
+<script src="../shared/account.js"></script>
+<script>
+'use strict';
+const APP = 'gifbox';
+const BUCKET = 'gifbox';
+const MAX_BYTES = 15 * 1024 * 1024;
+const WA = window.WebApps;
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : 'x' + Date.now().toString(36) + Math.random().toString(36).slice(2));
+const norm = s => String(s || '').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').trim();
+const cleanTag = s => norm(s).replace(/^#/, '').replace(/[^a-z0-9 &'-]/g, '').replace(/\s+/g, ' ').trim().slice(0, 24);
+const BACK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>';
+const I = {
+  send: '<svg viewBox="0 0 24 24"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg>',
+  copy: '<svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 00-1-1H5a1 1 0 00-1 1v10a1 1 0 001 1h3"/></svg>',
+  save: '<svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>',
+  trash: '<svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>',
+  paste: '<svg viewBox="0 0 24 24"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3h6v1M9 11h6M9 15h4"/></svg>',
+  photo: '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg>',
+  edit: '<svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>',
+  search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>',
+  up: '<svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>',
+};
+const EMOJIS = ['😂', '😭', '😍', '😡', '🙄', '😱', '🥳', '👍', '🙏', '❤️', '🔥', '💀', '🎬', '📺', '🌟', '⚔️', '🦸', '🐶', '🏈', '⚽', '🎮', '🎄', '🎂', '✨'];
+
+/* ================================================================== data
+   Two backends with the same shape. GIF files live in Supabase Storage (bucket "gifbox"):
+   library/<id>.gif for the Library, <user id>/<id>.gif for each person's own.
+   Collections are rows of their own, so the owner can share one with other people,
+   who then see its GIFs and can add to it. */
+function remoteData() {
+  const sb = WA.client;
+  const ok = r => { if (r.error) throw r.error; return r.data; };
+  const sign = async paths => { const urls = {}; for (let i = 0; i < paths.length; i += 200) {
+    const sig = ok(await sb.storage.from(BUCKET).createSignedUrls(paths.slice(i, i + 200), 60 * 60 * 12)); sig.forEach(x => { if (x.signedUrl) urls[x.path] = x.signedUrl; }); } return urls; };
+  return {
+    async list() {
+      const [g, c] = await Promise.all([
+        sb.from('gifbox_gifs').select('*').order('created_at', { ascending: false }),
+        sb.from('gifbox_collections').select('id,owner,name,emoji,created_at,gifbox_collection_members(user_id),gifbox_collection_items(gif_id,added_by,added_at)').order('created_at')]);
+      const rows = ok(g), urls = await sign(rows.map(r => r.path));
+      const gifs = rows.map(r => ({ ...r, tags: r.tags || [], url: urls[r.path] || '' }));
+      const cols = ok(c).map(r => ({ id: r.id, owner: r.owner, name: r.name, emoji: r.emoji, created_at: r.created_at,
+        members: (r.gifbox_collection_members || []).map(m => m.user_id),
+        items: (r.gifbox_collection_items || []).sort((a, b) => b.added_at.localeCompare(a.added_at)).map(i => ({ gif_id: i.gif_id, added_by: i.added_by })) }));
+      return { gifs, cols };
+    },
+    async add(g, blob) {
+      const path = (g.owner ? g.owner : 'library') + '/' + g.id + '.' + extFor(blob.type);
+      ok(await sb.storage.from(BUCKET).upload(path, blob, { contentType: blob.type, upsert: false, cacheControl: '31536000' }));
+      const row = { id: g.id, owner: g.owner, path, w: g.w, h: g.h, bytes: g.bytes, hash: g.hash, title: g.title, tags: g.tags, type: blob.type, created_by: ME.id };
+      try { ok(await sb.from('gifbox_gifs').insert(row)); } catch (e) { await sb.storage.from(BUCKET).remove([path]); throw e; }
+      const s = ok(await sb.storage.from(BUCKET).createSignedUrl(path, 60 * 60 * 12));
+      return { ...row, created_at: new Date().toISOString(), url: s.signedUrl };
+    },
+    async update(g, fields) { ok(await sb.from('gifbox_gifs').update(fields).eq('id', g.id)); },
+    async toLibrary(g) {
+      const path = 'library/' + g.path.split('/').pop();
+      ok(await sb.storage.from(BUCKET).move(g.path, path));
+      ok(await sb.from('gifbox_gifs').update({ owner: null, path }).eq('id', g.id));
+      const s = ok(await sb.storage.from(BUCKET).createSignedUrl(path, 60 * 60 * 12));
+      return { path, url: s.signedUrl };
+    },
+    async remove(g) {   // the file first: its access rule needs the row to still exist
+      ok(await sb.storage.from(BUCKET).remove([g.path])); ok(await sb.from('gifbox_gifs').delete().eq('id', g.id)); },
+    async createCol(c) { ok(await sb.from('gifbox_collections').insert({ id: c.id, owner: ME.id, name: c.name, emoji: c.emoji })); },
+    async updateCol(id, f) { ok(await sb.from('gifbox_collections').update(f).eq('id', id)); },
+    async deleteCol(id) { ok(await sb.from('gifbox_collections').delete().eq('id', id)); },
+    async setMembers(id, ids) {
+      const cur = ok(await sb.from('gifbox_collection_members').select('user_id').eq('collection_id', id)).map(r => r.user_id);
+      const drop = cur.filter(x => !ids.includes(x)), add = ids.filter(x => !cur.includes(x));
+      if (drop.length) ok(await sb.from('gifbox_collection_members').delete().eq('collection_id', id).in('user_id', drop));
+      if (add.length) ok(await sb.from('gifbox_collection_members').insert(add.map(u => ({ collection_id: id, user_id: u }))));
+    },
+    async leaveCol(id) { ok(await sb.from('gifbox_collection_members').delete().eq('collection_id', id).eq('user_id', ME.id)); },
+    async addItems(id, gids) { ok(await sb.from('gifbox_collection_items').upsert(gids.map(g => ({ collection_id: id, gif_id: g, added_by: ME.id })), { onConflict: 'collection_id,gif_id', ignoreDuplicates: true })); },
+    async removeItem(id, gid) { ok(await sb.from('gifbox_collection_items').delete().eq('collection_id', id).eq('gif_id', gid)); },
+  };
+}
+/* This browser only (no Supabase settings): files in IndexedDB, collections in localStorage.
+   Same visibility rules as the database, so the preview behaves like the real thing. */
+function localData() {
+  const open = () => new Promise((res, rej) => { const q = indexedDB.open('gifbox-local', 1); q.onupgradeneeded = () => q.result.createObjectStore('gifs', { keyPath: 'id' }); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); });
+  const tx = async (mode, fn) => { const db = await open(); return new Promise((res, rej) => { const t = db.transaction('gifs', mode); const s = t.objectStore('gifs'); const out = fn(s); t.oncomplete = () => res(out && out.result !== undefined ? out.result : out); t.onerror = () => rej(t.error); }); };
+  const urls = new Map();
+  const urlFor = r => { if (!urls.has(r.id)) urls.set(r.id, URL.createObjectURL(r.blob)); return urls.get(r.id); };
+  const LK = 'gifbox.local.cols';
+  const loadC = () => { try { return JSON.parse(localStorage.getItem(LK)) || []; } catch (e) { return []; } };
+  const saveC = c => localStorage.setItem(LK, JSON.stringify(c));
+  const mineC = c => c.owner === ME.id || c.members.includes(ME.id);
+  const editC = fn => { const all = loadC(); fn(all); saveC(all); };
+  return {
+    async list() {
+      const all = await tx('readonly', s => s.getAll());
+      const cols = loadC().filter(mineC);
+      const via = new Set(cols.flatMap(c => c.items.map(i => i.gif_id)));
+      const gifs = all.filter(r => r.owner === null || r.owner === ME.id || via.has(r.id)).sort((a, b) => b.created_at.localeCompare(a.created_at)).map(r => { const { blob, ...m } = r; return { ...m, url: urlFor(r), blob }; });
+      const have = new Set(all.map(r => r.id));
+      cols.forEach(c => c.items = c.items.filter(i => have.has(i.gif_id)));
+      return { gifs, cols: JSON.parse(JSON.stringify(cols)) };
+    },
+    async add(g, blob) { const r = { ...g, type: blob.type, created_by: ME.id, created_at: new Date().toISOString(), blob }; await tx('readwrite', s => s.put(r)); return { ...g, type: blob.type, created_by: ME.id, created_at: r.created_at, url: urlFor(r), blob }; },
+    async update(g, fields) { const r = await tx('readonly', s => s.get(g.id)); Object.assign(r, fields); await tx('readwrite', s => s.put(r)); },
+    async toLibrary(g) { await this.update(g, { owner: null }); return {}; },
+    async remove(g) { await tx('readwrite', s => s.delete(g.id)); editC(all => all.forEach(c => c.items = c.items.filter(i => i.gif_id !== g.id))); },
+    async createCol(c) { editC(all => all.push({ id: c.id, owner: ME.id, name: c.name, emoji: c.emoji, members: [], items: [], created_at: new Date().toISOString() })); },
+    async updateCol(id, f) { editC(all => { const c = all.find(x => x.id === id); if (c && c.owner === ME.id) Object.assign(c, f); }); },
+    async deleteCol(id) { editC(all => { const k = all.findIndex(x => x.id === id && x.owner === ME.id); if (k >= 0) all.splice(k, 1); }); },
+    async setMembers(id, ids) { editC(all => { const c = all.find(x => x.id === id); if (c && c.owner === ME.id) c.members = ids.slice(); }); },
+    async leaveCol(id) { editC(all => { const c = all.find(x => x.id === id); if (c) c.members = c.members.filter(u => u !== ME.id); }); },
+    async addItems(id, gids) { editC(all => { const c = all.find(x => x.id === id); if (!c || !mineC(c)) return; gids.forEach(g => { if (!c.items.some(i => i.gif_id === g)) c.items.unshift({ gif_id: g, added_by: ME.id }); }); }); },
+    async removeItem(id, gid) { editC(all => { const c = all.find(x => x.id === id); if (c) c.items = c.items.filter(i => i.gif_id !== gid); }); },
+  };
+}
+const extFor = t => ({ 'image/gif': 'gif', 'image/webp': 'webp', 'image/png': 'png', 'image/jpeg': 'jpg', 'video/mp4': 'mp4' }[t] || 'gif');
+let DATA = null;
+
+/* ================================================================== state */
+let ME = null, MEMBER = null, GIFS = [], COLS = [], PEOPLE = {}, LOADED = false, LASTLOAD = 0;
+const isAdmin = () => !!ME && (ME.is_admin || (MEMBER && MEMBER.role === 'admin'));
+const canEdit = g => g && (g.owner === ME.id || (g.owner === null && isAdmin()));
+const ownsCol = c => c && c.owner === ME.id;
+const colGifIds = c => c.items.map(i => i.gif_id);
+const inCol = (c, id) => c.items.some(i => i.gif_id === id);
+const canTakeOut = (c, id) => { const it = c.items.find(i => i.gif_id === id); return !!it && (ownsCol(c) || it.added_by === ME.id); };
+const who = id => id === ME.id ? 'You' : (PEOPLE[id] && PEOPLE[id].display_name) || 'Someone';
+const sharedLabel = c => ownsCol(c) ? (c.members.length ? 'Shared with ' + c.members.map(who).join(', ') : 'Only you') : 'From ' + who(c.owner) + (c.members.length > 1 ? ' · with ' + c.members.filter(m => m !== ME.id).map(who).join(', ') : '');
+const gif = id => GIFS.find(g => g.id === id);
+const col = id => COLS.find(c => c.id === id);
+/* run a change against the server; if it fails, say so and reload what's really there */
+async function commit(p, fail = "Couldn't save that. Check your connection.") { try { await p; } catch (e) { toast(fail); await reload(); rerender(); } }
+async function reload() {
+  const [d, ppl] = await Promise.all([DATA.list(), WA.admin.accounts().catch(() => [])]);
+  GIFS = d.gifs; COLS = d.cols; LOADED = true; LASTLOAD = Date.now();
+  PEOPLE = {}; ppl.forEach(p => PEOPLE[p.id] = p);
+}
+/* shared collections change when other people add to them: catch up when the app comes back */
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState !== 'visible' || !ME || Date.now() - LASTLOAD < 15000) return;
+  if ($('.sheetwrap') || VIEW.type === 'add' || SEL) return;
+  try { await reload(); rerender(); } catch (e) {}
+});
+
+async function startSession() {
+  const me = WA.me; LOADED = false;
+  if (!me) { ME = null; MEMBER = null; GIFS = []; COLS = []; renderAvatar(); return; }
+  ME = { id: me.id, name: me.display_name, display_name: me.display_name, username: me.username, avatar: me.avatar, is_admin: !!me.is_admin };
+  DATA = WA.mode === 'supabase' ? remoteData() : localData();
+  try {
+    let app = (await WA.apps()).find(a => a.slug === APP);
+    if (app && !app.status) { await WA.join(APP); app = (await WA.apps()).find(a => a.slug === APP); }
+    MEMBER = app && app.status === 'active' ? { role: app.role } : null;
+  } catch (e) { MEMBER = MEMBER || { role: 'member' }; }
+  try { await reload(); }
+  catch (e) { toast("Couldn't open GIFbox. Check your connection."); GIFS = []; COLS = []; }
+  /* a collection only lists GIFs you can actually see */
+  const have = new Set(GIFS.map(g => g.id));
+  COLS.forEach(c => c.items = c.items.filter(i => have.has(i.gif_id)));
+  renderAvatar();
+}
+
+/* ================================================================== helpers */
+let toastT;
+function toast(m) { let t = $('.toast'); if (!t) { t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); document.body.append(t); }
+  t.textContent = m; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 2400); }
+function armed(btn, fn, label = 'Tap again to delete') {
+  if (btn.classList.contains('armed')) { fn(); return; }
+  const old = btn.innerHTML; btn.classList.add('armed'); btn.textContent = label;
+  setTimeout(() => { if (btn.isConnected) { btn.classList.remove('armed'); btn.innerHTML = old; } }, 3200);
+}
+function sheet(html) {
+  closeSheet(true);
+  const w = document.createElement('div'); w.className = 'sheetwrap';
+  w.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>${html}</div>`;
+  document.body.append(w); requestAnimationFrame(() => requestAnimationFrame(() => w.classList.add('on')));
+  const f = w.querySelector('[autofocus]'); if (f && matchMedia('(pointer:fine)').matches) setTimeout(() => f.focus(), 250);
+  return w;
+}
+function closeSheet(now) { $$('.sheetwrap:not(.closing)').forEach(w => { w.classList.add('closing'); w.classList.remove('on'); setTimeout(() => w.remove(), now ? 0 : 240); }); VIEWING = null; }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+const colsOf = id => COLS.filter(c => inCol(c, id));
+const allTags = () => { const m = new Map(); GIFS.forEach(g => (g.tags || []).forEach(t => m.set(t, (m.get(t) || 0) + 1))); return [...m.entries()].sort((a, b) => b[1] - a[1]).map(x => x[0]); };
+const sizeStr = b => b > 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
+async function sha(blob) { try { const h = await crypto.subtle.digest('SHA-256', await blob.arrayBuffer()); return [...new Uint8Array(h)].slice(0, 16).map(b => b.toString(16).padStart(2, '0')).join(''); } catch (e) { return ''; } }
+function dims(blob) { return new Promise(res => { const u = URL.createObjectURL(blob); const im = new Image(); im.onload = () => { res({ w: im.naturalWidth, h: im.naturalHeight, url: u }); }; im.onerror = () => res({ w: 0, h: 0, url: u }); im.src = u; }); }
+const blobCache = new Map();
+async function blobOf(g) { if (g.blob) return g.blob; if (blobCache.has(g.id)) return blobCache.get(g.id); const b = await (await fetch(g.url)).blob(); blobCache.set(g.id, b); return b; }
+const fileName = g => (norm(g.title).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'gif') + '.' + extFor(g.type || 'image/gif');
+
+/* ================================================================== routing */
+let VIEW = { type: 'lib' };
+function parse() { const h = location.hash.replace(/^#\/?/, ''); const [type, id] = h.split('/'); return { type: type || 'lib', id }; }
+function route() {
+  const v = ME ? parse() : { type: 'signin' }; VIEW = v; closeSheet(true); renderAvatar();
+  const tab = { lib: 'lib', add: 'add', collections: 'cols', c: 'cols' }[v.type] || '';
+  $$('#tabs a').forEach(a => { if (a.dataset.tab === tab) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+  $('#tabs').hidden = !ME; SEL = null;
+  const R = { lib: renderLib, add: renderAdd, collections: renderCols, c: renderCol, me: renderMe, signin: renderSignin };
+  (R[v.type] || renderLib)(v.id); window.scrollTo(0, 0);
+}
+function rerender() { const y = scrollY; const R = { lib: renderLib, add: renderAdd, collections: renderCols, c: renderCol, me: renderMe }; (R[VIEW.type] || renderLib)(VIEW.id); window.scrollTo(0, y); }
+const head = (title, sub = '', back = '', right = '') => `<div class="head">${back ? `<a class="back" href="${back}" aria-label="Back">${BACK}</a>` : ''}<h1>${esc(title)}${sub ? `<span class="sub">${sub}</span>` : ''}</h1>${right}</div>`;
+function renderAvatar() { const a = $('#navMe'); if (!a) return; a.innerHTML = ME ? WA.avatarHTML(ME) : '<span class="signin">Sign in</span>'; a.href = ME ? '#/me' : '#/signin'; }
+
+/* ================================================================== Library */
+let Q = { text: '', scope: 'all', tag: '', col: '' };
+function matches(g) {
+  if (Q.scope === 'library' && g.owner !== null) return false;
+  if (Q.scope === 'mine' && g.owner !== ME.id) return false;
+  if (Q.col && !inCol(col(Q.col) || { items: [] }, g.id)) return false;
+  if (Q.tag && !(g.tags || []).includes(Q.tag)) return false;
+  const words = norm(Q.text).split(/\s+/).filter(Boolean);
+  if (!words.length) return true;
+  const hay = norm([g.title, ...(g.tags || []), ...colsOf(g.id).map(c => c.name)].join(' '));
+  return words.every(w => hay.includes(w));
+}
+function tileHTML(g, sel) {
+  return `<button class="g ${sel && sel.has(g.id) ? 'on' : ''}" data-act="${sel ? 'toggleSel' : 'view'}" data-id="${g.id}" style="aspect-ratio:${g.w && g.h ? g.w + '/' + g.h : 'auto'}" aria-label="${esc(g.title || 'GIF')}">
+    <img src="${esc(g.url)}" alt="${esc(g.title || 'GIF')}" loading="lazy" decoding="async">${g.owner === null ? '<span class="badge fam">Library</span>' : g.owner !== ME.id ? `<span class="badge">${esc(who(g.owner))}</span>` : ''}${sel ? '<span class="sel"></span>' : ''}</button>`;
+}
+function renderLib() {
+  const list = GIFS.filter(matches);
+  const tags = allTags().slice(0, 14);
+  const fam = GIFS.filter(g => g.owner === null).length, mine = GIFS.filter(g => g.owner === ME.id).length;
+  $('#app').innerHTML = `<div class="wrap">
+    <div class="searchbar"><label class="search">${I.search}<input id="q" type="search" placeholder="Search ${GIFS.length} GIFs: happy, star wars, mic drop…" value="${esc(Q.text)}" autocomplete="off" enterkeyhint="search">${Q.text ? '<button class="x" data-act="clearQ" aria-label="Clear">✕</button>' : ''}</label>
+      <div class="chips" role="group" aria-label="Show">${[['all', 'All', GIFS.length], ['library', 'Library', fam], ['mine', 'My GIFs', mine]].map(([k, t, n]) => `<button class="chip" data-act="scope" data-v="${k}" aria-pressed="${Q.scope === k}">${t} <small>${n}</small></button>`).join('')}
+        ${COLS.map(c => `<button class="chip" data-act="qcol" data-v="${c.id}" aria-pressed="${Q.col === c.id}">${esc(ic(c))}${esc(c.name)}${c.members.length ? ' 👥' : ''}</button>`).join('')}</div>
+      ${tags.length ? `<div class="chips" style="padding-top:4px">${tags.map(t => `<button class="chip tag" data-act="qtag" data-v="${esc(t)}" aria-pressed="${Q.tag === t}">#${esc(t)}</button>`).join('')}</div>` : ''}</div>
+    ${!GIFS.length ? `<div class="card empty" style="margin-top:8px"><b>Your GIFbox is empty</b>Copy a GIF from anywhere (GIPHY, Messages, a website) and add it here. Then sort them into collections like “Sad”, “Happy” or “Star Wars”.<div style="margin-top:16px"><a class="btn pri" href="#/add">Add your first GIF</a></div></div>`
+      : list.length ? `<p class="count">${list.length === GIFS.length ? '' : list.length + ' of ' + GIFS.length + ' · '}Tap a GIF to send it</p><div class="gifs">${list.map(g => tileHTML(g)).join('')}</div>`
+      : `<div class="empty"><b>No matches</b>Try another word, or put GIFs in a collection with that name so search can find them.</div>`}
+  </div>`;
+  const q = $('#q'); q.addEventListener('input', () => { Q.text = q.value; const pos = q.selectionStart; renderLib(); const n = $('#q'); n.focus(); n.setSelectionRange(pos, pos); });
+}
+
+/* ================================================================== viewer */
+let VIEWING = null;
+function openViewer(id) {
+  const g = gif(id); if (!g) return;
+  VIEWING = id; blobOf(g).catch(() => {});   /* fetch now so Send can open the share sheet straight away */
+  const edit = canEdit(g), mine = colsOf(id).map(c => c.id);
+  const w = sheet(`<div class="big"><img src="${esc(g.url)}" alt="${esc(g.title || 'GIF')}"></div>
+    <div class="vmeta"><b>${esc(g.title || 'Untitled')}</b><span class="pill ${g.owner === null ? 'fam' : ''}">${g.owner === null ? 'Library' : g.owner === ME.id ? 'My GIFs' : 'From ' + esc(who(g.owner))}</span>${edit ? `<button class="btn sm icon" data-act="editGif" data-id="${id}" aria-label="Edit name and tags">${I.edit}</button>` : ''}</div>
+    ${(g.tags || []).length ? `<div class="row" style="gap:6px;margin-bottom:4px">${g.tags.map(t => `<button class="tg" data-act="tagSearch" data-v="${esc(t)}" style="padding-right:10px">#${esc(t)}</button>`).join('')}</div>` : ''}
+    <div class="acts"><button class="btn pri" data-act="send" data-id="${id}">${I.send} Send</button><button class="btn" data-act="copy" data-id="${id}">${I.copy} Copy</button><button class="btn" data-act="download" data-id="${id}">${I.save} Save</button></div>
+    <div class="sect" style="margin-top:16px">Collections</div>
+    <div class="colpick" id="vcols">${COLS.map(c => `<button data-act="toggleCol" data-id="${id}" data-c="${c.id}" aria-pressed="${mine.includes(c.id)}" ${mine.includes(c.id) && !canTakeOut(c, id) ? 'disabled title="Added by ' + esc(who((c.items.find(i => i.gif_id === id) || {}).added_by)) + '"' : ''}>${esc(ic(c))}${esc(c.name)}${c.members.length ? ' 👥' : ''}</button>`).join('')}<button data-act="newCol" data-add="${id}" style="border-style:dashed;color:var(--muted)">+ New</button></div>
+    ${g.owner !== null && g.owner !== ME.id ? `<p class="muted" style="font-size:13px;margin:12px 0 0">${esc(who(g.owner))} shared this through a collection.</p>` : ''}
+    ${edit || (isAdmin() && g.owner === ME.id) ? `<div class="row" style="margin-top:18px">${isAdmin() && g.owner === ME.id ? `<button class="btn sm" data-act="toLibrary" data-id="${id}">${I.up} Move to the Library</button>` : ''}${edit ? `<button class="btn sm danger" data-act="delGif" data-id="${id}">${I.trash} Delete</button>` : ''}</div>` : ''}
+    <p class="muted" style="font-size:12.5px;margin:14px 0 0">${g.w ? g.w + '×' + g.h + ' · ' : ''}${g.bytes ? sizeStr(g.bytes) : ''}</p>`);
+  return w;
+}
+function editSheet(g) {
+  sheet(`<h2>Edit GIF</h2><form data-form="editGif" data-id="${g.id}">
+    <label class="field">Name<input name="title" maxlength="60" value="${esc(g.title || '')}" placeholder="e.g. Mic drop" autocomplete="off"></label>
+    <div class="field">Tags${tagBoxHTML('etags', g.tags || [])}</div>
+    <button class="btn pri wide" type="submit">Save</button></form>`);
+  wireTagBox($('#etags'));
+}
+
+/* tags: a chip field with suggestions from tags already in GIFbox */
+function tagBoxHTML(id, tags) {
+  return `<div class="tagbox" id="${id}" data-tags="${esc(JSON.stringify(tags))}">${tags.map(t => `<span class="tg">#${esc(t)}<button type="button" data-rm="${esc(t)}" aria-label="Remove ${esc(t)}">✕</button></span>`).join('')}<input placeholder="${tags.length ? 'Add tag' : 'happy, star wars, reaction…'}" enterkeyhint="done" autocapitalize="none"></div><div class="sugg"></div>`;
+}
+function getTags(box) { try { return JSON.parse(box.dataset.tags) || []; } catch (e) { return []; } }
+function wireTagBox(box, onChange) {
+  const inp = box.querySelector('input'), sug = box.nextElementSibling;
+  const set = tags => { box.dataset.tags = JSON.stringify(tags); [...box.querySelectorAll('.tg')].forEach(e => e.remove());
+    tags.forEach(t => { const s = document.createElement('span'); s.className = 'tg'; s.innerHTML = `#${esc(t)}<button type="button" data-rm="${esc(t)}" aria-label="Remove ${esc(t)}">✕</button>`; box.insertBefore(s, inp); });
+    inp.placeholder = tags.length ? 'Add tag' : 'happy, star wars, reaction…'; suggest(); onChange && onChange(tags); };
+  const add = v => { const t = cleanTag(v); if (!t) return; const tags = getTags(box); if (!tags.includes(t)) set([...tags, t]); inp.value = ''; suggest(); };
+  const suggest = () => { const cur = getTags(box), q = norm(inp.value);
+    const pool = [...new Set([...allTags(), ...COLS.map(c => cleanTag(c.name))])].filter(t => t && !cur.includes(t) && (!q || t.includes(q))).slice(0, 8);
+    sug.innerHTML = pool.map(t => `<button type="button" data-sg="${esc(t)}">+ ${esc(t)}</button>`).join(''); };
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); add(inp.value); } else if (e.key === 'Backspace' && !inp.value) { const t = getTags(box); if (t.length) set(t.slice(0, -1)); } });
+  inp.addEventListener('input', () => { if (/,/.test(inp.value)) { inp.value.split(',').forEach(add); } else suggest(); });
+  inp.addEventListener('blur', () => { if (inp.value.trim()) add(inp.value); });
+  box.addEventListener('click', e => { const r = e.target.closest('[data-rm]'); if (r) { set(getTags(box).filter(t => t !== r.dataset.rm)); return; } inp.focus(); });
+  sug.addEventListener('mousedown', e => e.preventDefault());
+  sug.addEventListener('click', e => { const b = e.target.closest('[data-sg]'); if (b) add(b.dataset.sg); });
+  suggest();
+}
+
+/* ================================================================== Collections */
+let SEL = null;   /* picking GIFs to add to a collection */
+const ic = c => c.emoji ? c.emoji + ' ' : '';     // a collection's icon is optional
+function coverHTML(c) {
+  const imgs = colGifIds(c).slice(0, 4).map(gif).filter(Boolean);
+  if (!imgs.length) return `<div class="cover one"><span class="em${c.emoji ? '' : ' ltr'}">${esc(c.emoji || ([...c.name.trim()][0] || '?').toUpperCase())}</span></div>`;
+  if (imgs.length < 4) return `<div class="cover one"><img src="${esc(imgs[0].url)}" alt="" loading="lazy"></div>`;
+  return `<div class="cover">${imgs.map(g => `<img src="${esc(g.url)}" alt="" loading="lazy">`).join('')}</div>`;
+}
+function colCard(c) {
+  return `<a class="col" href="#/c/${c.id}">${coverHTML(c)}<div class="t"><b>${esc(ic(c))}${esc(c.name)}</b><span>${c.items.length} ${c.items.length === 1 ? 'GIF' : 'GIFs'}${c.members.length ? ' · 👥 ' + (ownsCol(c) ? c.members.length : esc(who(c.owner))) : ''}</span></div></a>`;
+}
+function renderCols() {
+  const mine = COLS.filter(ownsCol), shared = COLS.filter(c => !ownsCol(c));
+  $('#app').innerHTML = `<div class="wrap">${head('Collections', 'Just for you, or shared with the people you pick', '', `<button class="btn pri sm" data-act="newCol">+ New</button>`)}
+    <div class="cols">${mine.map(colCard).join('')}<button class="col new" data-act="newCol"><span><i>+</i>New collection</span></button></div>
+    ${shared.length ? `<div class="sect">Shared with me</div><div class="cols">${shared.map(colCard).join('')}</div>` : ''}
+    ${!mine.length ? `<p class="muted" style="margin-top:16px">Ideas: a movie or show (“Star Wars”, “The Office”), a feeling (“Happy”, “Sad”, “Mad”), or a reply (“Thank you”, “LOL”, “Good night”). Search also finds GIFs by the names of the collections they're in.</p>` : ''}</div>`;
+}
+function renderCol(id) {
+  const c = col(id); if (!c) { location.hash = '#/collections'; return; }
+  const list = colGifIds(c).map(gif).filter(Boolean);
+  const picking = SEL && SEL.col === id;
+  const pool = picking ? GIFS.filter(g => !inCol(c, g.id)) : null;
+  $('#app').innerHTML = `<div class="wrap">${head(ic(c) + c.name, picking ? 'Tap GIFs to add them' : `${list.length} ${list.length === 1 ? 'GIF' : 'GIFs'} · ${esc(sharedLabel(c))}`, picking ? '' : '#/collections',
+      picking ? `<button class="btn sm" data-act="cancelPick">Cancel</button>` : `${ownsCol(c) ? `<button class="btn sm" data-act="shareCol">${c.members.length ? '👥 Sharing' : 'Share'}</button>` : ''}<button class="btn sm icon" data-act="colMenu" aria-label="Collection options">⋯</button>`)}
+    ${picking ? (pool.length ? `<div class="gifs">${pool.map(g => tileHTML(g, SEL.ids)).join('')}</div>` : '<div class="empty"><b>Nothing left to add</b>Every GIF you can see is already here.</div>')
+      : `<button class="btn wide" data-act="pickInto" style="margin-bottom:12px">+ Add GIFs</button>
+         ${c.members.length && !ownsCol(c) ? `<p class="muted" style="font-size:13px;margin:-4px 2px 12px">Anything you add here, everyone in this collection can see.</p>` : c.members.length ? `<p class="muted" style="font-size:13px;margin:-4px 2px 12px">Everyone you shared with can see these GIFs and add their own.</p>` : ''}
+         ${list.length ? `<div class="gifs">${list.map(g => tileHTML(g)).join('')}</div>` : '<div class="empty"><b>Empty for now</b>Add GIFs from GIFbox, or open any GIF and tap this collection.</div>'}`}
+  </div>${picking ? `<div class="selbar"><div class="in"><span>${SEL.ids.size} selected</span><button class="btn pri sm" data-act="addPicked" ${SEL.ids.size ? '' : 'disabled'}>Add to ${esc(c.name)}</button></div></div>` : ''}`;
+}
+function shareSheet(c) {
+  const ppl = Object.values(PEOPLE).filter(p => p.id !== ME.id).sort((a, b) => (a.display_name || '').localeCompare(b.display_name || ''));
+  sheet(`<h2>Share “${esc(c.name)}”</h2><p class="lead">The people you pick can see every GIF in this collection, including your own, and can add GIFs to it. Only you can rename it, change who it's shared with or delete it.</p>
+    <form data-form="share" data-id="${c.id}"><div class="pick">${ppl.map(p => `<label style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;background:var(--bg);border:1px solid var(--line)">${WA.avatarHTML(p)}<span style="flex:1"><b>${esc(p.display_name || p.username)}</b><span class="muted" style="display:block;font-size:12.5px">@${esc(p.username)}</span></span>
+      <input type="checkbox" name="who" value="${p.id}" ${c.members.includes(p.id) ? 'checked' : ''} style="width:22px;height:22px;accent-color:var(--pink)"></label>`).join('') || '<p class="muted">Nobody else has a Web Apps account yet.</p>'}</div>
+    <button class="btn pri wide" type="submit">${c.members.length ? 'Save' : 'Share'}</button>
+    ${c.members.length ? `<button class="btn wide" type="button" data-act="unshare" data-id="${c.id}" style="margin-top:8px">Stop sharing</button>` : ''}</form>`);
+}
+function colSheet(c, addId) {
+  const isNew = !c; c = c || { name: '', emoji: '' };
+  sheet(`<h2>${isNew ? 'New collection' : 'Edit collection'}</h2><form data-form="col" data-id="${isNew ? '' : c.id}" data-add="${addId || ''}">
+    <label class="field">Name<input name="name" maxlength="30" value="${esc(c.name)}" placeholder="Star Wars, Happy, Thank you…" required autofocus autocomplete="off"></label>
+    <div class="field">Icon <span style="font-weight:600;text-transform:none;letter-spacing:0">(optional)</span><div class="emojis"><button type="button" data-act="pickEmoji" data-v="" aria-pressed="${!c.emoji}" aria-label="No icon" style="font-size:13px;font-weight:800;width:auto;padding:0 12px">None</button>${EMOJIS.map(e => `<button type="button" data-act="pickEmoji" data-v="${e}" aria-pressed="${c.emoji === e}">${e}</button>`).join('')}</div></div>
+    <input type="hidden" name="emoji" value="${esc(c.emoji)}">
+    <button class="btn pri wide" type="submit">${isNew ? 'Create' : 'Save'}</button></form>`);
+}
+
+/* ================================================================== Add */
+let PENDING = [];   /* {key, blob, url, w, h, hash, title, tags, cols:[], dest, dup} */
+let SHARED = { tags: [], cols: [], dest: 'mine' };
+function renderAdd() {
+  const admin = isAdmin();
+  $('#app').innerHTML = `<div class="wrap">${head('Add GIFs', 'Paste, pick from your photos, or drop in a GIPHY link')}
+    <div class="drop" id="drop" contenteditable="true" role="textbox" aria-label="Paste a GIF here" inputmode="none" spellcheck="false"><b>Paste a GIF here</b><span>Copy a GIF anywhere, then tap here and choose Paste. On a computer, press ${/Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl'}+V anywhere.</span></div>
+    <div class="ways"><button class="btn" data-act="clipPaste">${I.paste} Paste</button><label class="btn">${I.photo} Choose files<input type="file" id="pickf" accept="image/gif,image/webp,image/png,image/jpeg" multiple hidden></label></div>
+    <form class="linkrow" data-form="link"><input name="url" type="url" placeholder="Or paste a GIPHY or .gif link" autocomplete="off" inputmode="url"><button class="btn" type="submit">Get</button></form>
+    <div id="pending"></div></div>`;
+  $('#pickf').addEventListener('change', e => { takeFiles([...e.target.files]); e.target.value = ''; });
+  const d = $('#drop');
+  d.addEventListener('input', () => { const im = d.querySelector('img'); if (im && im.src) { fromURL(im.src, true); } d.innerHTML = '<b>Paste a GIF here</b><span>Got it. Paste another, or save below.</span>'; });
+  d.addEventListener('keydown', e => { if (!(e.metaKey || e.ctrlKey)) e.preventDefault(); });
+  d.addEventListener('drop', e => { e.preventDefault(); takeFiles([...e.dataTransfer.files]); });
+  d.addEventListener('dragover', e => e.preventDefault());
+  drawPending();
+}
+function drawPending() {
+  const box = $('#pending'); if (!box) return;
+  if (!PENDING.length) { box.innerHTML = ''; return; }
+  const admin = isAdmin();
+  box.innerHTML = `<div class="sect">${PENDING.length} ready to save</div>
+    ${PENDING.length > 1 ? `<div class="card" style="padding:12px"><div class="field" style="margin-bottom:6px">Tags for all of them${tagBoxHTML('alltags', SHARED.tags)}</div></div>` : ''}
+    ${PENDING.map(p => `<div class="pend" data-key="${p.key}"><div class="pv"><img src="${esc(p.url)}" alt=""></div><div>
+      <button class="x" data-act="rmPending" data-key="${p.key}" aria-label="Remove">✕</button>
+      ${p.dup ? `<p class="dup">Already in GIFbox${p.dup.title ? ' as “' + esc(p.dup.title) + '”' : ''}</p>` : ''}
+      <label class="field">Name<input data-p="title" data-key="${p.key}" maxlength="60" value="${esc(p.title)}" placeholder="Optional, e.g. Mic drop" autocomplete="off"></label>
+      <div class="field">Tags${tagBoxHTML('pt-' + p.key, p.tags)}</div>
+      <p class="muted" style="font-size:12px;margin:0">${p.w ? p.w + '×' + p.h + ' · ' : ''}${sizeStr(p.blob.size)}${p.blob.type === 'image/gif' ? '' : ' · ' + extFor(p.blob.type).toUpperCase()}</p></div></div>`).join('')}
+    <div class="card" style="padding:12px;margin-top:10px">
+      ${admin ? `<div class="field">Save to<div class="seg"><button type="button" data-act="dest" data-v="mine" aria-pressed="${SHARED.dest === 'mine'}">My GIFs</button><button type="button" data-act="dest" data-v="library" aria-pressed="${SHARED.dest === 'library'}">Library</button></div></div>` : ''}
+      <div class="field" style="margin-bottom:0">Put in collections<div class="colpick">${COLS.map(c => `<button type="button" data-act="pendCol" data-c="${c.id}" aria-pressed="${SHARED.cols.includes(c.id)}">${esc(ic(c))}${esc(c.name)}${c.members.length ? ' 👥' : ''}</button>`).join('')}<button type="button" data-act="newCol" data-pend="1" style="border-style:dashed;color:var(--muted)">+ New</button></div></div></div>
+    <div class="savebar"><button class="btn pri wide" data-act="savePending" style="min-height:54px;font-size:16px">Save ${PENDING.length === 1 ? 'GIF' : PENDING.length + ' GIFs'}</button></div>`;
+  PENDING.forEach(p => wireTagBox($('#pt-' + CSS.escape(p.key)), t => { p.tags = t; }));
+  const all = $('#alltags'); if (all) wireTagBox(all, t => { SHARED.tags = t; });
+  $$('[data-p="title"]', box).forEach(i => i.addEventListener('input', () => { const p = PENDING.find(x => x.key === i.dataset.key); if (p) p.title = i.value; }));
+}
+async function takeBlob(blob, name) {
+  if (!blob || !/^image\//.test(blob.type)) { toast("That isn't an image. Copy the GIF itself, not the page."); return; }
+  if (blob.size > MAX_BYTES) { toast(`That one's ${sizeStr(blob.size)}. GIFs up to 15 MB fit in GIFbox.`); return; }
+  const hash = await sha(blob);
+  if (hash && PENDING.some(p => p.hash === hash)) { toast('Already in your list'); return; }
+  const d = await dims(blob);
+  const title = name ? name.replace(/\.[a-z0-9]+$/i, '').replace(/[-_]+/g, ' ').replace(/\b(giphy|tenor|image|img)\b/gi, '').trim().slice(0, 60) : '';
+  PENDING.push({ key: Math.random().toString(36).slice(2, 9), blob, url: d.url, w: d.w, h: d.h, hash, title, tags: [], dup: hash ? GIFS.find(g => g.hash === hash) : null });
+  if (blob.type === 'image/png' || blob.type === 'image/jpeg') toast('Added. This one came through as a still image, not an animation.');
+  if (VIEW.type !== 'add') location.hash = '#/add'; else drawPending();
+}
+async function takeFiles(files) { for (const f of files) await takeBlob(f, f.name); }
+/* GIPHY page links and media links become the GIF file itself */
+function giphyURL(u) {
+  const m = u.match(/giphy\.com\/(?:gifs|stickers|embed|clips)\/(?:[\w-]*-)?([A-Za-z0-9]{8,})/) || u.match(/giphy\.com\/media\/(?:v1\.[^/]+\/)?([A-Za-z0-9]{8,})/) || u.match(/i\.giphy\.com\/([A-Za-z0-9]{8,})/);
+  return m ? `https://media.giphy.com/media/${m[1]}/giphy.gif` : null;
+}
+async function fromURL(raw, quiet) {
+  let u = String(raw || '').trim(); if (!u) return;
+  if (!/^(https?:|data:|blob:)/.test(u)) u = 'https://' + u;
+  const g = giphyURL(u); if (g) u = g;
+  try { const r = await fetch(u); if (!r.ok) throw 0; const b = await r.blob(); await takeBlob(b, decodeURIComponent(u.split('/').pop().split('?')[0])); }
+  catch (e) { if (!quiet) toast(/tenor\.com\/view/.test(u) ? "Tenor page links can't be fetched. Copy the GIF itself and paste it." : "Couldn't get a GIF from that link. Try copying the GIF itself."); }
+}
+async function clipPaste() {
+  if (!navigator.clipboard || !navigator.clipboard.read) { $('#drop').focus(); toast('Tap the box and choose Paste'); return; }
+  try {
+    const items = await navigator.clipboard.read(); let got = false;
+    for (const it of items) {
+      const t = it.types.find(x => x === 'image/gif') || it.types.find(x => x.startsWith('image/'));
+      if (t) { await takeBlob(await it.getType(t), ''); got = true; continue; }
+      if (it.types.includes('text/plain')) { const txt = await (await it.getType('text/plain')).text(); if (/^\s*https?:\/\//.test(txt)) { await fromURL(txt); got = true; } }
+    }
+    if (!got) toast('No GIF on the clipboard. Copy one first.');
+  } catch (e) { $('#drop').focus(); toast('Tap the box and choose Paste'); }
+}
+/* paste anywhere in the app */
+document.addEventListener('paste', async e => {
+  if (!ME) return;
+  const t = e.target; if (t && t.matches && t.matches('input, textarea')) return;
+  const files = [...(e.clipboardData && e.clipboardData.files || [])].filter(f => f.type.startsWith('image/'));
+  if (files.length) { e.preventDefault(); takeFiles(files); return; }
+  const items = [...(e.clipboardData && e.clipboardData.items || [])];
+  const img = items.find(i => i.kind === 'file' && i.type.startsWith('image/'));
+  if (img) { e.preventDefault(); takeBlob(img.getAsFile(), ''); return; }
+  const html = e.clipboardData && e.clipboardData.getData('text/html'); const m = html && html.match(/<img[^>]+src="([^"]+)"/i);
+  if (m) { e.preventDefault(); fromURL(m[1].replace(/&amp;/g, '&')); return; }
+  const txt = e.clipboardData && e.clipboardData.getData('text/plain');
+  if (txt && /^\s*https?:\/\/\S+\s*$/.test(txt)) { e.preventDefault(); fromURL(txt); return; }
+});
+async function savePending(btn) {
+  if (!PENDING.length) return;
+  btn.disabled = true; let done = 0, skipped = 0;
+  const fam = isAdmin() && SHARED.dest === 'library';
+  for (const p of PENDING.slice()) {
+    if (p.dup) { skipped++; await addToCols(p.dup.id); PENDING = PENDING.filter(x => x !== p); continue; }
+    btn.textContent = `Saving ${done + 1} of ${PENDING.length + done}…`;
+    const tags = [...new Set([...(p.tags || []), ...SHARED.tags])];
+    try {
+      const g = await DATA.add({ id: uid(), owner: fam ? null : ME.id, w: p.w, h: p.h, bytes: p.blob.size, hash: p.hash, title: p.title.trim(), tags }, p.blob);
+      GIFS.unshift(g); await addToCols(g.id); done++; PENDING = PENDING.filter(x => x !== p); URL.revokeObjectURL(p.url);
+    } catch (e) { toast("Couldn't save one of them. Check your connection and try again."); break; }
+  }
+  if (!PENDING.length) { SHARED = { tags: [], cols: [], dest: SHARED.dest };
+    toast(done ? `Saved ${done} ${done === 1 ? 'GIF' : 'GIFs'}${skipped ? `, ${skipped} already in GIFbox` : ''}` : 'Those were already in GIFbox'); location.hash = '#/'; }
+  else { btn.disabled = false; drawPending(); }
+}
+async function addToCols(id) { for (const cid of SHARED.cols) { const c = col(cid); if (c && !inCol(c, id)) { c.items.unshift({ gif_id: id, added_by: ME.id }); await commit(DATA.addItems(cid, [id])); } } }
+
+/* ================================================================== account */
+let SI = { mode: 'in' };
+async function renderSignin() {
+  const allow = await WA.signupsAllowed(); if (SI.mode === 'up' && !allow) SI.mode = 'in';
+  $('#app').innerHTML = `<div class="wrap"><div class="hero"><h1>Every GIF, <em>right there</em></h1><p>Sign in with your Web Apps account. The same username and password work in every app on the site.</p></div>
+    ${SI.mode === 'in' ? `<form class="card authcard" data-form="signin"><h2>Sign in</h2>
+      <label class="field">Username<input id="siU" autocomplete="username" autocapitalize="none" required></label>
+      <label class="field">Password<input id="siP" type="password" autocomplete="current-password" required></label>
+      <p class="err" id="siErr"></p><button class="btn pri wide" type="submit">Sign in</button>
+      ${allow ? '<button class="linkbtn" type="button" data-act="toUp">New here? Create an account</button>' : '<p class="muted">New accounts are made by an admin.</p>'}</form>`
+    : `<form class="card authcard" data-form="signup"><h2>Create an account</h2>
+      <label class="field">Your name<input id="suN" maxlength="40" autocomplete="name" required></label>
+      <label class="field">Username<input id="suU" maxlength="20" autocomplete="username" autocapitalize="none" required></label>
+      <label class="field">Password (6 or more characters)<input id="suP" type="password" autocomplete="new-password" required></label>
+      <label class="field">Confirm password<input id="suP2" type="password" autocomplete="new-password" required></label>
+      <p class="err" id="siErr"></p><button class="btn pri wide" type="submit">Create account</button>
+      <button class="linkbtn" type="button" data-act="toIn">Already have an account? Sign in</button></form>`}
+    ${WA.mode === 'local' ? '<p class="muted" style="text-align:center">Accounts are saved in this browser until the site is connected to Supabase.</p>' : ''}</div>`;
+}
+function renderMe() {
+  const mine = GIFS.filter(g => g.owner === ME.id).length, fam = GIFS.filter(g => g.owner === null).length;
+  $('#app').innerHTML = `<div class="wrap">${head('Account')}
+    <div class="card row" style="gap:14px;flex-wrap:nowrap">${WA.avatarHTML(ME, 'xl')}<div><b style="font-size:20px">${esc(ME.name)}</b><div class="muted">@${esc(ME.username)}${isAdmin() ? ' · GIFbox admin' : ''}</div><div class="muted">${mine} of my own · ${fam} in the Library · ${COLS.length} ${COLS.length === 1 ? 'collection' : 'collections'}</div></div></div>
+    <p class="muted" style="margin:14px 2px">${isAdmin() ? 'As an admin you can add GIFs to the Library, which everyone sees. ' : ''}My GIFs and your collections are only yours, unless you share a collection. Change your name or picture from Web Apps.</p>
+    <div class="row"><a class="btn" href="../">All Web Apps</a><button class="btn danger" data-act="signout">Sign out</button></div></div>`;
+}
+
+/* ================================================================== actions */
+const ACTS = {
+  closeSheet() { closeSheet(); },
+  toUp() { SI.mode = 'up'; renderSignin(); }, toIn() { SI.mode = 'in'; renderSignin(); },
+  async signout() { await WA.signOut(); toast('Signed out of every app'); },
+  clearQ() { Q.text = ''; renderLib(); },
+  scope(b) { Q.scope = b.dataset.v; renderLib(); },
+  qcol(b) { Q.col = Q.col === b.dataset.v ? '' : b.dataset.v; renderLib(); },
+  qtag(b) { Q.tag = Q.tag === b.dataset.v ? '' : b.dataset.v; renderLib(); },
+  tagSearch(b) { Q = { text: '', scope: 'all', tag: b.dataset.v, col: '' }; closeSheet(); if (VIEW.type !== 'lib') location.hash = '#/'; else renderLib(); },
+  view(b) { openViewer(b.dataset.id); },
+  async send(b) {
+    const g = gif(b.dataset.id);
+    try {
+      const blob = g.blob || blobCache.get(g.id) || await blobOf(g);
+      const file = new File([blob], fileName(g), { type: blob.type || 'image/gif' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file] }); return; }
+      ACTS.copy(b);
+    } catch (e) { if (e && e.name === 'AbortError') return; toast("Couldn't open sharing here. Try Copy or Save."); }
+  },
+  async copy(b) {
+    const g = gif(b.dataset.id);
+    try {
+      const blob = g.blob || blobCache.get(g.id) || await blobOf(g);
+      try { await navigator.clipboard.write([new ClipboardItem({ [blob.type || 'image/gif']: blob })]); toast('Copied. Paste it into your message.'); return; }
+      catch (e) { /* most browsers only copy PNG: fall back to a still */ }
+      const png = await toPNG(blob); await navigator.clipboard.write([new ClipboardItem({ 'image/png': png })]);
+      toast('Copied as a still image. Use Send to keep the animation.');
+    } catch (e) { toast("Couldn't copy here. Use Send or Save."); }
+  },
+  async download(b) {
+    const g = gif(b.dataset.id);
+    try { const blob = g.blob || await blobOf(g); const u = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = u; a.download = fileName(g); document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); }
+    catch (e) { toast("Couldn't save it here."); }
+  },
+  editGif(b) { editSheet(gif(b.dataset.id)); },
+  toggleCol(b) { const c = col(b.dataset.c), id = b.dataset.id; const on = !inCol(c, id);
+    if (!on && !canTakeOut(c, id)) { toast('Only the person who added it, or the owner, can take it out'); return; }
+    c.items = on ? [{ gif_id: id, added_by: ME.id }, ...c.items] : c.items.filter(i => i.gif_id !== id); b.setAttribute('aria-pressed', String(on));
+    commit(on ? DATA.addItems(c.id, [id]) : DATA.removeItem(c.id, id));
+    toast(on ? `Added to ${c.name}` : `Removed from ${c.name}`); if (VIEW.type === 'c' || (VIEW.type === 'lib' && Q.col)) { const v = VIEWING; rerender(); VIEWING = v; } },
+  async toLibrary(b) { const g = gif(b.dataset.id);
+    armed(b, async () => { try { const r = await DATA.toLibrary(g); Object.assign(g, { owner: null }, r); toast('Moved to the Library'); closeSheet(); rerender(); } catch (e) { toast("Couldn't move it. Check your connection."); } }, 'Everyone will see it. Move?'); },
+  delGif(b) { const g = gif(b.dataset.id);
+    armed(b, async () => { try { await DATA.remove(g); GIFS = GIFS.filter(x => x !== g); COLS.forEach(c => c.items = c.items.filter(i => i.gif_id !== g.id)); closeSheet(); toast('Deleted'); rerender(); } catch (e) { toast("Couldn't delete it. Check your connection."); } },
+      g.owner === null || colsOf(g.id).some(c => c.members.length) ? 'Delete for everyone?' : 'Tap again to delete'); },
+  newCol(b) { colSheet(null, b.dataset.add || (b.dataset.pend ? '__pending' : '')); },
+  pickEmoji(b) { $$('button', b.parentNode).forEach(x => x.setAttribute('aria-pressed', String(x === b))); b.closest('form').querySelector('[name="emoji"]').value = b.dataset.v; },
+  colMenu() { const c = col(VIEW.id), own = ownsCol(c);
+    const mineIn = c.items.filter(i => own || i.added_by === ME.id).length;
+    sheet(`<h2>${esc(ic(c))}${esc(c.name)}</h2><p class="lead">${esc(sharedLabel(c))}</p><div class="pick">
+      ${own ? '<button data-act="editCol"><span class="t"><b>Rename or change icon</b></span></button>' : ''}
+      ${own ? `<button data-act="shareCol"><span class="t"><b>${c.members.length ? 'Change who it’s shared with' : 'Share'}</b><span>${c.members.length ? esc(c.members.map(who).join(', ')) : 'Let other people see it and add to it'}</span></span></button>` : ''}
+      <button data-act="pickInto"><span class="t"><b>Add GIFs</b><span>Pick several at once</span></span></button>
+      ${mineIn ? `<button data-act="removeMode"><span class="t"><b>Remove GIFs</b><span>${own ? 'They stay in GIFbox' : 'Only ones you added'}</span></span></button>` : ''}
+    </div>${own ? `<button class="btn danger wide" data-act="delCol">${I.trash} Delete collection</button><p class="muted" style="font-size:12.5px;text-align:center">${c.members.length ? 'It disappears for everyone you shared it with. ' : ''}The GIFs stay in GIFbox.</p>`
+      : `<button class="btn danger wide" data-act="leaveCol">Leave this collection</button>`}`); },
+  shareCol() { shareSheet(col(VIEW.id)); },
+  async unshare(b) { const c = col(b.dataset.id); c.members = []; closeSheet(); await commit(DATA.setMembers(c.id, [])); toast('Only you can see it now'); rerender(); },
+  leaveCol(b) { armed(b, async () => { const id = VIEW.id; closeSheet(); await commit(DATA.leaveCol(id)); await reload(); toast('Left the collection'); location.hash = '#/collections'; }, 'Tap again to leave'); },
+  editCol() { colSheet(col(VIEW.id)); },
+  delCol(b) { armed(b, async () => { const id = VIEW.id; COLS = COLS.filter(c => c.id !== id); if (Q.col === id) Q.col = ''; closeSheet(); await commit(DATA.deleteCol(id)); location.hash = '#/collections'; }); },
+  pickInto() { closeSheet(); SEL = { col: VIEW.id, ids: new Set(), mode: 'add' }; renderCol(VIEW.id); },
+  removeMode() { closeSheet(); const c = col(VIEW.id);
+    $('#app').innerHTML = `<div class="wrap">${head('Remove from ' + c.name, 'Tap GIFs to take them out', '', '<button class="btn sm" data-act="cancelPick">Done</button>')}<div class="gifs">${colGifIds(c).filter(id => canTakeOut(c, id)).map(gif).filter(Boolean).map(g => `<button class="g" data-act="rmFromCol" data-id="${g.id}" style="aspect-ratio:${g.w && g.h ? g.w + '/' + g.h : 'auto'}"><img src="${esc(g.url)}" alt="" loading="lazy"><span class="badge" style="left:auto;right:7px;background:var(--red)">Remove</span></button>`).join('')}</div></div>`; },
+  rmFromCol(b) { const c = col(VIEW.id); c.items = c.items.filter(i => i.gif_id !== b.dataset.id); b.remove(); commit(DATA.removeItem(c.id, b.dataset.id)); toast(`Removed from ${c.name}`); },
+  cancelPick() { SEL = null; renderCol(VIEW.id); },
+  toggleSel(b) { const id = b.dataset.id; SEL.ids.has(id) ? SEL.ids.delete(id) : SEL.ids.add(id); b.classList.toggle('on', SEL.ids.has(id));
+    const bar = $('.selbar .in'); if (bar) { bar.querySelector('span').textContent = SEL.ids.size + ' selected'; bar.querySelector('button').disabled = !SEL.ids.size; } },
+  addPicked() { const c = col(SEL.col); const ids = [...SEL.ids]; c.items = [...ids.map(g => ({ gif_id: g, added_by: ME.id })), ...c.items.filter(i => !SEL.ids.has(i.gif_id))]; SEL = null; commit(DATA.addItems(c.id, ids)); toast(`Added ${ids.length} to ${c.name}`); renderCol(c.id); },
+  clipPaste() { clipPaste(); },
+  rmPending(b) { const p = PENDING.find(x => x.key === b.dataset.key); if (p) URL.revokeObjectURL(p.url); PENDING = PENDING.filter(x => x.key !== b.dataset.key); drawPending(); },
+  dest(b) { SHARED.dest = b.dataset.v; $$('button', b.parentNode).forEach(x => x.setAttribute('aria-pressed', String(x === b))); },
+  pendCol(b) { const c = b.dataset.c; SHARED.cols = SHARED.cols.includes(c) ? SHARED.cols.filter(x => x !== c) : [...SHARED.cols, c]; b.setAttribute('aria-pressed', String(SHARED.cols.includes(c))); },
+  savePending(b) { savePending(b); },
+};
+async function toPNG(blob) { const d = await dims(blob); const im = new Image(); im.src = d.url; await im.decode(); const c = document.createElement('canvas'); c.width = d.w; c.height = d.h; c.getContext('2d').drawImage(im, 0, 0); return new Promise(r => c.toBlob(r, 'image/png')); }
+document.addEventListener('click', e => { const b = e.target.closest('[data-act]'); if (!b) return; const f = ACTS[b.dataset.act]; if (!f) return; e.preventDefault(); f(b, e); });
+const FORMS = {
+  async signin() { const err = $('#siErr'); err.textContent = ''; try { await WA.signIn($('#siU').value, $('#siP').value); } catch (e) { err.textContent = e.message; $('#siP').value = ''; } },
+  async signup() { const err = $('#siErr'); err.textContent = '';
+    if ($('#suP').value !== $('#suP2').value) { err.textContent = "The two passwords don't match."; return; }
+    try { await WA.signUp({ display_name: $('#suN').value.trim(), username: $('#suU').value, password: $('#suP').value }); toast(`Welcome, ${WA.me.display_name}!`); } catch (e) { err.textContent = e.message; } },
+  link(f) { const u = f.url.value; f.url.value = ''; fromURL(u); },
+  async editGif(f) { const g = gif(f.dataset.id); const title = f.title.value.trim().slice(0, 60), tags = getTags($('#etags'));
+    try { await DATA.update(g, { title, tags }); Object.assign(g, { title, tags }); toast('Saved'); closeSheet(); rerender(); openViewer(g.id); } catch (e) { toast("Couldn't save. Check your connection."); } },
+  async col(f) { const name = f.name.value.trim().slice(0, 30); if (!name) return; const emoji = f.emoji.value || '';
+    if (f.dataset.id) { Object.assign(col(f.dataset.id), { name, emoji }); closeSheet(); rerender(); commit(DATA.updateCol(f.dataset.id, { name, emoji })); return; }
+    if (COLS.some(c => ownsCol(c) && norm(c.name) === norm(name))) { toast('You already have a collection with that name'); return; }
+    const c = { id: uid(), owner: ME.id, name, emoji, members: [], items: [] }; COLS.push(c);
+    try { await DATA.createCol(c); } catch (e) { COLS = COLS.filter(x => x !== c); toast("Couldn't create it. Check your connection."); return; }
+    const add = f.dataset.add;
+    if (add === '__pending') { SHARED.cols.push(c.id); closeSheet(); drawPending(); return; }
+    if (add) { c.items.push({ gif_id: add, added_by: ME.id }); await commit(DATA.addItems(c.id, [add])); toast(`Added to ${name}`); closeSheet(); rerender(); openViewer(add); return; }
+    closeSheet(); location.hash = '#/c/' + c.id; },
+  async share(f) { const c = col(f.dataset.id); const ids = new FormData(f).getAll('who');
+    c.members = ids; closeSheet(); rerender(); await commit(DATA.setMembers(c.id, ids));
+    toast(ids.length ? 'Shared with ' + ids.map(who).join(', ') : 'Only you can see it now'); },
+};
+document.addEventListener('submit', e => { const f = e.target.closest('form[data-form]'); if (!f) return; e.preventDefault(); const fn = FORMS[f.dataset.form]; if (fn) fn(f, e.submitter); });
+
+/* ================================================================== start */
+addEventListener('hashchange', route);
+let lastUser;
+(async function boot() {
+  await WA.ready; lastUser = WA.me && WA.me.id; await startSession(); route();
+  WA.onChange(async me => { const id = me && me.id;
+    if (id === lastUser) { if (me && ME) { ME.name = ME.display_name = me.display_name; ME.avatar = me.avatar; renderAvatar(); } return; }
+    lastUser = id; await startSession(); if (!ME) location.hash = '#/'; route(); });
+})();
+</script>
+</body>
+</html>
