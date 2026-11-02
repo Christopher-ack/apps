@@ -358,9 +358,9 @@ const $=id=>document.getElementById(id);
 // ---- the game shelf. Add a game: put its page in games/ and add an entry here. Games that speak the GP protocol get full controller support.
 // gp:false = the game doesn't speak the controller connection yet: it opens in full screen with its own touch controls, and a small ☰ opens the Arcade panel
 const GAMES=[
-  {id:'big-year',saves:['birding-journal-v1','birding-kit-v1','birding-settings'],title:'Big Year',src:'games/big-year/index.html',gp:false,
+  {id:'big-year',saves:['birding-journal-v1','birding-kit-v1','birding-settings','birding-progress-v1'],title:'Big Year',src:'games/big-year/index.html',
    blurb:'Walk or drive the East Coast, listen for birds, raise your binoculars, scope or camera to find them, and log every species in your field journal.',tags:['Explore','Nature'],
-   art:'birds',logo:{text:'Big Year',font:'italic 600 X "Crimson Pro",Georgia,serif',ink:'#2f3a2a',strip:'#f3ead2'},buttons:{}},
+   art:'birds',logo:{text:'Big Year',font:'italic 600 X "Crimson Pro",Georgia,serif',ink:'#2f3a2a',strip:'#f3ead2'},buttons:{a:'Binoculars',b:'Pish',l:'Map',r:'',select:'Gear',start:'Journal'}},
   {id:'dino-world',saves:['dino-save','dino-settings'],title:'Dino World',src:'games/dino-world/index.html',gp:false,
    blurb:'Tranquilize dinosaurs and sample their DNA on a wild island, then fly to Port Meridian and bring the escaped ones back to the Institute.',tags:['Adventure','Dinosaurs'],
    art:'dino',logo:{text:'Dino World',font:'"Lilita One",Fredoka,system-ui,sans-serif',ink:'#ffe9b0',strip:'#123a2b'},buttons:{}},
