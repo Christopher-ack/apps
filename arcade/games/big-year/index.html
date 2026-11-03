@@ -273,7 +273,8 @@ body.gp-console .compass{width:92px;height:92px;top:calc(8px + env(safe-area-ins
 #gpTop{position:fixed;z-index:5;top:calc(8px + env(safe-area-inset-top,0px));left:calc(8px + env(safe-area-inset-left,0px));display:flex;flex-direction:column;align-items:flex-start;gap:6px;max-width:calc(100% - 116px);pointer-events:none}
 #gpTop .topleft{position:static;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 #gpTop .life{padding:3px 10px 3px 5px;gap:5px}#gpTop .life svg{width:20px;height:20px}#gpTop .life b{font-size:15px}#gpTop .life span{font-size:10px}
-#gpTop .status{position:static;transform:none;max-width:100%;font-size:12px;padding:4px 10px 4px 8px;gap:6px}#gpTop .status svg{width:15px;height:15px}
+#gpTop .status{position:static;transform:none;max-width:100%;min-width:0;white-space:normal;border-radius:14px;line-height:1.25;font-size:12px;padding:4px 10px 4px 8px;gap:6px}#gpTop .status svg{width:15px;height:15px}#gpTop .status #statusText{overflow:visible;text-overflow:clip}
+body.on-title .compass,body.on-title .status{visibility:hidden}
 #gpTop .toast{position:static;transform:none;white-space:normal;font-size:12.5px;padding:6px 12px;border-radius:14px;max-width:100%}
 .gp-focus{outline:3px solid var(--sun)!important;outline-offset:2px}
 body.no-dev .proto{display:none!important}
@@ -305,7 +306,7 @@ body.gp-console .mmzoom{top:calc(104px + env(safe-area-inset-top,0px));right:cal
     <div class="tools">
       <button class="tool wide" id="callBtn">Bring one of each bird near me</button>
       <button class="tool" id="markBtn" aria-pressed="false">Show birds</button><button class="tool" id="plateBtn" aria-pressed="false">Show plates</button>
-      <button class="tool" id="logAllBtn">Log all 3</button><button class="tool" id="resetBtn">Reset journal</button>
+      <button class="tool" id="logAllBtn">Log all</button><button class="tool" id="resetBtn">Reset journal</button>
     </div>
   </div>
 </div>
@@ -463,7 +464,7 @@ const SFX=(()=>{let ac=null,master=null,noise=null;const amb={};let eng=null;
     shutter(){nshot('highpass',3000,.8,.035,.18,2000);nshot('bandpass',1700,1,.05,.14,900,.06)},
     pish(){for(let i=0;i<3;i++)nshot('highpass',3800,.6,.32,.12,2600,i*.42)},
     // songs: vol 0..1 by distance, pan -1..1 by bearing
-    song(id,vol,pan){if(vol<.02)return;const v=vol;
+    song(id,vol,pan){if(vol<.02)return;const v=vol;if(GB[id]){GBSONG[GB[id].song](tone,nshot,v,pan);return}
       if(id==='btbw'){const n=2+Math.floor(Math.random()*2);for(let i=0;i<n;i++)tone('sawtooth',4100,4000,.2,.05*v,i*.3,{vib:420,rate:64,filt:4300,q:3,pan});tone('sawtooth',4300,6100,.42,.06*v,n*.3+.02,{vib:520,rate:70,filt:5200,q:2,pan})}
       else if(id==='pile'){const n=9+Math.floor(Math.random()*5);for(let i=0;i<n;i++){const f=1150+Math.sin(i/n*PI)*180;tone('square',f,f*.86,.075,.06*v*(.6+.4*Math.sin(i/n*PI)),i*.105,{filt:1400,q:1.5,pan})}}
       else{tone('sine',2150,2300,.13,.11*v,0,{pan});tone('sine',1820,1650,.2,.09*v,.17,{pan});if(Math.random()<.5){tone('sine',2150,2300,.12,.09*v,.75,{pan});tone('sine',1820,1650,.18,.07*v,.9,{pan})}}},
@@ -661,7 +662,7 @@ function wingPt(F,u,v,k){const half=F.WS/2*k,x0=F.bw*.42,y0=-F.L*.12;
 function wingZone(F,u0,u1,v0,v1,k,col,side){ctx.fillStyle=col;ctx.beginPath();const N=8;
   for(let i=0;i<=N;i++){const p=wingPt(F,u0+(u1-u0)*i/N,v0,k);ctx.lineTo(p[0]*side,p[1])}
   for(let i=N;i>=0;i--){const p=wingPt(F,u0+(u1-u0)*i/N,v1,k);ctx.lineTo(p[0]*side,p[1])}ctx.closePath();ctx.fill()}
-function drawFlightTop(id,o){const F=FL[id],k=.3+.7*Math.abs(Math.cos(o.flap||0)),ven=!!o.ventral,det=o.detail;
+function drawFlightTop(id,o){if(GB[id]){drawGBFlight(id,o);return}const F=FL[id],k=.3+.7*Math.abs(Math.cos(o.flap||0)),ven=!!o.ventral,det=o.detail;
   const L=F.L,hy=-L*.36,ty=L*.18;
   for(const side of[-1,1]){
     if(id==='pipl'){
@@ -712,12 +713,551 @@ function shadeHex(hex,amt){let r,g,b;if(hex[0]==='#'){const n=parseInt(hex.slice
 /* the one entry point: draws a bird at the current origin, s px/cm, face +1 right / -1 left */
 function drawBird(id,pose,s,face,o={}){ctx.save();ctx.scale(s*face,s);
   const det=o.detail??s>2.2;
+  if(GB[id]&&pose!=='fly'&&pose!=='top'){drawGB(id,pose==='trunk'?'perch':pose,{...o,detail:det});ctx.restore();return}
   if(pose==='fly')drawFlightSide(id,{flap:o.flap,ventral:o.ventral,detail:det});
   else if(pose==='top'){ctx.restore();ctx.save();ctx.rotate(o.heading||0);ctx.scale(s,s);drawFlightTop(id,{flap:o.flap,ventral:o.ventral,detail:det})}
   else if(id==='pipl')drawPlover({...o,detail:det});
   else if(id==='btbw')drawWarbler({...o,detail:det});
   else drawPileated({...o,detail:det});
   ctx.restore()}
+
+/* ===== 27 more birds (version 18) =====
+   One set of body shapes (songbird, ground bird, shorebird, wader, swimmer, seabird) drawn in centimetres like the first three
+   birds: origin at the feet (or the waterline), +x the way the bird faces, -y up. Each species brings its own size, posture,
+   colours and field marks. kinds: perch (in trees), ground (walks and pecks), reed (sits on cattails),
+   wade (stands in shallow water), swim (floats), sea (flies over the sea and floats). */
+const GB={};
+const GBC={dark:'#141416',white:'#f6f5f0',eye:'#0b0b0c'};
+/* ===== body plans (version 20) =====
+   A species picks the closest body plan with form:'...' and then overrides anything that makes it itself:
+   gb('bufl',{form:'diver',shape:{hr:.15},...}). Size (len, cm) always comes from the species, so two birds can share a plan
+   and still read differently by size. Extra controls on top of the proportions:
+     body  plump | slim | potbelly | round | boat | long      (side profile of the body)
+     head  round | flat | peak | puffy                         (crown shape)
+     neckW neck thickness (1 = normal)     legW leg thickness (1 = normal)
+     tail  square | notch | round | point | fan                (tail tip, side and flight views)
+     bill types: thin, needle, cone, wedge, dagger, chisel, blade, hook, blunt, curve, flat, pouch
+   A species can also bring its own drawing: draw(ctx,pose,o,geom,G) runs after the body is drawn
+   (or instead of it with drawOnly:true), so an odd-shaped bird can be hand-drawn without touching the rest. */
+const FORMS={
+  sparrow:  {label:'Sparrow / bunting',len:15,body:'plump',head:'round',tail:'notch',bl:.52,bh:.33,hr:.11,tl:.3,tw:.12,tilt:.3,gtilt:.18,legs:.11,neck:0,bill:{l:1.1,d:.5,type:'cone',ang:.1},wingExt:0,chord:.22},
+  finch:    {label:'Finch / grosbeak',len:16,body:'plump',head:'round',tail:'notch',bl:.5,bh:.34,hr:.12,tl:.26,tw:.13,tilt:.35,gtilt:.22,legs:.1,neck:0,bill:{l:1.5,d:1.15,type:'cone',ang:.1},wingExt:.02,chord:.22},
+  warbler:  {label:'Warbler',len:13,body:'slim',head:'round',tail:'square',bl:.56,bh:.3,hr:.105,tl:.26,tw:.11,tilt:.25,gtilt:.15,legs:.12,neck:0,bill:{l:1.3,d:.3,type:'needle',ang:.04},wingExt:.03,chord:.22},
+  thrush:   {label:'Thrush / robin',len:24,body:'potbelly',head:'round',tail:'square',bl:.5,bh:.31,hr:.095,tl:.28,tw:.12,tilt:.6,gtilt:.45,legs:.15,neck:0,bill:{l:2,d:.55,type:'thin',ang:.12},wingExt:.02,chord:.22},
+  mimic:    {label:'Catbird / thrasher',len:22,body:'slim',head:'round',tail:'round',bl:.48,bh:.28,hr:.09,tl:.46,tw:.12,tilt:.3,gtilt:.2,legs:.11,neck:0,bill:{l:1.9,d:.4,type:'thin',ang:.12},wingExt:0,chord:.22},
+  wren:     {label:'Wren',len:13,body:'round',head:'round',tail:'round',bl:.56,bh:.38,hr:.12,tl:.28,tw:.13,tilt:.2,gtilt:.15,legs:.12,neck:0,bill:{l:1.6,d:.35,type:'thin',ang:.18},tailUp:.9,wingExt:0,chord:.22},
+  blackbird:{label:'Blackbird / meadowlark',len:22,body:'slim',head:'flat',tail:'round',bl:.54,bh:.3,hr:.095,tl:.3,tw:.13,tilt:.4,gtilt:.25,legs:.12,neck:0,bill:{l:2.5,d:.75,type:'dagger',ang:.06},wingExt:0,chord:.23},
+  nuthatch: {label:'Nuthatch',len:11,body:'round',head:'flat',tail:'square',bl:.64,bh:.4,hr:.13,tl:.14,tw:.2,tilt:.05,gtilt:.05,legs:.11,neck:0,bill:{l:1.3,d:.34,type:'chisel',ang:-.05},wingExt:.02,chord:.22},
+  pigeon:   {label:'Pigeon / dove',len:32,body:'potbelly',head:'round',tail:'round',bl:.58,bh:.36,hr:.075,tl:.28,tw:.22,tilt:.2,gtilt:.15,legs:.08,legW:1.25,neck:0,bill:{l:1.8,d:.55,type:'thin',ang:.15},wingExt:.02,chord:.22},
+  kingfisher:{label:'Kingfisher',len:32,body:'plump',head:'peak',tail:'square',bl:.44,bh:.32,hr:.16,tl:.2,tw:.18,tilt:.55,gtilt:.4,legs:.04,neck:0,bill:{l:6,d:1.6,type:'dagger',ang:.02},wingExt:.02,chord:.24},
+  dabbler:  {label:'Dabbling duck',len:56,body:'boat',head:'round',tail:'point',bl:.62,bh:.3,hr:.085,tl:.14,tw:.16,tilt:.05,gtilt:.05,stilt:0,legs:.07,neck:7,neckAng:1.25,bill:{l:5.4,d:1.7,type:'flat',ang:.18},tailUp:.35,wingExt:.02},
+  diver:    {label:'Diving duck (bufflehead)',len:35,body:'round',head:'puffy',tail:'point',bl:.6,bh:.36,hr:.13,tl:.1,tw:.14,tilt:.02,gtilt:.05,stilt:0,legs:.06,neck:2,neckAng:1.3,neckW:1.3,bill:{l:2.6,d:1.2,type:'flat',ang:.12},tailUp:.2,wingExt:0},
+  loon:     {label:'Loon / grebe',len:80,body:'long',head:'flat',tail:'square',bl:.66,bh:.22,hr:.068,tl:.05,tw:.12,tilt:0,gtilt:.05,stilt:-.03,legs:.06,neck:11,neckAng:1.15,neckW:1.15,bill:{l:7.5,d:1.8,type:'dagger',ang:.06},wingExt:0},
+  plover:   {label:'Plover',len:18,body:'potbelly',head:'round',tail:'square',bl:.56,bh:.38,hr:.14,tl:.14,tw:.2,tilt:0,gtilt:0,legs:.17,neck:0,bill:{l:1.0,d:.55,type:'blunt',ang:.03},wingExt:.06,chord:.2},
+  sandpiper:{label:'Sandpiper',len:19,body:'plump',head:'round',tail:'square',bl:.62,bh:.32,hr:.095,tl:.16,tw:.18,tilt:-.04,gtilt:-.06,legs:.14,neck:0,bill:{l:2.9,d:.45,type:'thin',ang:.1},wingExt:.09,chord:.2},
+  yellowlegs:{label:'Yellowlegs / tall sandpiper',len:33,body:'slim',head:'round',tail:'square',bl:.5,bh:.28,hr:.09,tl:.15,tw:.16,tilt:.18,gtilt:.15,legs:.34,legW:.8,neck:3.5,neckAng:1.25,neckW:.85,bill:{l:5.6,d:.55,type:'needle',ang:.05},wingExt:.07,chord:.2},
+  oystercatcher:{label:'Oystercatcher',len:44,body:'potbelly',head:'round',tail:'square',bl:.56,bh:.34,hr:.085,tl:.14,tw:.18,tilt:.1,gtilt:.08,legs:.15,legW:1.9,neck:2.5,neckAng:1.2,neckW:1.25,bill:{l:9,d:1.9,type:'blade',ang:.04},wingExt:.05,chord:.2},
+  pipit:    {label:'Pipit / lark',len:16,body:'slim',head:'round',tail:'notch',bl:.52,bh:.32,hr:.115,tl:.34,tw:.15,tilt:.15,gtilt:.1,legs:.14,neck:0,bill:{l:1.4,d:.32,type:'needle',ang:.06},wingExt:.05,chord:.22},
+  heron:    {label:'Heron / egret',len:110,body:'slim',head:'flat',tail:'square',bl:.38,bh:.2,hr:.05,tl:.08,tw:.1,tilt:.55,gtilt:.55,legs:.3,neck:32,neckAng:1.45,bill:{l:13,d:1.6,type:'dagger',ang:.1},wingExt:.04,chord:.2,tip:.6,round:.8},
+  ibis:     {label:'Ibis',len:64,body:'plump',head:'round',tail:'square',bl:.44,bh:.22,hr:.048,tl:.1,tw:.12,tilt:.3,gtilt:.25,legs:.2,neck:14,neckAng:1.0,bill:{l:15,d:1.5,type:'curve',ang:.35},wingExt:.02,chord:.21,tip:.7,round:.6},
+  pelican:  {label:'Pelican',len:125,body:'long',head:'flat',tail:'square',bl:.5,bh:.24,hr:.042,tl:.1,tw:.14,tilt:.2,gtilt:.2,stilt:.1,legs:.08,neck:20,neckAng:1.45,neckW:1.1,bill:{l:30,d:3,type:'pouch',ang:.55},wingExt:.02,chord:.17,tip:.7,round:.6},
+  gannet:   {label:'Gannet / booby',len:94,body:'long',head:'round',tail:'point',bl:.58,bh:.22,hr:.058,tl:.2,tw:.12,tilt:.25,gtilt:.25,stilt:-.05,legs:.07,neck:9,neckAng:1.1,neckW:1.2,bill:{l:9.5,d:2.2,type:'dagger',ang:.05},wingExt:.05,chord:.13,tip:1,round:0}};
+function gbMergeShape(base,over){const o=Object.assign({},base,over||{});o.bill=Object.assign({},base.bill||{},(over||{}).bill||{});delete o.label;delete o.len;return o}
+function gb(id,d){d.id=id;if(d.form){if(!FORMS[d.form])throw new Error('unknown form '+d.form);d.shape=gbMergeShape(FORMS[d.form],d.shape)}GB[id]=d}
+// ---- the species. shape: bl body length, bh body depth, hr head radius, tl tail, tw tail width (all x length);
+//      tilt perched / gtilt standing (radians, head up), legs (x length), neck (cm), bill {l cm, d cm, type, ang}
+gb('mall',{name:'Mallard',sci:'Anas platyrhynchos',group:'Ducks & geese',len:58,ws:89,lenTxt:'50–65 cm',wsTxt:'82–95 cm',sex:'Adult male',kind:'swim',homes:['pond','lake','marsh','river','park'],n:9,flush:110,flyspd:520,flap:16,
+  form:'dabbler',shape:{curl:1},
+  c:{back:'#9d9a92',belly:'#c9c5bb',breast:'#6b3a24',flank:'#c3bfb5',under:'#1e1c1c',tail:'#e9e7e1',wing:'#8a8478',prim:'#5b564e',speculum:'#3d4fae',face:'#1d6b40',crown:'#16583a',throat:'#1d6b40',collar:'#f3f2ec',neck:'#1d6b40',bill:'#e6c23a',leg:'#ef8a2a',mm:'#1d6b40'},
+  f:{wing:'#8f897d',prim:'#5f5a52',bar:'#3d4fae',under:'#e3e1da',tip:null},
+  habitat:'Ponds, lakes, marshes and park ponds almost anywhere there is shallow fresh water.',voice:'The female\'s loud, falling "QUACK quack quack quack"; the male gives a soft, raspy "rhaeb".',
+  hint:'Check any pond or quiet bay. Males shine green in the sun.',zone:'Ponds, lakes and marshes',
+  marks:[['crown','Glossy green head'],['collar','Thin white neck ring'],['breast','Chestnut breast'],['wing','Blue speculum edged in white'],['bill','Yellow bill'],['tail','Curled black feathers over a white tail']],
+  flightMarks:['Blue speculum bordered white on both sides','White underwings flash on each beat'],
+  song:'quack'});
+gb('colo',{name:'Common Loon',sci:'Gavia immer',group:'Loons',len:81,ws:136,lenTxt:'66–91 cm',wsTxt:'127–147 cm',sex:'Breeding adult',kind:'swim',homes:['lake'],bands:['R1','R2','R3','R4','R5'],n:5,flush:160,flyspd:620,flap:14,dive:true,
+  form:'loon',shape:{},
+  c:{back:'#151617',belly:'#f4f3ef',breast:'#f4f3ef',wing:'#1a1b1c',prim:'#101112',tail:'#151617',face:'#122019',crown:'#10161a',throat:'#122019',neck:'#122019',necklace:'#f1f1ee',checks:'#f1f1ee',iris:'#c4261f',bill:'#141416',leg:'#2a2c2e',mm:'#141416'},
+  f:{wing:'#16181a',prim:'#0f1012',under:'#f2f1ec',dots:'#e9e9e6'},
+  habitat:'Clear northern lakes in summer, where it nests at the water\'s edge; coastal waters in winter.',voice:'A haunting rising wail, a long yodel, and a laughing tremolo that carries across the lake.',
+  hint:'Scan open lake water from the shore. It sits low and can stay under for a minute.',zone:'Northern lakes',
+  marks:[['crown','Black head with a green gloss'],['neck','White striped necklace'],['back','Black back checked with white'],['eye','Deep red eye'],['bill','Heavy, dagger-shaped black bill']],
+  flightMarks:['Big feet trail behind the tail','Head held low: a hunched, pointed shape'],
+  song:'wail'});
+gb('noga',{name:'Northern Gannet',sci:'Morus bassanus',group:'Gannets & boobies',len:94,ws:173,lenTxt:'87–100 cm',wsTxt:'165–180 cm',sex:'Adult',kind:'sea',homes:['pelagic','ocean'],n:7,flush:90,flyspd:900,flap:8,plunge:true,
+  form:'gannet',shape:{},
+  c:{back:'#f7f6f2',belly:'#f7f6f2',wing:'#f4f3ef',prim:'#141416',tail:'#f4f3ef',face:'#f2e2b0',crown:'#e9cf86',throat:'#f2e2b0',neck:'#f0dfac',mask:'#1a1a1c',bill:'#a9b7c4',leg:'#3c4a46',mm:'#d9cf9e'},
+  f:{wing:'#f6f5f1',prim:'#141416',under:'#f6f5f1',tip:'#141416'},
+  habitat:'Open ocean beyond the surf. Breeds on sea cliffs far to the north.',voice:'Harsh, guttural "urrah" calls at the colony; silent at sea.',
+  hint:'Watch far out over the water for big white birds with black wingtips, folding to dive.',zone:'Offshore waters',
+  marks:[['crown','Golden-buff head'],['bill','Long pale blue-gray bill'],['face','Black skin around the eye and bill base'],['wing','Black wingtips'],['tail','Long, pointed white tail']],
+  flightMarks:['Long, narrow wings with black tips','Pointed at both ends','Plunges headfirst from high up'],
+  song:'urrah'});
+gb('brpe',{name:'Brown Pelican',sci:'Pelecanus occidentalis',group:'Pelicans',len:130,ws:200,lenTxt:'100–137 cm',wsTxt:'200 cm',sex:'Breeding adult',kind:'sea',homes:['ocean','bay','beach'],bands:['R4','R5','R6'],n:7,flush:110,flyspd:700,flap:6,
+  form:'pelican',shape:{},
+  c:{back:'#8f8a7d',belly:'#5b564e',wing:'#7f7a6e',prim:'#2e2c29',tail:'#55514a',face:'#f6f4ee',crown:'#f2d98a',throat:'#f6f4ee',neck:'#5b2e1e',neckFront:'#f6f4ee',bill:'#c4a07a',pouch:'#4a4a42',leg:'#2e2e2a',mm:'#8f8a7d'},
+  f:{wing:'#8b8578',prim:'#2c2a27',under:'#6e6a60'},
+  habitat:'Warm coasts: beaches, bays and harbors from the Carolinas south, often in lines over the surf.',voice:'Adults are nearly silent; low grunts at the nest.',
+  hint:'Look for lines of big brown birds gliding low over the waves, then crashing in to fish.',zone:'Southern coasts',
+  marks:[['crown','Yellow crown (breeding)'],['neck','Dark chestnut back of the neck'],['bill','Huge bill with a throat pouch'],['back','Silvery gray-brown back'],['belly','Dark belly']],
+  flightMarks:['Huge, broad wings; head pulled back','Flies in lines low over the water, flapping then gliding'],
+  song:'grunt'});
+gb('gbhe',{name:'Great Blue Heron',sci:'Ardea herodias',group:'Herons & egrets',len:117,ws:183,lenTxt:'97–137 cm',wsTxt:'167–201 cm',sex:'Adult',kind:'wade',homes:['bay','river','marsh','saltmarsh','lake','pond'],n:8,flush:200,flyspd:480,flap:6,
+  form:'heron',shape:{neckW:1.15,legW:1.2,hr:.052},
+  c:{back:'#7c8ea3',belly:'#6c7584',breast:'#8d97a3',wing:'#7a8ca1',prim:'#3a4350',tail:'#6f8197',face:'#f3f2ee',crown:'#f3f2ee',throat:'#f6f5f1',neck:'#9aa3ad',neckFront:'#e9e7e1',plume:'#18191b',thigh:'#8a4a2a',bill:'#e1b84a',bill2:'#c9a24a',leg:'#5a5246',mm:'#7c8ea3'},
+  f:{wing:'#7d8fa3',prim:'#2f3640',under:'#6f7d8e'},
+  habitat:'Shallow edges of almost any water: bays, rivers, marshes and ponds. Hunts by standing still.',voice:'A deep, harsh croak, "fraahnk", often when flushed.',
+  hint:'Look along shallow edges for a tall gray shape standing perfectly still.',zone:'Shallow water everywhere',
+  marks:[['crown','White face with a black plume stripe'],['neck','Long gray neck with a streaked front'],['bill','Dagger-like yellow bill'],['leg','Long legs with rusty thighs'],['back','Blue-gray back and wings']],
+  flightMarks:['Neck pulled into an S; legs trail far behind','Slow, deep wingbeats; dark flight feathers'],
+  song:'croakB'});
+gb('greg',{name:'Great Egret',sci:'Ardea alba',group:'Herons & egrets',len:99,ws:140,lenTxt:'94–104 cm',wsTxt:'131–145 cm',sex:'Adult',kind:'wade',homes:['saltmarsh','marsh','bay','pond','mangrove'],n:8,flush:180,flyspd:460,flap:6,
+  form:'heron',shape:{bl:.36,bh:.17,hr:.045,tilt:.62,gtilt:.62,neck:30,neckAng:1.5,neckW:.72,legW:.9,bill:{l:11,d:1.3,type:'dagger',ang:.08},wingExt:.03},
+  c:{back:'#f8f7f3',belly:'#efeee9',wing:'#f6f5f1',prim:'#eceae4',tail:'#f2f1ec',face:'#f8f7f3',crown:'#f8f7f3',throat:'#ffffff',neck:'#f6f5f1',bill:'#f2c31f',leg:'#1c1c1e',lore:'#b9d36a',mm:'#f2f1ec'},
+  f:{wing:'#f7f6f2',prim:'#ecebe5',under:'#f2f1ec'},
+  habitat:'Marshes, tidal flats, pond edges and mangroves, wading slowly after fish and frogs.',voice:'A low, rattling croak.',
+  hint:'A tall, all-white heron in the marsh. Check the bill and legs.',zone:'Marshes and tidal flats',
+  marks:[['crown','All-white plumage'],['bill','Yellow bill'],['leg','Black legs and feet'],['neck','Very long, slender neck'],['face','Green skin in front of the eye (breeding)']],
+  flightMarks:['All white; black legs trail behind','Neck tucked into an S'],
+  song:'croakE'});
+gb('whib',{name:'White Ibis',sci:'Eudocimus albus',group:'Ibises',len:64,ws:97,lenTxt:'56–69 cm',wsTxt:'90–105 cm',sex:'Adult',kind:'wade',homes:['mangrove','saltmarsh','swamp','bay','park'],bands:['R5','R6'],n:8,flush:140,flyspd:460,flap:9,
+  form:'ibis',shape:{},
+  c:{back:'#f6f5f1',belly:'#efeee9',wing:'#f4f3ef',prim:'#f0efea',tail:'#efeee9',face:'#f6f5f1',billMask:'#e5674f',crown:'#f6f5f1',throat:'#f6f5f1',neck:'#f6f5f1',bill:'#e5674f',leg:'#e35a46',iris:'#9ec3d6',mm:'#e5674f'},
+  f:{wing:'#f6f5f1',prim:'#f2f1ec',under:'#f2f1ec',tip:'#18191b'},
+  habitat:'Mangroves, salt marshes, swamps and even lawns in the warm south, probing mud with its curved bill.',voice:'A nasal, honking "hunk hunk hunk".',
+  hint:'Watch for flocks of white birds with long curved red bills, probing the mud.',zone:'Southern marshes and mangroves',
+  marks:[['bill','Long, down-curved red bill'],['face','Bare red-pink face'],['leg','Pink-red legs'],['back','All-white body'],['wing','Black wingtips (seen in flight)']],
+  flightMarks:['Black tips on white wings','Flies with neck straight out, in lines'],
+  song:'honk'});
+gb('rutu',{name:'Ruddy Turnstone',sci:'Arenaria interpres',group:'Sandpipers',len:22,ws:50,lenTxt:'21–24 cm',wsTxt:'50–57 cm',sex:'Breeding adult',kind:'ground',homes:['rocky','beach'],n:7,flush:90,flyspd:520,flap:26,walk:44,spot:'shore',
+  form:'sandpiper',shape:{body:'potbelly',tail:'notch',bl:.6,bh:.36,hr:.095,legs:.1,legW:1.35,gtilt:.06,bill:{l:2.1,d:.75,type:'wedge',ang:-.06},wingExt:.07},
+  c:{back:'#b8622e',belly:'#f7f6f2',breast:'#1a1a1c',wing:'#a85a2c',cov:'#b8622e',prim:'#2b2421',bars:['#211b18'],tail:'#2a2421',face:'#f7f6f2',crown:'#f2f0ea',throat:'#f7f6f2',mask:'#1a1a1c',bill:'#141416',leg:'#ef8c2a',mm:'#b8622e',harlequin:'#1a1a1c'},
+  f:{wing:'#a65a2d',prim:'#26201d',bar:'#f5f4ef',under:'#f3f2ed'},
+  habitat:'Rocky shores, jetties and beaches, flipping stones and seaweed to find food.',voice:'A low, chuckling rattle, "kut-a-kut-kut".',
+  hint:'Watch rocks and wrack along the tideline for a stocky, patterned shorebird turning things over.',zone:'Rocky shores and beaches',
+  marks:[['face','Black-and-white harlequin face'],['breast','Black bib'],['back','Rusty and black back'],['bill','Short, wedge-shaped bill'],['leg','Bright orange legs']],
+  flightMarks:['Bold white back, wing and tail stripes: a flashing pattern'],
+  song:'kut'});
+gb('sand',{name:'Sanderling',sci:'Calidris alba',group:'Sandpipers',len:19,ws:40,lenTxt:'18–20 cm',wsTxt:'35–40 cm',sex:'Nonbreeding adult',kind:'ground',homes:['beach'],n:9,flush:80,flyspd:540,flap:30,walk:110,spot:'surf',
+  form:'sandpiper',shape:{bh:.34,hr:.1,legs:.13,gtilt:.02,bill:{l:2.4,d:.5,type:'thin',ang:.06}},
+  c:{back:'#c9cbc7',belly:'#fbfbf8',wing:'#bfc1bd',cov:'#2a2b2c',prim:'#2a2b2c',tail:'#9fa29e',face:'#f4f4f1',crown:'#d0d2ce',throat:'#fbfbf8',bill:'#141416',leg:'#141416',mm:'#c9cbc7'},
+  f:{wing:'#b9bbb7',prim:'#232425',bar:'#fbfbf8',under:'#f6f6f3'},
+  habitat:'Sandy beaches, running in and out with every wave.',voice:'A sharp "kip", often from a flock.',
+  hint:'Watch the edge of the surf for small pale birds racing the waves.',zone:'Ocean beaches',
+  marks:[['back','Pale gray back'],['belly','Bright white underparts'],['wing','Black shoulder spot'],['bill','Short black bill'],['leg','Black legs, no hind toe']],
+  flightMarks:['Bold white stripe along a dark wing'],
+  song:'kip'});
+gb('ropi',{name:'Rock Pigeon',sci:'Columba livia',group:'Pigeons & doves',len:32,ws:64,lenTxt:'29–37 cm',wsTxt:'50–67 cm',sex:'Adult',kind:'ground',homes:['city','farm','park'],n:10,flush:60,flyspd:560,flap:20,walk:34,spot:'land',
+  form:'pigeon',shape:{hr:.085},
+  c:{back:'#9198a4',belly:'#8f96a2',breast:'#7a6f8f',wing:'#a3aab5',prim:'#4d535c',bars:['#1f2226','#1f2226'],tail:'#7f8694',tailBand:'#25282d',face:'#5e6477',crown:'#666c80',throat:'#4f7b6e',nape:'#5f8a7a',iris:'#e6782a',bill:'#2c2b2e',cere:'#e9e7e2',leg:'#d9707a',mm:'#9198a4'},
+  f:{wing:'#a2a9b4',prim:'#454b53',bar:'#1f2226',under:'#e9e9e7'},
+  habitat:'Cities, farms and bridges, anywhere with ledges to nest on and scraps to eat.',voice:'A soft, gurgling "coo-roo-coo".',
+  hint:'Sidewalks, plazas and barn roofs. Look for the glossy neck.',zone:'Cities and farms',
+  marks:[['throat','Glossy green and purple neck'],['wing','Two black wing bars'],['tail','Dark band at the tail tip'],['eye','Orange eye'],['leg','Pink legs']],
+  flightMarks:['White rump on most birds','Pale underwings and a dark tail band'],
+  song:'coo'});
+gb('beki',{name:'Belted Kingfisher',sci:'Megaceryle alcyon',group:'Kingfishers',len:33,ws:53,lenTxt:'28–35 cm',wsTxt:'48–58 cm',sex:'Adult male',kind:'perch',homes:['river','pond','lake','marsh'],suit:['decid','snag','birch','cypress','spruce','pine','cedar','hemlock'],nearWater:true,n:6,flush:120,flyspd:420,flap:24,
+  form:'kingfisher',shape:{crest:'shaggy',head:'round',hr:.14,bill:{l:6,d:1.6,type:'dagger',ang:.02}},
+  c:{back:'#5c7ea1',belly:'#f7f6f2',breast:'#f7f6f2',band:'#5c7ea1',wing:'#557797',prim:'#1f2732',spots:'#f2f1ec',tail:'#4e6d8c',face:'#5c7ea1',crown:'#4e6f92',throat:'#f7f6f2',collar:'#f7f6f2',lore:'#f7f6f2',bill:'#1c1d1f',leg:'#3a3a3c',mm:'#5c7ea1'},
+  f:{wing:'#5a7c9e',prim:'#1d2530',bar:'#f2f1ec',under:'#f2f1ec'},
+  habitat:'Rivers, creeks, ponds and lake shores with clear water and an overhanging perch.',voice:'A loud, dry rattle as it flies along the water.',
+  hint:'Listen for a rattle along the creek and look for a big-headed bird on a branch over the water.',zone:'Rivers and ponds',
+  marks:[['crown','Shaggy blue-gray crest'],['collar','White collar'],['breast','Blue-gray breast band'],['bill','Heavy, dagger-like bill'],['face','White spot in front of the eye']],
+  flightMarks:['White patch near the wingtip','Hovers before plunging'],
+  song:'rattle'});
+gb('rbnu',{name:'Red-breasted Nuthatch',sci:'Sitta canadensis',group:'Nuthatches',len:11,ws:21,lenTxt:'11 cm',wsTxt:'20–22 cm',sex:'Adult male',kind:'perch',homes:['highlands','boreal','bog'],suit:['spruce','hemlock','pine','cedar'],n:8,flush:60,flyspd:240,flap:36,
+  form:'nuthatch',shape:{},
+  c:{back:'#6f87a5',belly:'#d98b4f',breast:'#e09a5e',wing:'#6a82a0',prim:'#3d4d63',tail:'#5d7290',face:'#f6f5f0',crown:'#151618',throat:'#f6f5f0',eyeline:'#151618',supercilium:'#f6f5f0',bill:'#2a2b2e',leg:'#5a4e44',mm:'#d98b4f'},
+  f:{wing:'#6c84a2',prim:'#3a4a60',under:'#e3e1da'},
+  habitat:'Spruce and fir forests; often head-down on trunks and cones.',voice:'A nasal, tinny "yank yank", like a toy horn.',
+  hint:'Listen for little toy-horn toots high in the spruces.',zone:'Spruce–fir forest',
+  marks:[['crown','Black cap'],['face','White eyebrow over a black eye stripe'],['belly','Rusty underparts'],['back','Blue-gray back'],['bill','Long, thin bill; short tail']],
+  flightMarks:['Short tail with white spots near the corners'],
+  song:'yank'});
+gb('cawr',{name:'Carolina Wren',sci:'Thryothorus ludovicianus',group:'Wrens',len:13.5,ws:19,lenTxt:'12–14 cm',wsTxt:'18–20 cm',sex:'Adult',kind:'perch',homes:['maritime','southern','park','hardwood','swamp'],bands:['R3','R4','R5','R6'],suit:['decid','liveoak','cedar','pine','palm','cypress'],low:true,n:8,flush:50,flyspd:220,flap:38,
+  form:'wren',shape:{tl:.3,bill:{l:1.7,d:.36,type:'curve',ang:.2}},
+  c:{back:'#9b5a2c',belly:'#e3b47a',breast:'#e8bd84',wing:'#8f5228',prim:'#6b3f22',barring:'#4a2a16',tail:'#8a5028',face:'#cfa070',crown:'#8f5228',throat:'#f3ead8',supercilium:'#f6f2e8',eyeline:'#6b3f22',bill:'#5a4a3a',leg:'#c9a080',mm:'#9b5a2c'},
+  f:{wing:'#93542a',prim:'#6a3e22',under:'#e7d2b4'},
+  habitat:'Tangles, thickets and yards in the South and Mid-Atlantic, low and out of sight.',voice:'A very loud, rolling "teakettle-teakettle-teakettle".',
+  hint:'A huge song from a tiny bird. Look low in the tangles where the song comes from.',zone:'Southern thickets and yards',
+  marks:[['face','Bold white eyebrow'],['back','Warm rufous upperparts'],['belly','Buffy underparts'],['tail','Cocked tail with dark bars'],['throat','White throat']],
+  flightMarks:['Short, rounded wings and a long rufous tail'],
+  song:'teakettle'});
+gb('grca',{name:'Gray Catbird',sci:'Dumetella carolinensis',group:'Mockingbirds & thrashers',len:22,ws:28,lenTxt:'21–24 cm',wsTxt:'22–30 cm',sex:'Adult',kind:'perch',homes:['scrub','hardwood','park','foothills','maritime'],suit:['decid','cedar','birch','pine'],low:true,n:8,flush:55,flyspd:260,flap:30,
+  form:'mimic',shape:{},
+  c:{back:'#6d7176',belly:'#7a7e83',wing:'#64686d',prim:'#4a4e53',tail:'#2a2b2e',under:'#8a3b22',face:'#6d7176',crown:'#141416',throat:'#7a7e83',bill:'#141416',leg:'#2a2b2e',mm:'#6d7176'},
+  f:{wing:'#666a6f',prim:'#45494e',under:'#7f8388'},
+  habitat:'Dense shrubs and thickets, woodland edges and overgrown yards.',voice:'A cat-like "mew", and long jumbled songs of borrowed sounds.',
+  hint:'Pish at a thicket: a gray bird often pops up with a mewing call.',zone:'Thickets and shrubland',
+  marks:[['crown','Black cap'],['back','Slate-gray all over'],['tail','Long black tail'],['belly','Rusty patch under the tail'],['bill','Thin black bill']],
+  flightMarks:['Long dark tail; rusty undertail'],
+  song:'mew'});
+gb('eabl',{name:'Eastern Bluebird',sci:'Sialia sialis',group:'Thrushes',len:18,ws:30,lenTxt:'16–21 cm',wsTxt:'25–32 cm',sex:'Adult male',kind:'perch',homes:['farm','grassland','park','sandhill'],suit:['decid','pine','cedar','snag','liveoak'],n:8,flush:70,flyspd:300,flap:28,
+  form:'thrush',shape:{tail:'notch',hr:.11,tl:.24,legs:.11,tilt:.5,gtilt:.3,bill:{l:1.3,d:.42,type:'thin',ang:.1},wingExt:.07},
+  c:{back:'#3a6fd0',belly:'#f4f2ec',breast:'#d9783a',flank:'#d9783a',wing:'#3366c8',prim:'#24489a',tail:'#3466c6',face:'#3a6fd0',crown:'#3a6fd0',throat:'#d9783a',bill:'#141416',leg:'#2a2b2e',mm:'#3a6fd0'},
+  f:{wing:'#3a6fd0',prim:'#22468f',under:'#d9d6cf'},
+  habitat:'Open country with scattered trees: farms, fields, orchards and pine savanna.',voice:'A soft, low, warbled "chur-lee, chur-lee".',
+  hint:'Check fence posts and wires along fields for a flash of sky blue.',zone:'Farms and open fields',
+  marks:[['back','Bright sky-blue back, wings and tail'],['breast','Rusty-orange throat and breast'],['belly','White belly'],['bill','Short, thin black bill']],
+  flightMarks:['Blue above, orange breast below'],
+  song:'chur'});
+gb('amro',{name:'American Robin',sci:'Turdus migratorius',group:'Thrushes',len:25,ws:36,lenTxt:'23–28 cm',wsTxt:'31–41 cm',sex:'Adult male',kind:'ground',homes:['park','city','farm','grassland','hardwood'],n:11,flush:65,flyspd:340,flap:24,walk:52,spot:'land',
+  form:'thrush',shape:{},
+  c:{back:'#5d574f',belly:'#f2efe8',breast:'#d1612a',flank:'#cc5e2a',under:'#f2efe8',wing:'#57514a',prim:'#3e3a35',tail:'#2c2a28',face:'#2c2a28',crown:'#26241f',throat:'#f1ede4',eyering:'#f6f4ee',bill:'#e8b52a',leg:'#5d5248',streaks:'#2c2a28',mm:'#d1612a'},
+  f:{wing:'#58524b',prim:'#3a3632',under:'#d8723a'},
+  habitat:'Lawns, parks, farms and open woods; runs, stops and tugs up worms.',voice:'A rich, caroling "cheerily, cheer-up, cheerio".',
+  hint:'Watch lawns and fields: run, stop, head tilted, then a quick jab.',zone:'Lawns, parks and farms',
+  marks:[['breast','Brick-orange breast'],['crown','Dark head'],['eye','White arcs around the eye'],['bill','Yellow bill'],['throat','White throat with dark streaks']],
+  flightMarks:['Orange underwings and breast','White corners on the dark tail'],
+  song:'carol'});
+gb('ampi',{name:'American Pipit',sci:'Anthus rubescens',group:'Pipits',len:16,ws:27,lenTxt:'15–17 cm',wsTxt:'25–28 cm',sex:'Breeding adult',kind:'ground',homes:['tundra','arctic','grassland'],n:7,flush:65,flyspd:340,flap:30,walk:44,spot:'land',
+  form:'pipit',shape:{},
+  c:{back:'#8b8475',belly:'#e8d3b0',breast:'#e6cba4',wing:'#7e7768',prim:'#5c564b',bars:['#d9cdb4','#d9cdb4'],tail:'#4a463e',tailEdge:'#f6f5f0',face:'#8b8475',crown:'#857e70',throat:'#efe2c8',supercilium:'#efe0c4',bill:'#2c2a28',leg:'#4a443c',streaks:'#7a6a55',mm:'#8b8475'},
+  f:{wing:'#827b6c',prim:'#575146',under:'#e3dccb'},
+  habitat:'Alpine tundra and arctic slopes in summer; open fields and beaches in winter.',voice:'A thin "pip-it" flight call; a tinkling song given in a display flight.',
+  hint:'Walks (doesn\'t hop) across open ground, bobbing its tail.',zone:'Tundra and open fields',
+  marks:[['back','Plain gray-brown back'],['breast','Buffy breast with fine streaks'],['face','Pale eyebrow'],['tail','White outer tail feathers'],['bill','Thin bill; bobs its tail']],
+  flightMarks:['White outer tail feathers','Bounding flight calling "pip-it"'],
+  song:'pipit'});
+gb('snbu',{name:'Snow Bunting',sci:'Plectrophenax nivalis',group:'Longspurs & snow buntings',len:16,ws:32,lenTxt:'15–18 cm',wsTxt:'32–35 cm',sex:'Breeding male',kind:'ground',homes:['arctic','tundra'],n:8,flush:70,flyspd:360,flap:28,walk:40,spot:'land',
+  form:'sparrow',shape:{legs:.09,tl:.24,hr:.11,bill:{l:1.1,d:.55,type:'cone',ang:.1},wingExt:.09,chord:.24},
+  c:{back:'#141416',belly:'#f9f9f6',breast:'#f9f9f6',wing:'#f9f9f6',prim:'#141416',tail:'#f4f4f1',tailMid:'#141416',face:'#f9f9f6',crown:'#f9f9f6',throat:'#f9f9f6',bill:'#141416',leg:'#141416',mm:'#e8e8e4'},
+  f:{wing:'#f9f9f6',prim:'#141416',under:'#f9f9f6'},
+  habitat:'Arctic tundra and rocky slopes in summer; beaches and bare fields in winter.',voice:'A rich, musical warble; a soft rippling call in flight.',
+  hint:'Flocks swirl over bare ground like blowing snowflakes.',zone:'Arctic and alpine tundra',
+  marks:[['back','Black back'],['belly','Snow-white body'],['wing','Huge white wing patch'],['bill','Short black bill (summer)'],['tail','Black center to the white tail']],
+  flightMarks:['Mostly white wings with black tips','Flocks flash white and black'],
+  song:'snow'});
+gb('daju',{name:'Dark-eyed Junco',sci:'Junco hyemalis',group:'New World sparrows',len:15,ws:23,lenTxt:'14–16 cm',wsTxt:'18–25 cm',sex:'Adult male (Slate-colored)',kind:'ground',homes:['boreal','highlands','foothills','bog'],n:9,flush:55,flyspd:280,flap:32,walk:36,spot:'land',
+  form:'sparrow',shape:{hr:.115,bill:{l:1.1,d:.5,type:'cone',ang:.1}},
+  c:{back:'#5c6068',belly:'#f6f5f1',breast:'#5c6068',wing:'#575b62',prim:'#3f4247',tail:'#3c3f44',tailEdge:'#f6f5f1',face:'#55595f',crown:'#53575e',throat:'#5c6068',bill:'#efc2b6',leg:'#c99a8a',mm:'#5c6068'},
+  f:{wing:'#575b62',prim:'#3d4045',under:'#cfd0d0'},
+  habitat:'Spruce and mixed forest floors and edges; flocks visit yards and roadsides in winter.',voice:'A musical trill on one pitch; sharp "tick" calls.',
+  hint:'Watch the forest floor and trail edges: a gray bird flicks white tail sides as it flies.',zone:'Northern and mountain forest',
+  marks:[['crown','Slate-gray hood and back'],['belly','Clean white belly'],['bill','Pale pink bill'],['tail','White outer tail feathers flash in flight']],
+  flightMarks:['White outer tail feathers on a dark tail'],
+  song:'trill'});
+gb('eato',{name:'Eastern Towhee',sci:'Pipilo erythrophthalmus',group:'New World sparrows',len:21,ws:27,lenTxt:'17–23 cm',wsTxt:'20–30 cm',sex:'Adult male',kind:'ground',homes:['foothills','scrub','maritime','hardwood','sandhill'],n:9,flush:55,flyspd:280,flap:30,walk:38,spot:'land',
+  form:'sparrow',shape:{tail:'round',tl:.42,hr:.11,bh:.34,bill:{l:1.4,d:.65,type:'cone',ang:.1}},
+  c:{back:'#151517',belly:'#f6f5f1',breast:'#151517',flank:'#c8642a',wing:'#18181a',prim:'#121214',wpatch:'#f6f5f1',tail:'#151517',tailEdge:'#f6f5f1',face:'#151517',crown:'#151517',throat:'#151517',iris:'#b52a1f',bill:'#141416',leg:'#c9a48c',mm:'#c8642a'},
+  f:{wing:'#18181a',prim:'#111113',bar:'#f2f1ec',under:'#d4d1c9'},
+  habitat:'Thickets, scrub and leafy forest edges, scratching noisily in dead leaves.',voice:'A ringing "drink-your-teeeea" and a loud "chewink" call.',
+  hint:'Listen for scratching in dry leaves under shrubs.',zone:'Thickets and forest edges',
+  marks:[['crown','Black hood and back'],['flank','Rufous sides'],['belly','White belly'],['eye','Red eye'],['tail','White corners on a long black tail']],
+  flightMarks:['White corners on a long black tail','White patch at the base of the primaries'],
+  song:'drink'});
+gb('eame',{name:'Eastern Meadowlark',sci:'Sturnella magna',group:'Blackbirds & orioles',len:24,ws:38,lenTxt:'19–28 cm',wsTxt:'35–40 cm',sex:'Adult',kind:'ground',homes:['grassland','farm'],n:9,flush:90,flyspd:380,flap:22,walk:38,spot:'land',
+  form:'blackbird',shape:{body:'potbelly',tail:'square',tl:.2,bh:.34,legs:.15,bill:{l:3,d:.75,type:'dagger',ang:.05},wingExt:0,chord:.24},
+  c:{back:'#8d6c40',belly:'#f4c62a',breast:'#f4c62a',flank:'#e8ddc2',wing:'#8a6a3e',prim:'#6d5434',bars:['#3a2c1a','#3a2c1a','#3a2c1a'],tail:'#7a5e38',tailEdge:'#f6f5f0',face:'#e9e0c8',crown:'#6a5030',throat:'#f4c62a',supercilium:'#f2e6b8',eyeline:'#4a3820',necklace:'#151517',streaks:'#3a2c1a',bill:'#cbbfa6',leg:'#d8b8a0',mm:'#f4c62a'},
+  f:{wing:'#8a6a3e',prim:'#5f4a2e',under:'#ebe3d0'},
+  habitat:'Grasslands, hayfields and pastures; sings from fence posts.',voice:'Clear, slurred whistles, "see-you, see-yeeer".',
+  hint:'Check fence posts over hayfields and listen for slurred whistles.',zone:'Grasslands and farms',
+  marks:[['breast','Bright yellow breast'],['throat','Black V across the chest'],['back','Streaky brown back'],['crown','Striped crown'],['tail','White outer tail feathers']],
+  flightMarks:['Stiff, fluttering wingbeats then a glide','White outer tail feathers'],
+  song:'meadow'});
+gb('rwbl',{name:'Red-winged Blackbird',sci:'Agelaius phoeniceus',group:'Blackbirds & orioles',len:22,ws:35,lenTxt:'17–23 cm',wsTxt:'31–40 cm',sex:'Adult male',kind:'reed',homes:['marsh','saltmarsh','farm','bog'],n:12,flush:70,flyspd:360,flap:24,
+  form:'blackbird',shape:{tl:.32,bill:{l:2.3,d:.8,type:'dagger',ang:.05}},
+  c:{back:'#141416',belly:'#151517',wing:'#141416',prim:'#0f0f11',tail:'#141416',face:'#151517',crown:'#141416',throat:'#151517',epaulet:'#e1261c',epauletEdge:'#f1d36a',bill:'#141416',leg:'#2a2b2e',mm:'#e1261c'},
+  f:{wing:'#141416',prim:'#0f0f11',epaulet:'#e1261c',under:'#1c1c1e'},
+  habitat:'Cattail marshes, wet ditches and hayfields; males sing from the tops of cattails.',voice:'A gurgling "conk-la-reee!" and sharp "check" calls.',
+  hint:'Look at the tops of the cattails: males flare their red shoulders as they sing.',zone:'Marshes and wet fields',
+  marks:[['wing','Red shoulder patch edged in yellow'],['back','Glossy black all over'],['bill','Sharp, pointed black bill']],
+  flightMarks:['Red shoulders flash on a black bird'],
+  song:'conk'});
+gb('prow',{name:'Prothonotary Warbler',sci:'Protonotaria citrea',group:'Wood-warblers',len:13.5,ws:22,lenTxt:'13 cm',wsTxt:'22 cm',sex:'Adult male',kind:'perch',homes:['swamp','river'],bands:['R4','R5','R6'],suit:['cypress','decid','snag'],low:true,n:8,flush:60,flyspd:250,flap:34,
+  form:'warbler',shape:{body:'plump',tl:.22,hr:.11,bh:.34,bill:{l:1.5,d:.36,type:'needle',ang:.05}},
+  c:{back:'#9cab3a',belly:'#f7f6f0',breast:'#f4c216',wing:'#7f8fa1',prim:'#5c6a7b',tail:'#6d7b8c',under:'#f7f6f0',face:'#f6c418',crown:'#f2bf14',throat:'#f6c418',bill:'#141416',leg:'#5a6068',mm:'#f4c216'},
+  f:{wing:'#7e8ea0',prim:'#5a6879',under:'#e6e4dd'},
+  habitat:'Wooded swamps and slow rivers with standing dead trees, nesting in old cavities over water.',voice:'A loud, ringing "sweet-sweet-sweet-sweet".',
+  hint:'Look low over swamp water for a glowing golden bird.',zone:'Swamps and river bottoms',
+  marks:[['crown','Glowing golden-yellow head'],['wing','Plain blue-gray wings, no wing bars'],['back','Olive back'],['bill','Long, sharp black bill'],['eye','Big dark eye']],
+  flightMarks:['Blue-gray wings and tail with white tail spots'],
+  song:'sweet'});
+gb('pawa',{name:'Palm Warbler',sci:'Setophaga palmarum',group:'Wood-warblers',len:13.5,ws:20,lenTxt:'12–14 cm',wsTxt:'20–21 cm',sex:'Breeding adult (Yellow)',kind:'perch',homes:['bog','scrub','beach','grassland'],suit:['spruce','cedar','pine','decid','birch'],low:true,n:8,flush:55,flyspd:250,flap:34,
+  form:'warbler',shape:{tl:.28,tail:'notch',legs:.13,bill:{l:1.1,d:.3,type:'needle',ang:.05}},
+  c:{back:'#8b7d4c',belly:'#f2d53c',breast:'#f2d03a',wing:'#7f7448',prim:'#5d553a',bars:['#c9bf98'],tail:'#5f5840',under:'#f6dc3a',face:'#bba05a',crown:'#b5532c',throat:'#f2d53c',supercilium:'#f2dc5a',eyeline:'#6a5a30',streaks:'#b5532c',bill:'#2a2b2e',leg:'#4a3e34',mm:'#f2d53c'},
+  f:{wing:'#7d7346',prim:'#5a5338',under:'#e9e1bf'},
+  habitat:'Spruce bogs in summer; low scrub, field edges and dunes in migration and winter. Pumps its tail constantly.',voice:'A buzzy, even trill.',
+  hint:'A warbler on or near the ground that never stops bobbing its tail.',zone:'Bogs, scrub and field edges',
+  marks:[['crown','Chestnut cap'],['face','Yellow eyebrow'],['throat','Yellow throat and underparts'],['breast','Rusty streaks on the breast'],['tail','Bright yellow under the tail; tail always bobbing']],
+  flightMarks:['Yellow undertail, white tail spots'],
+  song:'buzztrill'});
+gb('scta',{name:'Scarlet Tanager',sci:'Piranga olivacea',group:'Cardinals & tanagers',len:17,ws:29,lenTxt:'16–17 cm',wsTxt:'25–30 cm',sex:'Breeding male',kind:'perch',homes:['hardwood','foothills'],suit:['decid'],n:8,flush:70,flyspd:300,flap:28,
+  form:'finch',shape:{hr:.105,tl:.26,bh:.34,bill:{l:1.5,d:.78,type:'cone',ang:.08}},
+  c:{back:'#df2229',belly:'#e3272c',wing:'#141416',prim:'#0f0f11',tail:'#141416',face:'#e3272c',crown:'#dc2228',throat:'#e3272c',bill:'#cbc3a2',leg:'#5a5550',mm:'#e3272c'},
+  f:{wing:'#141416',prim:'#0f0f11',under:'#d9d6cf'},
+  habitat:'Tall, mature hardwood forest, high in the leafy canopy.',voice:'A hoarse, robin-like song, "querit-queer-query-querit", and a "chick-burr" call.',
+  hint:'Listen for a burry robin-like song high in the oaks, then find the red.',zone:'Hardwood forest canopy',
+  marks:[['back','Brilliant scarlet body'],['wing','Jet-black wings and tail'],['bill','Pale, thick bill']],
+  flightMarks:['Red body with black wings: unmistakable'],
+  song:'hoarse'});
+gb('noca',{name:'Northern Cardinal',sci:'Cardinalis cardinalis',group:'Cardinals & tanagers',len:22,ws:28,lenTxt:'21–23 cm',wsTxt:'25–31 cm',sex:'Adult male',kind:'perch',homes:['southern','maritime','park','scrub','hardwood','swamp'],bands:['R3','R4','R5','R6'],suit:['decid','cedar','liveoak','pine','palm','cypress'],n:11,flush:60,flyspd:280,flap:28,
+  form:'finch',shape:{crest:'point',tail:'round',tl:.4,hr:.1,bill:{l:1.8,d:1.25,type:'cone',ang:.1}},
+  c:{back:'#c42228',belly:'#d7262b',wing:'#b8222a',prim:'#9a1e24',tail:'#b02026',face:'#d7262b',crown:'#d42529',throat:'#141416',billMask:'#141416',bill:'#ee5b3a',leg:'#8a5a50',mm:'#d7262b'},
+  f:{wing:'#b8222a',prim:'#941c22',under:'#d9a0a0'},
+  habitat:'Thickets, woodland edges, yards and parks; most common in the South.',voice:'Loud, slurred whistles, "cheer-cheer-cheer, birdy-birdy-birdy".',
+  hint:'Bright red in the thickets. Listen for loud slurred whistles.',zone:'Thickets, yards and southern woods',
+  marks:[['crown','Pointed red crest'],['face','Black mask around the bill'],['bill','Thick red-orange bill'],['back','Red all over']],
+  flightMarks:['All red with a long tail'],
+  song:'cheer'});
+gb('pabu',{name:'Painted Bunting',sci:'Passerina ciris',group:'Cardinals & tanagers',len:13.5,ws:22,lenTxt:'12–14 cm',wsTxt:'21–23 cm',sex:'Adult male',kind:'perch',homes:['sandhill','maritime','scrub','southern'],bands:['R5','R6'],suit:['cedar','liveoak','pine','palm','decid'],low:true,n:8,flush:60,flyspd:260,flap:34,
+  form:'sparrow',shape:{body:'round',tl:.26,hr:.11,bh:.36,bill:{l:1.1,d:.6,type:'cone',ang:.1}},
+  c:{back:'#8fcd2c',belly:'#e3372e',breast:'#e3372e',rump:'#e3372e',wing:'#4e8a2a',cov:'#8fcd2c',prim:'#3a6a24',tail:'#7a3a3a',face:'#3a5ad8',crown:'#3657d3',throat:'#e3372e',eyering:'#e3372e',bill:'#4a4e56',leg:'#6a6560',mm:'#3a5ad8'},
+  f:{wing:'#4f8b2a',cov:'#8fcd2c',prim:'#3a6a24',under:'#d06a5a'},
+  habitat:'Brushy coastal thickets, maritime forest edges and sandy scrub in the deep South.',voice:'A sweet, high, tumbling warble.',
+  hint:'Watch the edges of coastal thickets for a bird that looks painted in blue, green and red.',zone:'Southern coastal thickets',
+  marks:[['crown','Blue head'],['eye','Red eye-ring'],['back','Lime-green back'],['belly','Red underparts and rump'],['bill','Stout, conical bill']],
+  flightMarks:['Red rump and underparts, green back'],
+  song:'warble'});
+// ---- songs: tone(type,f0,f1,dur,vol,delay,{vib,rate,filt,q,pan}) and nshot(type,f,q,dur,vol,fEnd,delay,pan)
+const GBSONG={
+  quack:(T,N,v,p)=>{const n=3+Math.floor(Math.random()*3);for(let i=0;i<n;i++){const k=1-i*.12;T('sawtooth',360*k,300*k,.16,.07*v,i*.24,{filt:900,q:3,pan:p});N('bandpass',1100,3,.14,.03*v,700,i*.24,p)}},
+  wail:(T,N,v,p)=>{T('sine',600,960,1.1,.11*v,0,{vib:6,rate:5,pan:p});T('sine',960,780,1.2,.1*v,1.1,{vib:10,rate:6,pan:p});T('sine',1180,1050,.9,.04*v,1.2,{pan:p})},
+  urrah:(T,N,v,p)=>{for(let i=0;i<2;i++){T('sawtooth',320,250,.38,.06*v,i*.5,{vib:30,rate:28,filt:900,q:2,pan:p});N('lowpass',600,1,.35,.04*v,300,i*.5,p)}},
+  grunt:(T,N,v,p)=>{N('lowpass',260,1,.28,.06*v,160,0,p);T('sawtooth',110,90,.25,.03*v,0,{filt:300,pan:p})},
+  croakB:(T,N,v,p)=>{T('sawtooth',230,150,.6,.08*v,0,{filt:700,q:2,vib:20,rate:24,pan:p});N('bandpass',500,1.5,.55,.05*v,260,0,p)},
+  croakE:(T,N,v,p)=>{for(let i=0;i<2;i++){T('sawtooth',190,140,.32,.06*v,i*.42,{filt:600,q:2,vib:30,rate:30,pan:p})}},
+  honk:(T,N,v,p)=>{for(let i=0;i<4;i++){T('sawtooth',420,340,.13,.06*v,i*.28,{filt:1000,q:3,pan:p})}},
+  kut:(T,N,v,p)=>{for(let i=0;i<7;i++){T('square',2900-i*60,2700-i*60,.04,.035*v,i*.065,{filt:3400,q:2,pan:p})}},
+  kip:(T,N,v,p)=>{for(let i=0;i<3;i++)T('sine',4300,4000,.045,.07*v,i*.17+Math.random()*.04,{pan:p})},
+  coo:(T,N,v,p)=>{T('sine',430,380,.28,.09*v,0,{vib:7,rate:9,pan:p});T('sine',380,300,.55,.09*v,.32,{vib:9,rate:9,pan:p});T('sine',400,340,.3,.07*v,.95,{pan:p})},
+  rattle:(T,N,v,p)=>{for(let i=0;i<20;i++){N('bandpass',2600+Math.random()*400,4,.03,.06*v,0,i*.045,p);T('square',1800,1700,.025,.02*v,i*.045,{filt:2600,pan:p})}},
+  yank:(T,N,v,p)=>{const n=3+Math.floor(Math.random()*3);for(let i=0;i<n;i++)T('square',640,610,.11,.04*v,i*.2,{filt:1300,q:4,pan:p})},
+  teakettle:(T,N,v,p)=>{for(let r=0;r<3;r++){const d=r*.42;T('sine',3800,3000,.09,.08*v,d,{pan:p});T('sine',2600,2700,.08,.07*v,d+.12,{pan:p});T('sine',3300,2900,.11,.08*v,d+.24,{pan:p})}},
+  mew:(T,N,v,p)=>{T('sine',1900,1300,.32,.07*v,0,{vib:12,rate:20,pan:p});for(let i=0;i<6;i++){const f=2000+Math.random()*2500;T(Math.random()<.5?'square':'sine',f,f*(.85+Math.random()*.3),.08,.035*v,.45+i*.15,{filt:5000,pan:p})}},
+  chur:(T,N,v,p)=>{for(let r=0;r<2;r++){T('sine',1500,2200,.2,.06*v,r*.62,{pan:p});T('sine',2000,1800,.25,.05*v,r*.62+.24,{pan:p})}},
+  carol:(T,N,v,p)=>{const n=4+Math.floor(Math.random()*3);for(let i=0;i<n;i++){const f=2300+Math.random()*900;T('sine',f,f*(Math.random()<.5?.82:1.15),.2,.07*v,i*.34,{vib:30,rate:40,pan:p})}},
+  pipit:(T,N,v,p)=>{for(let i=0;i<3;i++){T('sine',5000,4600,.05,.05*v,i*.38,{pan:p});T('sine',4400,4300,.05,.05*v,i*.38+.09,{pan:p})}},
+  snow:(T,N,v,p)=>{for(let i=0;i<8;i++){const f=2500+Math.random()*1300;T('sine',f,f*1.08,.1,.05*v,i*.12,{pan:p})}},
+  trill:(T,N,v,p)=>{const f=3400+Math.random()*400,n=16+Math.floor(Math.random()*6);for(let i=0;i<n;i++)T('sine',f,f*.92,.04,.05*v,i*.058,{pan:p})},
+  drink:(T,N,v,p)=>{T('sine',2600,2700,.16,.07*v,0,{pan:p});T('sine',1900,1800,.12,.06*v,.24,{pan:p});for(let i=0;i<9;i++)T('sine',3300,3100,.035,.05*v,.44+i*.045,{pan:p})},
+  meadow:(T,N,v,p)=>{T('sine',3600,3200,.3,.07*v,0,{pan:p});T('sine',3000,2700,.25,.06*v,.38,{pan:p});T('sine',3400,3500,.22,.06*v,.75,{pan:p});T('sine',3300,2300,.45,.07*v,1.02,{pan:p})},
+  conk:(T,N,v,p)=>{T('sine',1700,1800,.09,.06*v,0,{pan:p});T('sine',2300,2200,.09,.06*v,.15,{pan:p});T('sawtooth',3600,3300,.7,.045*v,.32,{vib:200,rate:55,filt:4200,q:2,pan:p})},
+  sweet:(T,N,v,p)=>{const n=5+Math.floor(Math.random()*3);for(let i=0;i<n;i++)T('sine',3500,4300,.1,.07*v,i*.18,{pan:p})},
+  buzztrill:(T,N,v,p)=>{for(let i=0;i<11;i++)T('sawtooth',4300+i*25,4250+i*25,.055,.035*v,i*.07,{filt:5000,q:2,vib:120,rate:70,pan:p})},
+  hoarse:(T,N,v,p)=>{const n=4+Math.floor(Math.random()*2);for(let i=0;i<n;i++){const f=2500+Math.random()*700;T('sawtooth',f,f*(Math.random()<.5?.85:1.12),.2,.04*v,i*.28,{filt:3300,q:2,vib:90,rate:60,pan:p})}},
+  cheer:(T,N,v,p)=>{const n=3+Math.floor(Math.random()*2);for(let i=0;i<n;i++)T('sine',3800,1900,.2,.08*v,i*.3,{pan:p});for(let i=0;i<4;i++)T('sine',2400,3200,.08,.06*v,n*.3+.15+i*.13,{pan:p})},
+  warble:(T,N,v,p)=>{for(let i=0;i<10;i++){const f=3000+Math.random()*2000;T('sine',f,f*(.9+Math.random()*.2),.08,.05*v,i*.1,{pan:p})}}};
+// ---- drawing ----
+function gbS(G,pose){const S=G.shape;return pose==='perch'?S.tilt:pose==='swim'?(S.stilt??0):S.gtilt}
+function gbGeom(G,pose,o={}){const S=G.shape,L=G.len,A=L*S.bl/2,B=L*S.bh/2,R=L*S.hr,tilt=gbS(G,pose),legH=pose==='swim'?0:L*S.legs;
+  let cy=pose==='swim'?-B*.28:-(legH+B*.72);if(pose==='perch')cy+=B*.18;const cx=0,ca=Math.cos(tilt),sa=Math.sin(tilt);
+  const loc=(u,v)=>[cx+u*ca+v*sa,cy-u*sa+v*ca];
+  const neckBase=loc(A*.72,-B*.5);let Hc;
+  if(S.neck){const na=S.neckAng??1.2,nk=S.neck*(pose==='swim'?.85:1);Hc=[neckBase[0]+Math.cos(na)*nk+R*.3,neckBase[1]-Math.sin(na)*nk]}
+  else Hc=loc(A*.78-R*.1,-B*.55-R*.38);
+  const pk=o.peck||0;if(pk>0){const gy=pose==='swim'?R*.2:-R*1.1;Hc=[Hc[0]+A*.45*pk,lerp(Hc[1],gy,pk*(S.neck?.9:.7))]}
+  const ba=(S.bill.ang??.1)+pk*.9,bb=[Hc[0]+R*.9*Math.cos(ba),Hc[1]+R*.9*Math.sin(ba)],btip=[bb[0]+S.bill.l*Math.cos(ba),bb[1]+S.bill.l*Math.sin(ba)];
+  const t2=tilt-(S.tailUp||0)-(o.tailFlick||0)*.3,Lt=L*S.tl,rear=loc(-A*.95,-B*.08),tailTip=[rear[0]-Lt*Math.cos(t2),rear[1]+Lt*Math.sin(t2)];
+  const hip=loc(-A*.02,B*.62);
+  return{A,B,R,tilt,ca,sa,cx,cy,loc,neckBase,Hc,ba,bb,btip,t2,Lt,rear,tailTip,hip,legH,L}}
+const GB_BODY={
+  plump:[[.97,0],[.97,-1.02],[.12,-1.15],[-.55,-.78],[-.85,-.5],[-1.06,-.16],[-1.07,.06],[-.9,.48],[-.3,1.06],[.28,.98],[.72,.86],[.97,.5],[.97,0]],
+  slim:[[.97,0],[.97,-.9],[.15,-1.0],[-.55,-.68],[-.88,-.42],[-1.1,-.12],[-1.12,.05],[-.92,.36],[-.3,.82],[.3,.84],[.74,.74],[.97,.42],[.97,0]],
+  potbelly:[[.97,0],[.97,-1.0],[.2,-1.1],[-.5,-.78],[-.85,-.5],[-1.05,-.2],[-1.06,.04],[-.85,.42],[-.35,.98],[.35,1.16],[.86,1.06],[.98,.5],[.97,0]],
+  round:[[.97,0],[.98,-1.08],[.1,-1.2],[-.6,-.92],[-.94,-.62],[-1.06,-.2],[-1.06,.1],[-.96,.62],[-.3,1.14],[.3,1.12],[.82,.96],[.98,.5],[.97,0]],
+  boat:[[.97,0],[.97,-1.0],[.2,-1.1],[-.5,-.95],[-.92,-.88],[-1.12,-.52],[-1.14,-.1],[-1.02,.58],[-.4,.84],[.3,.84],[.86,.78],[.98,.4],[.97,0]],
+  long:[[.97,0],[.98,-.86],[.25,-.96],[-.5,-.8],[-.92,-.6],[-1.14,-.26],[-1.14,0],[-1.02,.46],[-.3,.86],[.35,.86],[.8,.76],[.98,.4],[.97,0]]};
+function gbBodyPath(g,S){const {A,B,loc}=g,P=new Path2D();const m=(u,v)=>loc(u*A,v*B);
+  const pts=GB_BODY[(S&&S.body)||'plump']||GB_BODY.plump;
+  const q=pts.map(p=>m(p[0],p[1]));P.moveTo(...q[0]);for(let i=1;i+2<q.length;i+=3)P.bezierCurveTo(...q[i],...q[i+1],...q[i+2]);P.closePath();return P}
+function gbWingPath(g,G){const {A,B,loc}=g,ext=G.shape.wingExt*G.len,P=new Path2D();const s=loc(A*.62,-B*.6),tip=loc(-A*1.02-ext,B*.06);
+  P.moveTo(...s);P.bezierCurveTo(...loc(A*.15,-B*.95),...loc(-A*.65,-B*.55),...tip);P.bezierCurveTo(...loc(-A*.55,B*.32),...loc(A*.1,B*.32),...loc(A*.48,B*.06));P.bezierCurveTo(...loc(A*.68,-B*.15),...loc(A*.72,-B*.45),...s);P.closePath();return{P,s,tip}}
+function gbHeadPath(Hc,R,kind){const P=new Path2D();
+  if(kind==='flat'){P.ellipse(Hc[0]-R*.06,Hc[1]+R*.06,R*1.14,R*.9,-.08,0,TAU)}
+  else if(kind==='peak'){P.arc(Hc[0],Hc[1],R,0,TAU);P.moveTo(Hc[0]-R*.35+R*.62,Hc[1]-R*.7);P.ellipse(Hc[0]-R*.35,Hc[1]-R*.7,R*.62,R*.52,-.3,0,TAU)}
+  else if(kind==='puffy'){P.ellipse(Hc[0]-R*.18,Hc[1]-R*.08,R*1.24,R*1.12,0,0,TAU)}
+  else P.arc(Hc[0],Hc[1],R,0,TAU);return P}
+// tail outline from the base (b, half-width w0) to the tip (t, half-width w1); n is the sideways unit vector
+function gbTailPath(kind,b,t,n,w0,w1){const P=new Path2D(),dx=t[0]-b[0],dy=t[1]-b[1];
+  const at=(k,s)=>[b[0]+dx*k+n[0]*s,b[1]+dy*k+n[1]*s];
+  P.moveTo(...at(0,w0));
+  if(kind==='point'){P.quadraticCurveTo(...at(.55,w1*1.05),...at(1.08,0));P.quadraticCurveTo(...at(.55,-w1*1.05),...at(0,-w0))}
+  else if(kind==='notch'){P.lineTo(...at(1,w1));P.lineTo(...at(.86,0));P.lineTo(...at(1,-w1));P.lineTo(...at(0,-w0))}
+  else if(kind==='round'){P.lineTo(...at(.86,w1));P.quadraticCurveTo(...at(1.14,0),...at(.86,-w1));P.lineTo(...at(0,-w0))}
+  else if(kind==='fan'){P.lineTo(...at(.8,w1*1.5));P.quadraticCurveTo(...at(1.12,0),...at(.8,-w1*1.5));P.lineTo(...at(0,-w0))}
+  else{P.lineTo(...at(1,w1));P.lineTo(...at(1,-w1));P.lineTo(...at(0,-w0))}
+  P.closePath();return P}
+function gbEll(x,y,rx,ry,rot,col){ctx.fillStyle=col;ctx.beginPath();ctx.ellipse(x,y,Math.max(0,rx),Math.max(0,ry),rot,0,TAU);ctx.fill()}
+function drawGB(id,pose,o){const G=GB[id],S=G.shape,C=G.c,det=o.detail,g=gbGeom(G,pose,o),{A,B,R,loc,Hc,L}=g;
+  if(G.draw&&G.drawOnly){G.draw(ctx,pose,o,g,G);return}
+  const lw=Math.max(.12,L*.011)*(S.legW||1);
+  if(pose==='swim'){ctx.save();ctx.beginPath();ctx.rect(-L*3,-L*3,L*6,L*3);ctx.clip()}
+  if(o.stem){ctx.strokeStyle='#8a7a46';ctx.lineWidth=Math.max(.25,L*.016);ctx.lineCap='round';ctx.beginPath();ctx.moveTo(0,0);ctx.quadraticCurveTo(L*.05,o.stem*.5,-L*.02,o.stem);ctx.stroke();
+    gbEll(0,L*.12,L*.045,L*.12,0,'#6a4426');cline([[0,L*.24],[0,L*.34]],'#8a7a46',L*.01)}
+  // tail
+  {const {rear,tailTip,t2}=g,tw=L*S.tw,nx=Math.sin(t2),ny=Math.cos(t2);ctx.fillStyle=C.tail;
+    ctx.fill(gbTailPath(S.tail,rear,tailTip,[nx,ny],tw*.31,tw*.44));
+    if(C.tailEdge&&(o.under||det)){ctx.strokeStyle=C.tailEdge;ctx.lineWidth=tw*.14;ctx.beginPath();ctx.moveTo(rear[0]+nx*tw*.28,rear[1]+ny*tw*.28);ctx.lineTo(tailTip[0]+nx*tw*.4,tailTip[1]+ny*tw*.4);ctx.stroke()}
+    if(C.tailBand){ctx.strokeStyle=C.tailBand;ctx.lineWidth=g.Lt*.16;ctx.beginPath();const k=.88;ctx.moveTo(lerp(rear[0],tailTip[0],k)+nx*tw*.44,lerp(rear[1],tailTip[1],k)+ny*tw*.44);ctx.lineTo(lerp(rear[0],tailTip[0],k)-nx*tw*.42,lerp(rear[1],tailTip[1],k)-ny*tw*.42);ctx.stroke()}
+    if(C.tailMid){ctx.strokeStyle=C.tailMid;ctx.lineWidth=tw*.3;ctx.beginPath();ctx.moveTo(...rear);ctx.lineTo(...tailTip);ctx.stroke()}
+    if(S.curl){ctx.strokeStyle=C.under||GBC.dark;ctx.lineWidth=L*.007;ctx.beginPath();ctx.arc(rear[0]-L*.02,rear[1]-L*.05,L*.025,PI*.2,PI*1.6);ctx.stroke()}}
+  // legs and feet
+  if(pose!=='swim'){const {hip,legH}=g,lc=C.leg;const run=o.run?Math.sin(o.ph||0):0;
+    if(pose==='perch'){cline([[hip[0]+L*.01,hip[1]],[L*.02,0]],lc,lw*1.2);cline([[hip[0]-L*.03,hip[1]],[-L*.03,0]],lc,lw*1.1);
+      for(const fx of[L*.02,-L*.03]){cline([[fx,0],[fx+L*.06,L*.008],[fx+L*.075,L*.03]],lc,lw*.7);cline([[fx,0],[fx-L*.04,L*.02]],lc,lw*.7)}}
+    else{const wl=o.water?-Math.min(legH*.75,o.water):1e9;
+      for(const [k,sh] of[[1,run],[-1,-run]]){const fx=sh*L*.06+(k>0?L*.015:-L*.02),kx=lerp(hip[0],fx,.5)+(S.legs>.15?-L*.02:L*.01),ky=lerp(hip[1],0,.5);
+        const pts=[[hip[0]+k*L*.012,hip[1]],[kx,ky],[fx,0]];ctx.save();if(o.water){ctx.beginPath();ctx.rect(-L*3,-L*3,L*6,L*3+wl);ctx.clip()}
+        cline(pts,lc,lw*(S.legs>.15?.9:1.1));cline([[fx,0],[fx+L*.07,0]],lc,lw*.7);cline([[fx,0],[fx-L*.035,-L*.004]],lc,lw*.6);ctx.restore()}
+      if(C.thigh)cline([[g.hip[0],g.hip[1]],[lerp(g.hip[0],0,.25),lerp(g.hip[1],0,.25)]],C.thigh,lw*2.2)}}
+  // body
+  const body=gbBodyPath(g,S);ctx.fillStyle=C.belly;ctx.fill(body);ctx.save();ctx.clip(body);
+  {ctx.fillStyle=C.back;ctx.beginPath();const a=loc(A*1.2,-B*.08),b=loc(-A*1.3,B*.3);ctx.moveTo(...a);ctx.lineTo(...b);ctx.lineTo(...loc(-A*1.3,-B*1.6));ctx.lineTo(...loc(A*1.2,-B*1.6));ctx.closePath();ctx.fill()}
+  if(C.breast)gbEll(...loc(A*.62,B*.3),A*.62,B*.78,-g.tilt,C.breast);
+  if(C.flank)gbEll(...loc(-A*.08,B*.42),A*.48,B*.42,-g.tilt,C.flank);
+  if(C.rump)gbEll(...loc(-A*.9,B*.05),A*.28,B*.4,-g.tilt,C.rump);
+  if(C.under)gbEll(...loc(-A*.95,B*.62),A*.32,B*.42,-g.tilt,C.under);
+  if(C.band){const p=loc(A*.72,-B*.05);gbEll(p[0],p[1],A*.32,B*.42,-g.tilt,C.band)}
+  if(C.checks&&det){ctx.fillStyle=C.checks;for(let i=0;i<14;i++){const u=-.7+(i%7)*.2,v=-.75+Math.floor(i/7)*.22,p=loc(A*u,B*v);ctx.fillRect(p[0]-L*.006,p[1]-L*.004,L*.012,L*.008)}}
+  if(C.necklace&&!S.neck){ctx.strokeStyle=C.necklace;ctx.lineWidth=B*.16;ctx.beginPath();const a=loc(A*.95,-B*.35),m=loc(A*.62,B*.12),b=loc(A*.32,-B*.48);ctx.moveTo(...a);ctx.lineTo(...m);ctx.lineTo(...b);ctx.stroke()}
+  if(C.streaks&&det){ctx.fillStyle=C.streaks;for(let i=0;i<12;i++){const u=.25+((i*37)%10)/10*.6,v=-.05+((i*53)%10)/10*.8,p=loc(A*u,B*v);ctx.beginPath();ctx.ellipse(p[0],p[1],L*.008,L*.016,-g.tilt+.3,0,TAU);ctx.fill()}}
+  if(C.harlequin){ctx.strokeStyle=C.harlequin;ctx.lineWidth=B*.14;ctx.beginPath();ctx.moveTo(...loc(A*.4,-B*.7));ctx.quadraticCurveTo(...loc(A*.1,-B*.2),...loc(-A*.4,-B*.55));ctx.stroke()}
+  ctx.restore();
+  // wing
+  if(pose!=='swim'||id!=='colo'){const W=gbWingPath(g,G);ctx.fillStyle=C.wing;ctx.fill(W.P);ctx.save();ctx.clip(W.P);
+    if(C.cov)gbEll(...loc(A*.32,-B*.28),A*.5,B*.45,-g.tilt,C.cov);
+    if(C.prim){ctx.fillStyle=C.prim;ctx.beginPath();ctx.moveTo(...loc(-A*.35,-B*1.2));ctx.lineTo(...loc(-A*2,-B*1.2));ctx.lineTo(...loc(-A*2,B*1.2));ctx.lineTo(...loc(-A*.2,B*1.2));ctx.closePath();ctx.fill()}
+    if(C.bars)C.bars.forEach((bc,i)=>{ctx.strokeStyle=bc;ctx.lineWidth=B*.11;ctx.beginPath();const u=.38-i*.2;ctx.moveTo(...loc(A*(u+.12),-B*.9));ctx.lineTo(...loc(A*(u-.12),B*.4));ctx.stroke()});
+    if(C.barring&&det){ctx.strokeStyle=C.barring;ctx.lineWidth=B*.05;for(let i=0;i<6;i++){const u=.4-i*.22;ctx.beginPath();ctx.moveTo(...loc(A*(u+.1),-B*.8));ctx.lineTo(...loc(A*(u-.1),B*.3));ctx.stroke()}}
+    if(C.speculum){const p=loc(-A*.1,B*.02);gbEll(p[0],p[1],A*.26,B*.13,-g.tilt,'#f6f5f0');gbEll(p[0],p[1],A*.22,B*.09,-g.tilt,C.speculum)}
+    if(C.wpatch){const p=loc(-A*.25,B*.0);gbEll(p[0],p[1],A*.09,B*.1,-g.tilt,C.wpatch)}
+    if(C.spots&&det){ctx.fillStyle=C.spots;for(let i=0;i<8;i++){const p=loc(A*(.3-i*.17),B*(-.4+(i%2)*.3));ctx.beginPath();ctx.arc(p[0],p[1],L*.006,0,TAU);ctx.fill()}}
+    if(det){ctx.strokeStyle='rgba(0,0,0,.18)';ctx.lineWidth=L*.004;for(let i=0;i<4;i++){const u=-.15-i*.22;ctx.beginPath();ctx.moveTo(...loc(A*(u+.2),-B*.55));ctx.lineTo(...loc(A*(u-.25),B*.25));ctx.stroke()}}
+    ctx.restore();
+    if(C.epaulet){const p=loc(A*.42,-B*.38);gbEll(p[0],p[1],A*.24,B*.2,-g.tilt,C.epaulet);if(C.epauletEdge){const q=loc(A*.4,-B*.18);gbEll(q[0],q[1],A*.2,B*.06,-g.tilt,C.epauletEdge)}}}
+  if(det)shadeBody(body,...loc(A*.3,-B*.3),Math.max(A,B)*1.1,.24);
+  // neck
+  if(S.neck){const nb=g.neckBase,hc=Hc,sN=S.neckAng>1.3,nk=Math.hypot(hc[0]-nb[0],hc[1]-nb[1]),mid=[lerp(nb[0],hc[0],.5)+(sN?-L*.05:L*.02),lerp(nb[1],hc[1],.5)];const nw=R*(sN?1.05:1.2)*(S.neckW||1);
+    const c1=sN?[nb[0]+L*.02,nb[1]-nk*.45]:mid,c2=sN?[hc[0]-L*.09,hc[1]+nk*.35]:mid;
+    ctx.strokeStyle=C.neck||C.throat;ctx.lineCap='round';ctx.lineWidth=nw*1.35;ctx.beginPath();ctx.moveTo(...nb);ctx.lineTo(lerp(nb[0],c1[0],.3),lerp(nb[1],c1[1],.3));ctx.stroke();ctx.lineWidth=nw;ctx.beginPath();ctx.moveTo(...nb);ctx.bezierCurveTo(...c1,...c2,...hc);ctx.stroke();
+    if(C.neckFront){ctx.strokeStyle=C.neckFront;ctx.lineWidth=nw*.38;ctx.beginPath();ctx.moveTo(nb[0]+nw*.45,nb[1]);ctx.bezierCurveTo(c1[0]+nw*.4,c1[1],c2[0]+nw*.4,c2[1],hc[0]+nw*.3,hc[1]+R*.3);ctx.stroke()}
+    if(C.necklace){ctx.strokeStyle=C.necklace;ctx.lineWidth=nw*.12;for(const k of[.42,.5,.58]){const p=[lerp(nb[0],hc[0],k)+(S.neckAng>1.3?-L*.03:L*.01),lerp(nb[1],hc[1],k)];ctx.beginPath();ctx.moveTo(p[0]-nw*.45,p[1]-nw*.1);ctx.lineTo(p[0]+nw*.2,p[1]+nw*.12);ctx.stroke()}}}
+  // head
+  const head=gbHeadPath(Hc,R,S.head);ctx.fillStyle=C.face||C.crown;ctx.fill(head);ctx.save();ctx.clip(head);
+  if(C.nape)gbEll(Hc[0]-R*.75,Hc[1]+R*.2,R*.5,R*.9,0,C.nape);
+  if(C.crown)gbEll(Hc[0]-R*.1,Hc[1]-R*.62,R*1.15,R*.62,0,C.crown);
+  if(C.throat)gbEll(Hc[0]+R*.35,Hc[1]+R*.8,R*.8,R*.55,0,C.throat);
+  if(C.supercilium){ctx.strokeStyle=C.supercilium;ctx.lineWidth=R*.2;ctx.beginPath();ctx.moveTo(Hc[0]-R*.95,Hc[1]-R*.3);ctx.quadraticCurveTo(Hc[0]-R*.1,Hc[1]-R*.55,Hc[0]+R*.75,Hc[1]-R*.38);ctx.stroke()}
+  if(C.eyeline){ctx.strokeStyle=C.eyeline;ctx.lineWidth=R*.2;ctx.beginPath();ctx.moveTo(Hc[0]-R*1.05,Hc[1]-R*.02);ctx.lineTo(Hc[0]+R*.95,Hc[1]-R*.1);ctx.stroke()}
+  if(C.mask)gbEll(Hc[0]+R*.7,Hc[1]-R*.05,R*.45,R*.3,0,C.mask);
+  if(C.billMask)gbEll(Hc[0]+R*.82,Hc[1]+R*.1,R*.52,R*.6,0,C.billMask);
+  if(C.harlequin){ctx.strokeStyle=C.harlequin;ctx.lineWidth=R*.28;ctx.beginPath();ctx.moveTo(Hc[0]+R*.9,Hc[1]);ctx.lineTo(Hc[0]+R*.1,Hc[1]+R*.1);ctx.lineTo(Hc[0]-R*.2,Hc[1]+R*.9);ctx.stroke()}
+  if(C.lore)gbEll(Hc[0]+R*.72,Hc[1]-R*.2,R*.2,R*.16,0,C.lore);
+  if(det){const gr=ctx.createRadialGradient(Hc[0]-R*.3,Hc[1]-R*.5,R*.1,Hc[0],Hc[1],R*1.2);gr.addColorStop(0,'rgba(255,255,255,.18)');gr.addColorStop(1,'rgba(0,0,0,.12)');ctx.fillStyle=gr;ctx.fillRect(Hc[0]-R*1.2,Hc[1]-R*1.2,R*2.4,R*2.4)}
+  ctx.restore();
+  if(C.collar){ctx.strokeStyle=C.collar;ctx.lineWidth=R*(S.neck?.18:.28);ctx.beginPath();if(S.neck){const p=[lerp(g.neckBase[0],Hc[0],.3),lerp(g.neckBase[1],Hc[1],.3)],dx=Hc[0]-g.neckBase[0],dy=Hc[1]-g.neckBase[1],l=Math.hypot(dx,dy)||1,px=-dy/l,py=dx/l;ctx.moveTo(p[0]-px*R*.62,p[1]-py*R*.62);ctx.lineTo(p[0]+px*R*.62,p[1]+py*R*.62)}else{ctx.arc(Hc[0],Hc[1],R*1.02,PI*.45,PI*1.05)}ctx.stroke()}
+  if(C.plume){ctx.strokeStyle=C.plume;ctx.lineCap='round';ctx.lineWidth=R*.26;ctx.beginPath();ctx.moveTo(Hc[0]+R*.45,Hc[1]-R*.42);ctx.quadraticCurveTo(Hc[0]-R*.6,Hc[1]-R*.7,Hc[0]-R*2.4,Hc[1]-R*.1);ctx.stroke()}
+  if(S.crest){ctx.fillStyle=C.crest||C.crown;ctx.beginPath();if(S.crest==='point'){ctx.moveTo(Hc[0]+R*.3,Hc[1]-R*.85);ctx.lineTo(Hc[0]-R*1.2,Hc[1]-R*1.75);ctx.lineTo(Hc[0]-R*.75,Hc[1]-R*.4);ctx.closePath()}
+    else{ctx.moveTo(Hc[0]+R*.2,Hc[1]-R*.9);ctx.quadraticCurveTo(Hc[0]-R*.4,Hc[1]-R*1.5,Hc[0]-R*.75,Hc[1]-R*1.25);ctx.quadraticCurveTo(Hc[0]-R*1.05,Hc[1]-R*1.3,Hc[0]-R*1.2,Hc[1]-R*.95);ctx.quadraticCurveTo(Hc[0]-R*1.55,Hc[1]-R*.85,Hc[0]-R*1.45,Hc[1]-R*.45);ctx.quadraticCurveTo(Hc[0]-R*1.2,Hc[1]-R*.1,Hc[0]-R*.8,Hc[1]+R*.1);ctx.closePath()}ctx.fill()}
+  // eye
+  {const ex=Hc[0]+R*.4,ey=Hc[1]-R*.15,er=Math.max(.12,R*.19);if(C.eyering){ctx.strokeStyle=C.eyering;ctx.lineWidth=er*.6;ctx.beginPath();ctx.arc(ex,ey,er*1.45,0,TAU);ctx.stroke()}
+    cdot(ex,ey,er,C.iris||GBC.eye);if(C.iris)cdot(ex,ey,er*.5,GBC.eye);cdot(ex+er*.3,ey-er*.35,er*.32,'rgba(255,255,255,.85)')}
+  // bill
+  {const {bb,btip,ba}=g,bt=S.bill.type,d=S.bill.d,l=S.bill.l,nx=-Math.sin(ba),ny=Math.cos(ba),up=[bb[0]-nx*d*.5,bb[1]-ny*d*.5],lo=[bb[0]+nx*d*.5,bb[1]+ny*d*.5];
+    ctx.fillStyle=C.bill;ctx.beginPath();
+    if(bt==='curve'){const c1=[lerp(bb[0],btip[0],.55),lerp(bb[1],btip[1],.55)-l*.12],tip=[btip[0]-l*.08,btip[1]+l*.18];ctx.moveTo(...up);ctx.quadraticCurveTo(c1[0],c1[1]-d*.3,...tip);ctx.quadraticCurveTo(c1[0],c1[1]+d*.4,...lo)}
+    else if(bt==='flat'){ctx.moveTo(...up);ctx.lineTo(btip[0]-nx*d*.35,btip[1]-ny*d*.35);ctx.quadraticCurveTo(btip[0]+Math.cos(ba)*d*.4,btip[1]+Math.sin(ba)*d*.4,btip[0]+nx*d*.3,btip[1]+ny*d*.3);ctx.lineTo(...lo)}
+    else if(bt==='pouch'){ctx.moveTo(...up);ctx.lineTo(btip[0]-nx*d*.2,btip[1]-ny*d*.2);ctx.lineTo(btip[0]+nx*d*.35,btip[1]+ny*d*.35);ctx.lineTo(...lo);ctx.fill();ctx.fillStyle=C.pouch;ctx.beginPath();ctx.moveTo(...lo);ctx.quadraticCurveTo(lerp(lo[0],btip[0],.5)+nx*d*1.6,lerp(lo[1],btip[1],.5)+ny*d*1.6,btip[0]+nx*d*.3,btip[1]+ny*d*.3);ctx.lineTo(btip[0]-nx*d*.05,btip[1]-ny*d*.05);ctx.lineTo(...lo)}
+    else if(bt==='chisel'||bt==='blade'){const e=bt==='blade'?.4:.28;ctx.moveTo(...up);ctx.lineTo(btip[0]-nx*d*e,btip[1]-ny*d*e);ctx.lineTo(btip[0]+nx*d*e*.6,btip[1]+ny*d*e*.6);ctx.lineTo(...lo)}
+    else if(bt==='hook'){const hk=[btip[0]+nx*d*.7,btip[1]+ny*d*.7];ctx.moveTo(...up);ctx.quadraticCurveTo(btip[0]-nx*d*.4,btip[1]-ny*d*.4,btip[0]+Math.cos(ba)*d*.2,btip[1]+Math.sin(ba)*d*.2);ctx.quadraticCurveTo(hk[0]+Math.cos(ba)*d*.1,hk[1],hk[0]-Math.cos(ba)*d*.3,hk[1]-Math.sin(ba)*d*.3);ctx.lineTo(...lo)}
+    else if(bt==='blunt'){const sw=[lerp(bb[0],btip[0],.72),lerp(bb[1],btip[1],.72)];ctx.moveTo(...up);ctx.lineTo(sw[0]-nx*d*.3,sw[1]-ny*d*.3);ctx.quadraticCurveTo(btip[0]-nx*d*.42,btip[1]-ny*d*.42,btip[0],btip[1]);ctx.lineTo(...lo)}
+    else{const w=bt==='cone'?1:bt==='wedge'?.85:bt==='needle'?.5:.7;ctx.moveTo(...up);ctx.quadraticCurveTo(lerp(up[0],btip[0],.5),lerp(up[1],btip[1],.5)-(bt==='cone'?d*.1:0),...btip);ctx.lineTo(lo[0]+(btip[0]-lo[0])*(1-w)*.2,lo[1]+(btip[1]-lo[1])*(1-w)*.2);ctx.lineTo(...lo)}
+    ctx.closePath();ctx.fill();
+    if(C.bill2){ctx.fillStyle=C.bill2;ctx.beginPath();ctx.moveTo(...bb);ctx.lineTo(...btip);ctx.lineTo(...lo);ctx.closePath();ctx.fill()}
+    if(C.cere)gbEll(bb[0]+Math.cos(ba)*l*.15,bb[1]-d*.35,l*.14,d*.25,ba,C.cere);
+    if(det){ctx.strokeStyle='rgba(0,0,0,.35)';ctx.lineWidth=Math.max(.05,d*.06);ctx.beginPath();ctx.moveTo(...bb);ctx.lineTo(lerp(bb[0],btip[0],.9),lerp(bb[1],btip[1],.9));ctx.stroke()}}
+  if(pose==='swim'){ctx.restore();if(o.water!==false){ctx.strokeStyle='rgba(240,250,252,.8)';ctx.lineWidth=Math.max(.2,L*.012);ctx.beginPath();ctx.ellipse(-A*.05,0,A*1.25,A*.18,0,0,TAU);ctx.stroke()}}
+  if(o.water&&pose!=='swim'){ctx.strokeStyle='rgba(240,250,252,.8)';ctx.lineWidth=Math.max(.2,L*.012);const wl=-Math.min(g.legH*.75,o.water);ctx.beginPath();ctx.ellipse(0,wl,L*.12,L*.03,0,0,TAU);ctx.stroke()}
+  if(G.draw)G.draw(ctx,pose,o,g,G)}
+// flight, seen from above or below (same frame as drawFlightTop: forward = -y)
+function gbFL(G){const S=G.shape;return{L:G.len,WS:G.ws,bw:G.len*Math.max(.14,S.bh*.55),hr:G.len*S.hr*.72,bill:S.bill.l,tl:G.len*S.tl*.9,tw:G.len*S.tw*1.1,chord:G.ws*(S.chord??.23),tip:S.tip??.82,round:S.round??.3}}
+function drawGBFlight(id,o){const G=GB[id],C=G.c,Fc=G.f||{},F=FL[id],k=.3+.7*Math.abs(Math.cos(o.flap||0)),ven=!!o.ventral,det=o.detail,L=F.L,hy=-L*.36,ty=L*.18,S=G.shape;
+  for(const side of[-1,1]){wingZone(F,0,1,0,1,k,ven?(Fc.under||'#e6e4dd'):(Fc.wing||C.wing),side);
+    if(!ven){wingZone(F,0,.48,0,.5,k,Fc.cov||C.back,side);wingZone(F,.6,1,0,1,k,Fc.prim||C.prim||C.wing,side);if(Fc.bar)wingZone(F,.08,.82,.52,.66,k,Fc.bar,side);if(Fc.epaulet)wingZone(F,0,.3,0,.42,k,Fc.epaulet,side);
+      if(Fc.dots&&det)for(let i=0;i<6;i++)wingZone(F,.1+i*.07,.12+i*.07,.15,.3,k,Fc.dots,side)}
+    else if(Fc.prim&&!Fc.under)wingZone(F,.62,1,0,1,k,Fc.prim,side);
+    if(Fc.tip)wingZone(F,.8,1,0,1,k,Fc.tip,side);
+    if(det)for(let i=0;i<5;i++)wingZone(F,.7+i*.06,.712+i*.06,.55,1,k,'rgba(0,0,0,.18)',side)}
+  // legs trailing (long-legged birds)
+  if(S.legs>.15){cline([[-.6,ty],[-.8,ty+F.tl+L*.22]],C.leg,Math.max(.3,L*.012));cline([[.6,ty],[.8,ty+F.tl+L*.22]],C.leg,Math.max(.3,L*.012))}
+  ctx.fillStyle=ven?(C.under||C.belly):C.tail;ctx.fill(gbTailPath(S.tail,[0,ty-1],[0,ty+F.tl],[1,0],F.tw*.32,F.tw/2));
+  if(C.tailEdge){ctx.fillStyle=C.tailEdge;ctx.fillRect(-F.tw/2,ty,F.tw*.16,F.tl);ctx.fillRect(F.tw*.34,ty,F.tw*.16,F.tl)}
+  if(C.tailBand){ctx.fillStyle=C.tailBand;ctx.fillRect(-F.tw/2,ty+F.tl*.8,F.tw,F.tl*.2)}
+  ctx.fillStyle=ven?C.belly:C.back;ctx.beginPath();ctx.ellipse(0,0,F.bw/2,L*.33,0,0,TAU);ctx.fill();
+  if(ven&&C.breast){ctx.fillStyle=C.breast;ctx.beginPath();ctx.ellipse(0,-L*.15,F.bw*.46,L*.14,0,0,TAU);ctx.fill()}
+  if(!ven&&C.rump){ctx.fillStyle=C.rump;ctx.beginPath();ctx.ellipse(0,ty-.5,F.bw*.4,L*.07,0,0,TAU);ctx.fill()}
+  const nk=S.neck&&S.neckAng<1.3?S.neck*.5:0;if(nk){ctx.strokeStyle=C.neck||C.throat;ctx.lineWidth=F.hr*1.3;ctx.beginPath();ctx.moveTo(0,hy+F.hr);ctx.lineTo(0,hy-nk);ctx.stroke()}
+  const hy2=hy-nk;ctx.fillStyle=ven?(C.throat||C.face):(C.crown||C.face);ctx.beginPath();ctx.arc(0,hy2,F.hr,0,TAU);ctx.fill();
+  ctx.fillStyle=C.bill;ctx.beginPath();ctx.moveTo(-F.hr*.35,hy2-F.hr*.7);ctx.lineTo(0,hy2-F.hr-F.bill);ctx.lineTo(F.hr*.35,hy2-F.hr*.7);ctx.fill();
+  if(S.legs>.15&&det){}}
+// ---- integration helpers ----
+function gbKind(sp){return GB[sp]?GB[sp].kind:null}
+function gbPose(b){const k=gbKind(b.sp);return b.st==='swim'?'swim':b.st==='perch'||b.st==='reed'?'perch':'stand'}
+function gbMapScale(sp){const L=SPECIES[sp]?.len||13;return L<=30?1:(30+(L-30)*.42)/L}
+function gbBinoEx(sp){const L=SPECIES[sp]?.len||13;return L>30?Math.pow(30/L,.6):1}
+// where each kind can stand
+function gbSpotOK(sp,x,y,loose){const G=GB[sp];if(!G)return false;if(x<700||x>WW-80||y<120||y>WH-120)return false;const t=terr(x,y),h=habitatAt(x,y);
+  if(!loose&&G.bands&&!G.bands.includes(bandAt(y).id))return false;const home=loose||G.homes.includes(h);
+  switch(G.kind){
+    case'ground':if(!home)return false;if(G.spot==='surf')return t===T.WET||(t===T.SAND&&wdist(x,y)<110);if(G.spot==='shore')return t===T.ROCK||t===T.WET||t===T.SAND;
+      return isLand(t)&&!waterKind(x,y)&&t!==T.ICE&&!blockedAt(x,y,6);
+    case'reed':return home&&(t===T.MARSH||t===T.SALT||t===T.BOG||t===T.FIELD||t===T.HEDGE||t===T.GRASS)&&!blockedAt(x,y,6);
+    case'wade':return home&&(waterKind(x,y)==='wade'||t===T.MARSH||t===T.SALT||t===T.MUD)&&t!==T.ICE;
+    case'swim':return home&&(t===T.LAKE||t===T.SHAL||t===T.DEEP)&&t!==T.ICE&&wdist(x,y)>(G.id==='colo'?60:18);
+    case'sea':return(t===T.DEEP||t===T.SHAL)&&(loose||h==='ocean'||h==='pelagic'||h==='bay');
+    default:return G.homes.includes(h)}}
+function gbFindSpot(sp,x,y,rmin,rmax,tries=40){for(let i=0;i<tries;i++){const a=Math.random()*TAU,r=rmin+Math.random()*(rmax-rmin),px=x+Math.cos(a)*r,py=y+Math.sin(a)*r;if(gbSpotOK(sp,px,py))return[px,py]}return null}
+function gbRestZ(sp,st){return st==='reed'?1.1:0}
+// bring a dormant bird to life when the player comes near
+function gbActivate(b){const G=GB[b.sp],k=G.kind,h=b.home;
+  if(k==='perch'){const ts=suitableTrees(b.sp,h.x,h.y,0,650,false).sort((a,c)=>Math.hypot(a.x-h.x,a.y-h.y)-Math.hypot(c.x-h.x,c.y-h.y));if(!ts.length)return false;landOn(b,ts[0]);return true}
+  const sp=gbSpotOK(b.sp,h.x,h.y)?[h.x,h.y]:gbFindSpot(b.sp,h.x,h.y,10,400,60);if(!sp)return false;b.x=sp[0];b.y=sp[1];
+  if(k==='sea'){b.z=6+Math.random()*10;b.st='swim';if(G.id==='noga'||Math.random()<.5){b.st='fly';gbSeaLeg(b)}else b.z=0;return true}
+  b.st=k==='swim'?'swim':k==='reed'?'reed':k==='wade'?'wade':'ground';b.z=gbRestZ(b.sp,b.st);b.goal=null;return true}
+function gbSeaLeg(b){const G=GB[b.sp],sp=gbFindSpot(b.sp,b.x,b.y,300,1100,30)||[b.x+(Math.random()-.5)*400,b.y+(Math.random()-.5)*400];
+  const plunge=G.plunge&&Math.random()<.35,land=!G.plunge&&Math.random()<.3;const z=plunge||land?0:(G.id==='noga'?14+Math.random()*12:4+Math.random()*6);
+  b.fly={ax:b.x,ay:b.y,az:b.z,bx:sp[0],by:sp[1],bz:z,t:0,dur:Math.max(1,Math.hypot(sp[0]-b.x,sp[1]-b.y)/G.flyspd),next:{st:plunge||land?'swim':'fly'},sea:true};b.st='fly';b.hd=Math.atan2(sp[1]-b.y,sp[0]-b.x)}
+function gbFlush(b){const G=GB[b.sp],k=G.kind,L=listener();
+  if(k==='swim'&&G.dive){b.under=6+Math.random()*5;const sp=gbFindSpot(b.sp,b.x,b.y,120,300,40);if(sp){b.x=sp[0];b.y=sp[1]}return}
+  if(k==='sea'){if(b.st!=='fly')gbSeaLeg(b);return}
+  const away=Math.atan2(b.y-L.y,b.x-L.x),far=k==='wade'||k==='swim'?[300,750]:k==='reed'?[60,220]:[180,450];let sp=null;
+  for(let i=0;i<40&&!sp;i++){const a=away+(Math.random()-.5)*1.8,r=far[0]+Math.random()*(far[1]-far[0]),px=b.x+Math.cos(a)*r,py=b.y+Math.sin(a)*r;if(gbSpotOK(b.sp,px,py))sp=[px,py]}
+  if(!sp)sp=gbFindSpot(b.sp,b.x,b.y,far[0],far[1]*1.6,40);if(!sp)return;const st=k==='swim'?'swim':k==='reed'?'reed':k==='wade'?'wade':'ground';
+  flyTo(b,sp[0],sp[1],gbRestZ(b.sp,st),{st});b.home={x:sp[0],y:sp[1]};b.goal=null}
+function gbUpdate(b,dt){const G=GB[b.sp];b.tm-=dt;
+  if(b.under){b.under-=dt;if(b.under<=0)b.under=0;return}
+  if(b.st==='ground'||b.st==='wade'||b.st==='swim'){const spd=b.st==='ground'?(G.walk||40):b.st==='wade'?10:8;
+    if(b.goal){const dx=b.goal.x-b.x,dy=b.goal.y-b.y,l=Math.hypot(dx,dy);if(l<2){b.goal=null;b.tm=(b.st==='ground'?1:3)+Math.random()*(b.st==='wade'?6:3);if(Math.random()<.55)b.peck=1}
+      else{const s=spd*dt;b.x+=dx/l*Math.min(s,l);b.y+=dy/l*Math.min(s,l);b.hd=Math.atan2(dy,dx);b.run=(b.run||0)+dt*(b.st==='ground'?(G.walk>80?30:18):6)}}
+    else if(b.tm<=0){const r=b.st==='ground'?(G.spot==='surf'?90:70):b.st==='wade'?45:80;const sp=gbFindSpot(b.sp,b.x,b.y,15,r,10);if(sp){b.goal={x:sp[0],y:sp[1]}}else b.tm=1+Math.random()*2;
+      if(b.st==='swim'&&G.dive&&Math.random()<.25){b.under=5+Math.random()*6;b.goal=null}
+      if(b.st==='swim'&&G.kind==='sea'&&Math.random()<.4)gbSeaLeg(b)}
+    b.z=0;b.bob=b.st==='swim'?Math.sin(S.t*1.6+b.x)*.04:0}
+  else if(b.st==='reed'){b.bob=Math.sin(S.t*1.8+b.x)*.05;b.z=1.1;if(b.tm<=0){b.tm=4+Math.random()*7;if(Math.random()<.35){const sp=gbFindSpot(b.sp,b.x,b.y,25,110,12);if(sp){flyTo(b,sp[0],sp[1],1.1,{st:'reed'})}}}}}
+function gbSongGap(sp){const k=gbKind(sp);return k==='sea'?40+Math.random()*40:k==='wade'?30+Math.random()*30:k==='swim'?18+Math.random()*20:7+Math.random()*9}
+
+function gbPlatePose(id){const k=GB[id].kind;return k==='perch'||k==='reed'?'perch':k==='swim'?'swim':'stand'}
+function gbPlateBox(id){const G=GB[id],g=gbGeom(G,gbPlatePose(id)),{A,B,R,Hc,loc,L}=g;const P=[g.tailTip,g.btip,[Hc[0]-R,Hc[1]-R*(G.shape.crest?1.9:1.15)],[Hc[0]+R,Hc[1]+R],loc(A,-B),loc(-A*1.1,-B),loc(A,B),loc(-A,B),[0,0]];
+  const xs=P.map(p=>p[0]),ys=P.map(p=>p[1]);const m=L*.05;return[Math.min(...xs)-m,Math.max(...xs)+m,Math.min(...ys)-m,Math.max(...ys,G.kind==='swim'?B*.4:0)+m]}
+function gbPlateBg(g,id,s){const G=GB[id],L=G.len,pose=gbPlatePose(id);
+  if(pose==='perch'&&G.kind==='reed'){g.strokeStyle='#8a7a46';g.lineWidth=Math.max(2,L*.02*s);g.beginPath();g.moveTo(0,0);g.lineTo(-L*.02*s,L*2*s);g.stroke();g.fillStyle='#6a4426';g.beginPath();g.ellipse(0,L*.14*s,L*.05*s,L*.13*s,0,0,TAU);g.fill();return}
+  if(pose==='perch'){g.fillStyle='#6b513b';g.beginPath();g.moveTo(-L*3*s,.004*L*s);g.quadraticCurveTo(0,-.015*L*s,L*3*s,.04*L*s);g.lineTo(L*3*s,.11*L*s);g.quadraticCurveTo(0,.065*L*s,-L*3*s,.09*L*s);g.fill();
+    g.fillStyle='#55803a';for(const [x,y,r] of[[-.34,-.09,.1],[.36,.03,.085],[-.25,.07,.07]]){g.beginPath();g.ellipse(x*L*s,y*L*s,r*L*s*1.6,r*L*s*.6,-.4,0,TAU);g.fill()}return}
+  if(pose==='swim'){g.fillStyle='#86b4c4';g.fillRect(-L*3*s,0,L*6*s,L*2*s);g.strokeStyle='rgba(255,255,255,.55)';g.lineWidth=Math.max(1,L*.01*s);for(let i=0;i<4;i++){g.beginPath();g.moveTo((-1+i*.55)*L*s,(.08+i*.05)*L*s);g.lineTo((-.7+i*.55)*L*s,(.08+i*.05)*L*s);g.stroke()}return}
+  const sp=G.spot,col=G.kind==='wade'?'#86b4c4':G.kind==='sea'?'#9a958a':sp==='surf'||sp==='shore'?'#ead6a3':G.homes[0]==='arctic'||G.homes[0]==='tundra'?'#cdd2c8':G.homes[0]==='city'?'#c9c5bb':'#9db36d';
+  if(G.kind==='wade'){const wl=-L*G.shape.legs*.45;g.fillStyle='#b9c48f';g.fillRect(-L*3*s,0,L*6*s,L*2*s);g.fillStyle=col;g.fillRect(-L*3*s,wl*s,L*6*s,(L*2-wl)*s);return}
+  g.fillStyle=col;g.fillRect(-L*3*s,0,L*6*s,L*2*s);g.fillStyle='rgba(0,0,0,.05)';for(let i=0;i<24;i++)g.fillRect(((i*37)%120-60)/60*L*s,((i*13)%8)*.01*L*s,.012*L*s,.006*L*s)}
+function gbMarks(G){const g=gbGeom(G,gbPlatePose(G.id)),{A,B,R,Hc,loc}=g;
+  const at={crown:[Hc[0]-R*.1,Hc[1]-R*.8],face:[Hc[0]+R*.55,Hc[1]-R*.05],eye:[Hc[0]+R*.4,Hc[1]-R*.15],throat:[Hc[0]+R*.55,Hc[1]+R*.75],
+    collar:G.shape.neck?[lerp(g.neckBase[0],Hc[0],.45),lerp(g.neckBase[1],Hc[1],.45)]:[Hc[0]-R*.55,Hc[1]+R*.8],
+    neck:G.shape.neck?[lerp(g.neckBase[0],Hc[0],.55),lerp(g.neckBase[1],Hc[1],.55)]:[Hc[0]-R*.6,Hc[1]+R*.7],
+    bill:[lerp(g.bb[0],g.btip[0],.55),lerp(g.bb[1],g.btip[1],.55)],breast:loc(A*.7,B*.3),belly:loc(A*.05,B*.75),back:loc(-A*.25,-B*.78),wing:loc(-A*.4,-B*.05),
+    flank:loc(-A*.05,B*.45),tail:[lerp(g.rear[0],g.tailTip[0],.7),lerp(g.rear[1],g.tailTip[1],.7)],leg:[lerp(g.hip[0],0,.55),lerp(g.hip[1],0,.55)]};
+  return G.marks.map(([k,t],i)=>({n:i+1,t,at:at[k]||at.back}))}
+function gbCallSpot(sp,x,y){for(let i=0;i<260;i++){const a=Math.random()*TAU,r=80+Math.random()*520,px=x+Math.cos(a)*r,py=y+Math.sin(a)*r;if(gbSpotOK(sp,px,py,true))return[px,py]}return null}
+for(const id in GB){const G=GB[id];SPECIES[id]={id,group:G.group,name:G.name,sci:G.sci,len:G.len,ws:G.ws,lenTxt:G.lenTxt,wsTxt:G.wsTxt,sex:G.sex,habitat:G.habitat,voice:G.voice,hint:G.hint,zone:G.zone,marks:gbMarks(G),flightMarks:G.flightMarks,sound:id};FL[id]=gbFL(G)}
+SP_ORDER.length=0;SP_ORDER.push('mall','colo','noga','brpe','gbhe','greg','whib','pipl','rutu','sand','ropi','beki','pile','rbnu','cawr','grca','eabl','amro','ampi','snbu','daju','eato','eame','rwbl','prow','pawa','btbw','scta','noca','pabu');
 
 /* ---------- world: the East Coast region ----------
    x grows east, y grows south. Atlantic to the east, Appalachians to the west, cold north, subtropical south.
@@ -739,7 +1279,15 @@ const WDIST=(()=>{const N=WGW*WGH,d=new Uint16Array(N).fill(65000),G=WGRID,W=WGW
     if(i>0)v=Math.min(v,d[o-1]+3);if(j>0){v=Math.min(v,d[o-W]+3);if(i>0)v=Math.min(v,d[o-W-1]+4);if(i<W-1)v=Math.min(v,d[o-W+1]+4)}d[o]=v}
   for(let j=H-1;j>=0;j--)for(let i=W-1;i>=0;i--){const o=j*W+i;let v=d[o];
     if(i<W-1)v=Math.min(v,d[o+1]+3);if(j<H-1){v=Math.min(v,d[o+W]+3);if(i<W-1)v=Math.min(v,d[o+W+1]+4);if(i>0)v=Math.min(v,d[o+W-1]+4)}d[o]=v}
-  const out=new Uint8Array(N);for(let o=0;o<N;o++)out[o]=Math.min(255,Math.round(d[o]/3));return out})();
+  const out=new Float32Array(N);for(let o=0;o<N;o++)out[o]=Math.min(255,d[o]/3);
+  // two passes of a 5-cell box blur (running sums) take out the chamfer stair-steps
+  const tmp=new Float32Array(N),R=2;
+  const blurH=(a,b)=>{for(let j=0;j<H;j++){const r0=j*W;let sum=0,n=0;for(let i=0;i<=R&&i<W;i++){sum+=a[r0+i];n++}
+      for(let i=0;i<W;i++){b[r0+i]=sum/n;const add=i+R+1,sub=i-R;if(add<W){sum+=a[r0+add];n++}if(sub>=0){sum-=a[r0+sub];n--}}}};
+  const blurV=(a,b)=>{for(let i=0;i<W;i++){let sum=0,n=0;for(let j=0;j<=R&&j<H;j++){sum+=a[j*W+i];n++}
+      for(let j=0;j<H;j++){b[j*W+i]=sum/n;const add=j+R+1,sub=j-R;if(add<H){sum+=a[add*W+i];n++}if(sub>=0){sum-=a[sub*W+i];n--}}}};
+  for(let p=0;p<2;p++){blurH(out,tmp);blurV(tmp,out)}
+  return out})();
 function wcell(x,y){let i=Math.floor(x/WU),j=Math.floor(y/WU);i=i<0?0:i>=WGW?WGW-1:i;j=j<0?0:j>=WGH?WGH-1:j;return j*WGW+i}
 function wcode(x,y){return WGRID[wcell(x,y)]}
 // borders between habitats: blend the four nearest map cells and add a small wobble, so edges are smooth curves rather than steps
@@ -747,7 +1295,7 @@ const WS_C=[0,0,0,0],WS_W=[0,0,0,0];
 function wsample(x,y){const w=(vnoise(x/46+31,y/46+17)-.5)*18;x+=w;y-=w*.7;
   let fx=x/WU-.5,fy=y/WU-.5,i=Math.floor(fx),j=Math.floor(fy);fx-=i;fy-=j;i=clamp(i,0,WGW-2);j=clamp(j,0,WGH-2);
   const o=j*WGW+i,a=WGRID[o],b=WGRID[o+1],c=WGRID[o+WGW],d=WGRID[o+WGW+1];if(a===b&&a===c&&a===d)return a;
-  const n=(vnoise(x/9+3,y/9+7)-.5)*.3;let best=a,bw=-1;
+  const n=(vnoise(x/38+3,y/38+7)-.5)*.24;let best=a,bw=-1;
   const cs=[a,b,c,d],ws=[(1-fx)*(1-fy),fx*(1-fy),(1-fx)*fy,fx*fy];
   for(let k=0;k<4;k++){let t=0;for(let m=0;m<4;m++)if(cs[m]===cs[k])t+=ws[m];t+=n*(k&1?1:-1)*(k&2?1:-1);if(t>bw){bw=t;best=cs[k]}}return best}
 function wkey(x,y){return WKEYS[wsample(x,y)]}
@@ -838,8 +1386,8 @@ function groundColor(x,y,tt){const t=tt??terr(x,y);let c=groundColor0(x,y,t);if(
   return c}
 function groundColor0(x,y,t){const n=vnoise(x/90,y/90);
   switch(t){
-    case T.DEEP:{const c=blend3(GC.deepN,GC.deep,GC.deepS,y);return mix(c,GC.pelagic,clamp((wdist(x,y)-900)/1600,0,.8)).map(v=>v*(.94+n*.1))}
-    case T.SHAL:{const d=clamp(wdist(x,y)/300,0,1);return mix(blend3(GC.shalN,GC.shal,GC.shalS,y),blend3(GC.deepN,GC.deep,GC.deepS,y),d*d)}
+    case T.DEEP:{const c=blend3(GC.deepN,GC.deep,GC.deepS,y);return mix(c,GC.pelagic,clamp((wdist(x,y)-900)/1600,0,.8)).map(v=>v*(.97+n*.05))}
+    case T.SHAL:{const d0=wdist(x,y),d=clamp(d0/300,0,1),rim=d0<9?(1-d0/9)*.28:0;return mix(mix(blend3(GC.shalN,GC.shal,GC.shalS,y),blend3(GC.deepN,GC.deep,GC.deepS,y),d*d),[226,240,236],rim)}
     case T.WET:return GC.wet.map(v=>v*(.95+n*.08));
     case T.SAND:return mix(GC.sand,GC.sandS,nS(y)).map(v=>v*(.96+n*.06));
     case T.DUNE:return mix(GC.dune,GC.sand,n*.6);
@@ -1035,7 +1583,7 @@ Object.assign(GC,{lake:hex('#3d7c8c'),lakeN:hex('#35687a'),lakeShal:hex('#62a19b
   corn:hex('#5b8a34'),corn2:hex('#4c7a2c'),soil:hex('#7d5e3d'),wheat:hex('#d9bf68'),wheat2:hex('#c6a955'),soy:hex('#7fb046'),hay:hex('#a9b65c'),hay2:hex('#c9c27a'),plow:hex('#6a4b31'),pasture:hex('#8db352')});
 function habColor(x,y,t,n){
   switch(t){
-    case T.LAKE:{const hk=wkey(x,y),base=y<14000?GC.lakeN:GC.lake,deep=clamp(wdist(x,y)/(hk==='river'||hk==='pools'?40:220),0,1);return mix(GC.lakeShal,base,hk==='lake'?deep:deep*.7).map(v=>v*(.96+n*.06))}
+    case T.LAKE:{const hk=wkey(x,y),base=y<14000?GC.lakeN:GC.lake,deep=clamp(wdist(x,y)/(hk==='river'||hk==='pools'?40:220),0,1);const d0=wdist(x,y),rim=d0<9?(1-d0/9)*.32:0;return mix(mix(GC.lakeShal,base,hk==='lake'?deep:deep*.7),[226,240,236],rim)}
     case T.MARSH:{const k=fbm(x/60,y/60);return mix(GC.marsh,GC.marsh2,k).map(v=>v*(.9+n*.14))}
     case T.SALT:{const k=fbm(x/90+2,y/90);return(k>.66?GC.mudS:mix(GC.salt,GC.salt2,k)).map(v=>v*(.94+n*.08))}
     case T.SWAMP:{const k=fbm(x/80+7,y/80+3);return(k>.55?mix(GC.duck,GC.swamp,n*.4):mix(GC.swampW,GC.swamp,k)).map(v=>v*(.92+n*.1))}
@@ -1905,23 +2453,32 @@ function updatePlayer(dt){const p=S.player,inp=getInput();
   p.idleT=p.moving||S.bino.on?0:(p.idleT||0)+dt;const lk=p.idleT>2.5?Math.sin((p.idleT-2.5)*.9)*.75:0;p.look=lerp(p.look||0,lk,Math.min(1,dt*4))}
 
 /* ---------- Defender ---------- */
+function carWet(x,y){if(onPier(x,y))return'pier';const rd=roadAt(x,y);if(rd)return rd.kind==='boardwalk'?'pier':null;const t=terr(x,y);
+  if(t===T.MARSH||t===T.SALT||t===T.MUD||t===T.BOG)return null;
+  if(t===T.SHAL||t===T.LAKE)return waterKind(x,y)==='wade'?null:'deep';
+  if(t===T.DEEP)return'deep';if(t===T.SWAMP||t===T.MANGROVE)return'trees';if(t===T.ICE)return'ice';return null}
+const CAR_SOFT={[T.SHAL]:130,[T.LAKE]:130,[T.MARSH]:170,[T.SALT]:200,[T.MUD]:140,[T.BOG]:120};
 function updateCar(dt){const c=S.car,inp=getInput(),drive=S.mode==='drive'&&!S.bino.on;
   const r=roadAt(c.x,c.y),t=terr(c.x,c.y);
-  const vmax=r?(r.city?400:r.kind==='paved'?620:r.kind==='sand'?360:440):isBeach(t)?280:t===T.SNOW?260:t===T.ROCK?200:320;
+  const vmax=r?(r.city?400:r.kind==='paved'?620:r.kind==='sand'?360:440):CAR_SOFT[t]||(isBeach(t)?280:t===T.SNOW?260:t===T.ROCK?200:320);
   if(drive&&inp.m>0){const want=Math.atan2(inp.y,inp.x);let d=angDiff(c.ang,want);
-    // pointing back behind the car while slow: reverse instead of a U-turn
-    if(Math.abs(d)>2.3&&c.v<80){c.v=Math.max(-160,c.v-500*dt);const d2=angDiff(c.ang,want+PI);c.ang+=clamp(d2,-1,1)*dt*1.6*clamp(-c.v/120,0,1)}
+    // D1 pointing back behind the car: brake, then reverse straight back
+    if(!c.rev&&Math.abs(d)>2.45&&c.v<70)c.rev=true;else if(c.rev&&Math.abs(d)<1.75)c.rev=false;
+    if(c.rev||(Math.abs(d)>2.45&&c.v>=70)){
+      if(c.v>0){c.v=Math.max(0,c.v-700*dt)}
+      else{const rv=-Math.min(220,vmax*.45)*inp.m;c.v+=(rv<c.v?-320:320)*dt;if(Math.abs(c.v-rv)<10)c.v=rv;
+        const d2=angDiff(c.ang,want+PI),dz=.44,sg=Math.abs(d2)<dz?0:(d2-Math.sign(d2)*dz);c.ang+=clamp(sg*1.4,-1,1)*dt*1.1*clamp(-c.v/120,0,1)}}
     else{// gentle steering: quicker when slow, calmer at speed
       const steer=clamp(d*1.6,-1,1)*(1.1+1.2*clamp(1-Math.abs(c.v)/620,0,1));c.ang+=steer*dt*clamp(Math.abs(c.v)/110,.3,1);
       const tv=vmax*inp.m*clamp(1.25-Math.abs(d)/1.4,.25,1);c.v+=(tv>c.v?260*(1-.5*clamp(c.v/vmax,0,1)):-520)*dt;if(c.v>tv&&c.v-tv<12)c.v=tv}}
-  else{c.v*=Math.pow(.25,dt);if(Math.abs(c.v)<4)c.v=0}
+  else{c.v*=Math.pow(.25,dt);if(Math.abs(c.v)<4)c.v=0;if(!c.v)c.rev=false}
   if(c.v>vmax)c.v-=500*dt;
   const nx=c.x+Math.cos(c.ang)*c.v*dt,ny=c.y+Math.sin(c.ang)*c.v*dt;
-  let what=null;const hit=pt=>{const b=blockedAt(pt[0],pt[1],16);if(b){what=b;return true}if(waterAt(pt[0],pt[1],false)){what='water';return true}return false};
+  let what=null;const hit=pt=>{const b=blockedAt(pt[0],pt[1],16);if(b){what=b;return true}const w=carWet(pt[0],pt[1]);if(w){what='water';c.wetWhy=w;return true}return false};
   const fx=Math.cos(c.ang)*30,fy=Math.sin(c.ang)*30;
   if(!hit([nx+fx,ny+fy])&&!hit([nx-fx,ny-fy])&&!hit([nx,ny])){c.x=nx;c.y=ny}
-  else{if(Math.abs(c.v)>140){toast(what==='water'?(onPier(nx+fx,ny+fy)?'The pier is for walking. Park and go on foot.':'Too wet for the Defender. Walk from here.'):what&&what.kind&&BKIND[what.kind]?'Bump! Mind the buildings.':what&&what.type&&VTYPES[what.type]?'Bump! Careful with the other cars.':'Bump! Mind the trees.',1.6)}c.v*=-.25}
-  c.roll+=c.v*dt/(.4*M*VX);
+  else{if(Math.abs(c.v)>140){toast(what==='water'?(c.wetWhy==='pier'?'The pier is for walking. Park and go on foot.':c.wetWhy==='trees'?'Too tangled for the Defender. Walk from here.':c.wetWhy==='ice'?'Not on the ice. Walk from here.':'Too deep for the Defender. Walk or take a boat from here.'):what&&what.kind&&BKIND[what.kind]?'Bump! Mind the buildings.':what&&what.type&&VTYPES[what.type]?'Bump! Careful with the other cars.':'Bump! Mind the trees.',1.6)}c.v*=-.25}
+  c.roll+=c.v*dt/(.4*M*VX);if((t===T.SHAL||t===T.LAKE)&&Math.abs(c.v)>30){c.spl=(c.spl||0)-dt;if(c.spl<=0){c.spl=.1;addPrint(c.x-Math.cos(c.ang)*26,c.y-Math.sin(c.ang)*26,c.ang,'water')}}
   SFX.engine(S.mode==='drive',clamp(Math.abs(c.v)/620,0,1),r?(r.kind==='paved'?'paved':r.kind==='sand'?'sand':'dirt'):isBeach(t)?'sand':'off')}
 
 /* ---------- boats (W1 tour boat, W2 kayak, W3 canoe) ----------
@@ -1983,13 +2540,18 @@ function shoreSpot(B){const ca=Math.cos(B.ang),sa=Math.sin(B.ang);
   for(const r of[50,80,110,140,170])for(const a of[PI/2,-PI/2,0,PI,PI/4,-PI/4,3*PI/4,-3*PI/4]){const x=B.x+Math.cos(B.ang+a)*r,y=B.y+Math.sin(B.ang+a)*r;
     if((onPier(x,y)||(!waterKind(x,y)&&!waterAt(x,y,true)))&&!blockedAt(x,y,8))return[x,y]}return null}
 function updateBoat(dt){const B=S.boat;if(S.mode!=='boat'||!B){SFX.boat(null,0);return}const K=BOATK[B.craft],inp=getInput(),steer=!S.bino.on&&inp.m>0;
-  if(steer){const want=Math.atan2(inp.y,inp.x),d=angDiff(B.ang,want);B.ang+=clamp(d*1.4,-1,1)*K.turn*dt*clamp(.35+Math.abs(B.v)/K.vmax,.35,1.2);
+  if(steer){const want0=Math.atan2(inp.y,inp.x),d0=angDiff(B.ang,want0);
+    if(!B.rev&&Math.abs(d0)>2.45&&B.v<K.vmax*.25)B.rev=true;else if(B.rev&&Math.abs(d0)<1.75)B.rev=false}else if(!B.v)B.rev=false;
+  if(steer&&(B.rev||Math.abs(angDiff(B.ang,Math.atan2(inp.y,inp.x)))>2.45)){const want=Math.atan2(inp.y,inp.x);
+    if(B.v>0)B.v=Math.max(0,B.v-K.acc*2.2*dt);
+    else if(B.rev){const rv=-K.vmax*.4*inp.m;B.v+=(rv<B.v?-K.acc:K.acc)*dt;const d2=angDiff(B.ang,want+PI),dz=.44,sg=Math.abs(d2)<dz?0:(d2-Math.sign(d2)*dz);B.ang+=clamp(sg*1.4,-1,1)*K.turn*.6*dt}}
+  else if(steer){const want=Math.atan2(inp.y,inp.x),d=angDiff(B.ang,want);B.ang+=clamp(d*1.4,-1,1)*K.turn*dt*clamp(.35+Math.abs(B.v)/K.vmax,.35,1.2);
     const tv=K.vmax*inp.m*clamp(1.2-Math.abs(d)/1.6,.15,1);B.v+=(tv>B.v?K.acc:-K.acc*1.4)*dt}
   else{B.v*=Math.pow(B.craft==='tour'?.5:.3,dt);if(Math.abs(B.v)<3)B.v=0}
   const nx=B.x+Math.cos(B.ang)*B.v*dt,ny=B.y+Math.sin(B.ang)*B.v*dt,bow=K.L*M*.5,fx=Math.cos(B.ang)*bow,fy=Math.sin(B.ang)*bow;
   const ok=boatWater(B.craft,nx+fx,ny+fy)&&boatWater(B.craft,nx,ny)&&!(B.craft!=='tour'&&blockedAt(nx+fx*.8,ny+fy*.8,10));
   if(ok){B.x=nx;B.y=ny}else{if(Math.abs(B.v)>40&&!S.boatTold){S.boatTold=true;setTimeout(()=>S.boatTold=false,2500);
-      const t=terr(nx+fx,ny+fy);toast(t===T.ICE?'Ice ahead.':B.craft==='tour'?'Too shallow for the tour boat.':B.craft==='canoe'&&wkey(nx+fx,ny+fy)==='ocean'?'The canoe stays on lakes, ponds, creeks and the swamp.':B.craft==='kayak'&&(t===T.DEEP||t===T.SHAL)?'Open ocean ahead. That\'s tour boat water.':'Ashore here. Press Use to step out.',1.8)}B.v*=-.2}
+      const t=terr(nx+fx,ny+fy);toast(t===T.ICE?'Ice ahead.':B.craft==='tour'?'Too shallow for the tour boat.':B.craft==='canoe'&&wkey(nx+fx,ny+fy)==='ocean'?'The canoe stays on lakes, ponds, creeks and the swamp.':B.craft==='kayak'&&(t===T.DEEP||t===T.SHAL)?'Open ocean ahead. That\'s tour boat water.':(GPS.linked&&GPS.mode==='console'?'Ashore here. Press B to step out.':'Ashore here. Press Use to step out.'),1.8)}B.v*=-.2}
   const ph0=B.ph;B.ph+=B.craft==='tour'?Math.abs(B.v)*dt*.045:steer?(1.6+Math.abs(B.v)*.02)*dt:0;
   if(B.craft!=='tour'){const P=paddlePose(B),wb=P.blades.find(b=>b.wet);B.pfx=(B.pfx||0)-dt;if(wb&&steer&&B.pfx<=0){B.pfx=.12;const ca=Math.cos(B.ang),sa=Math.sin(B.ang);addPrint(B.x+(wb.p[0]*ca-wb.p[1]*sa)*M*VX,B.y+(wb.p[0]*sa+wb.p[1]*ca)*M*VX*KD,B.ang,'water')}}
   if(B.craft!=='tour'&&(steer||Math.abs(B.v)>30)&&Math.floor(B.ph/PI)!==Math.floor(ph0/PI))SFX.paddle(clamp(.5+Math.abs(B.v)/K.vmax,.5,1.2),paddlePose(B).side>0?.35:-.35);
@@ -2057,20 +2619,22 @@ const FLUSH={btbw:70,pile:150,pipl:110},FLYSPD={btbw:260,pile:300,pipl:420};
 const SUIT={btbw:['decid','hemlock','birch','spruce'],pile:['decid','snag','pine','liveoak','spruce','hemlock','cypress'],pipl:[]};
 // each species is placed only in its own habitats
 const HOMES={btbw:['hardwood','foothills','boreal'],pile:['hardwood','southern','swamp','maritime','foothills'],pipl:['beach']};
+for(const id in GB){const G=GB[id];FLUSH[id]=G.flush;FLYSPD[id]=G.flyspd;SUIT[id]=G.suit||[];HOMES[id]=G.homes;
+  for(const h of G.homes){const H=HABITATS[h];if(!H)continue;if(!H.play.includes(id))H.play.push(id);H.birds=H.birds.filter(n=>n!==G.name)}}
 function listener(){return S.mode==='drive'?S.car:S.player}
 function perchWorld(T,p){return{x:T.x+p.x*M,y:T.y+p.y*M,z:p.h}}
 function trunkPerch(T,a,h){const m=model(T);h=clamp(h,1.6,m.tr.h*.82);const w=trunkRadiusAt(m,h),c=trunkAt(m,h);return{x:c[0]+Math.cos(a)*(w+.01),y:c[1]+Math.sin(a)*(w+.01),h,kind:'t',a}}
 function suitableTrees(sp,x,y,rmin,rmax,away){const L=listener();
   return treesNear(x,y,rmax).filter(t=>{if(!SUIT[sp].includes(t.type))return false;const d=Math.hypot(t.x-x,t.y-y);if(d<rmin||d>rmax)return false;
-    if(sp==='pile'&&model(t).tr.h<6)return false;if(away){const ax=t.x-x,ay=t.y-y,bx=x-L.x,by=y-L.y;if(ax*bx+ay*by<0)return false}return true})}
+    if(sp==='pile'&&model(t).tr.h<6)return false;if(GB[sp]&&GB[sp].nearWater&&wdist(t.x,t.y)>90)return false;if(away){const ax=t.x-x,ay=t.y-y,bx=x-L.x,by=y-L.y;if(ax*bx+ay*by<0)return false}return true})}
 function pickPerch(sp,m){const ps=m.perch;if(!ps.length)return null;const r=Math.random();let pool=ps;
-  if(sp==='btbw'&&r<.45){const low=ps.filter(p=>p.h<6.5);if(low.length)pool=low}else if(r<.8){const o=ps.filter(p=>p.outer);if(o.length)pool=o}
+  if((sp==='btbw'||GB[sp]?.low)&&r<.45){const low=ps.filter(p=>p.h<6.5);if(low.length)pool=low}else if(r<.8){const o=ps.filter(p=>p.outer);if(o.length)pool=o}
   return pool[Math.floor(Math.random()*pool.length)]}
 function landOn(b,T){b.tree=T.id;const m=model(T);
   if(b.sp==='pile'){b.perch=trunkPerch(T,Math.random()*TAU,3+Math.random()*7);b.st='trunk'}
   else{b.perch=pickPerch(b.sp,m)||{x:0,y:0,h:m.tr.h*.6,kind:'b',ang:0};b.st='perch'}
   const w=perchWorld(T,b.perch);b.x=w.x;b.y=w.y;b.z=w.z;b.hd=b.sp==='pile'?b.perch.a+PI:Math.random()*TAU}
-function makeBird(sp,x,y){const b={sp,x,y,z:0,st:'ground',hd:Math.random()*TAU,tm:2+Math.random()*4,song:3+Math.random()*10,note:0,flap:0,peck:0,bob:0,tail:0,curious:0,home:{x,y},id:Math.random().toString(36).slice(2,8)};
+function makeBird(sp,x,y){if(GB[sp])return{sp,x,y,z:0,st:'dormant',wake:Math.random()*2,hd:Math.random()*TAU,tm:2+Math.random()*4,song:3+Math.random()*10,note:0,flap:0,peck:0,bob:0,tail:0,curious:0,home:{x,y},id:Math.random().toString(36).slice(2,8)};const b={sp,x,y,z:0,st:'ground',hd:Math.random()*TAU,tm:2+Math.random()*4,song:3+Math.random()*10,note:0,flap:0,peck:0,bob:0,tail:0,curious:0,home:{x,y},id:Math.random().toString(36).slice(2,8)};
   if(sp!=='pipl'){const ts=suitableTrees(sp,x,y,0,500,false).sort((a,c)=>Math.hypot(a.x-x,a.y-y)-Math.hypot(c.x-x,c.y-y));if(ts.length)landOn(b,ts[0]);else return null}
   else{b.x=x;b.y=y;b.st='ground';b.goal=null}
   return b}
@@ -2083,9 +2647,11 @@ function placeBirds(){const r=rng(2024);S.birds=[];
   for(let i=0,n=0;i<200&&n<8;i++){const y=11600+r()*20000,x=3600+r()*(coastX(y)-4900);if(!inHome('pile',x,y))continue;n++;add('pile',x,y)}
   {const q=riverPoint('Black Creek',.62,1);add('pile',q.x,q.y+200)}
   for(const f of FENCES)add('pipl',f.x+f.w*.5,f.y+f.h*(.3+r()*.4));
-  for(let i=0;i<3;i++){const y=13000+r()*14000;add('pipl',coastX(y)-140,y)}}
+  for(let i=0;i<3;i++){const y=13000+r()*14000;add('pipl',coastX(y)-140,y)}
+  // the 27 version-18 species: scattered through their own habitats (and regions), woken when you come near
+  for(const id in GB){const G=GB[id];let n=0;for(let i=0;i<6000&&n<G.n;i++){const x=700+r()*(WW-800),y=150+r()*(WH-300);if(!G.homes.includes(habitatAt(x,y)))continue;if(G.bands&&!G.bands.includes(bandAt(y).id))continue;n++;add(id,x,y)}}}
 function flyTo(b,x,y,z,next){b.fly={ax:b.x,ay:b.y,az:b.z,bx:x,by:y,bz:z,t:0,dur:Math.max(.6,Math.hypot(x-b.x,y-b.y)/FLYSPD[b.sp]),next};b.st='fly';b.hd=Math.atan2(y-b.y,x-b.x)}
-function flushBird(b,scare){const L=listener();
+function flushBird(b,scare){const L=listener();if(GB[b.sp]&&GB[b.sp].kind!=='perch'){gbFlush(b);if(scare){const d=Math.hypot(b.x-L.x,b.y-L.y);SFX.flush(clamp(1-d/700,0,1),0)}return}
   if(b.sp==='pipl'){const dir=Math.sign(b.y-L.y)||1,ny=clamp(b.y+dir*(300+Math.random()*500),6000,25000);flyTo(b,coastX(ny)-80-Math.random()*190,ny,0,{st:'ground'});b.home={x:b.fly.bx,y:ny}}
   else{let ts=suitableTrees(b.sp,b.x,b.y,180,650,true);if(!ts.length)ts=suitableTrees(b.sp,b.x,b.y,150,700,false);if(!ts.length)return;
     const T2=ts[Math.floor(Math.random()*ts.length)],tmp={sp:b.sp};landOn(tmp,T2);b.pending={tree:T2.id,perch:tmp.perch};flyTo(b,tmp.x,tmp.y,tmp.z,{st:tmp.st})}
@@ -2095,14 +2661,15 @@ function birdSing(b){const L=listener(),d=Math.hypot(b.x-L.x,b.y-L.y);const vol=
   if(b.sp==='pile'&&Math.random()<.45)SFX.drum(vol,pan);else SFX.song(b.sp,vol,pan);b.note=1.8}
 function updateBird(b,dt){
   b.note=Math.max(0,b.note-dt);b.curious=Math.max(0,b.curious-dt);b.peck=Math.max(0,b.peck-dt*3);
-  b.song-=dt;if(b.song<=0){b.song=b.sp==='btbw'?7+Math.random()*7:b.sp==='pile'?16+Math.random()*16:9+Math.random()*9;if(b.st!=='fly')birdSing(b)}
+  b.song-=dt;if(b.song<=0){b.song=GB[b.sp]?gbSongGap(b.sp):b.sp==='btbw'?7+Math.random()*7:b.sp==='pile'?16+Math.random()*16:9+Math.random()*9;if(b.st!=='fly')birdSing(b)}
   const L=listener(),d=Math.hypot(b.x-L.x,b.y-L.y);
-  if(b.st!=='fly'&&!b.curious){const k=S.mode==='drive'?(Math.abs(S.car.v)>60?1.8:.9):(S.player.sneak?.4:S.player.moving?1:.55);if(d<FLUSH[b.sp]*k){flushBird(b,true);return}}
+  if(b.st!=='fly'&&!b.curious&&!b.under){const k=S.mode==='drive'?(Math.abs(S.car.v)>60?1.8:.9):(S.player.sneak?.4:S.player.moving?1:.55);if(d<FLUSH[b.sp]*k){flushBird(b,true);return}}
   if(b.st==='fly'){const f=b.fly;f.t+=dt/f.dur;const u=clamp(f.t,0,1),e=u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2;
-    b.x=lerp(f.ax,f.bx,e);b.y=lerp(f.ay,f.by,e);const arc=b.sp==='pipl'?1.2:4+f.dur*2;b.z=lerp(f.az,f.bz,e)+Math.sin(u*PI)*arc+(b.sp==='pile'?Math.sin(u*f.dur*9)*.4:0);
-    b.flap+=dt*(b.sp==='btbw'?34:b.sp==='pile'?12:26);if(b.sp==='pile'&&Math.sin(u*f.dur*9)>.4)b.flap-=dt*12;
-    if(f.t>=1){b.z=f.bz;b.st=f.next.st;b.tm=2+Math.random()*4;if(b.pending){b.tree=b.pending.tree;b.perch=b.pending.perch;b.pending=null;b.hd=b.sp==='pile'?b.perch.a+PI:b.hd}}
+    b.x=lerp(f.ax,f.bx,e);b.y=lerp(f.ay,f.by,e);const arc=b.sp==='pipl'||f.sea?1.2:4+f.dur*2;b.z=lerp(f.az,f.bz,e)+Math.sin(u*PI)*arc+(b.sp==='pile'?Math.sin(u*f.dur*9)*.4:0);
+    b.flap+=dt*(GB[b.sp]?GB[b.sp].flap:b.sp==='btbw'?34:b.sp==='pile'?12:26);if(b.sp==='pile'&&Math.sin(u*f.dur*9)>.4)b.flap-=dt*12;
+    if(f.t>=1){b.z=f.bz;b.st=f.next.st;if(b.st==='fly'){gbSeaLeg(b);return}b.tm=2+Math.random()*4;if(b.pending){b.tree=b.pending.tree;b.perch=b.pending.perch;b.pending=null;b.hd=b.sp==='pile'?b.perch.a+PI:b.hd}}
     return}
+  if(GB[b.sp]&&b.st!=='perch'&&b.st!=='trunk'){gbUpdate(b,dt);return}
   b.tm-=dt;
   if(b.st==='perch'){b.bob=Math.sin(S.t*3+b.x)*.08;b.tail=Math.max(0,Math.sin(S.t*2.3+b.y)*1.6-.9);
     if(b.hop){b.hop.t+=dt/.28;const u=clamp(b.hop.t,0,1);b.x=lerp(b.hop.ax,b.hop.bx,u);b.y=lerp(b.hop.ay,b.hop.by,u);b.z=lerp(b.hop.az,b.hop.bz,u)+Math.sin(u*PI)*.35;if(u>=1)b.hop=null}
@@ -2123,7 +2690,7 @@ function updateBird(b,dt){
     if(b.goal){const dx=b.goal.x-b.x,dy=b.goal.y-b.y,l=Math.hypot(dx,dy);if(l<3){b.goal=null;b.tm=1.4+Math.random()*3;if(Math.random()<.6)b.peck=1}else{const sp=48*dt;b.x+=dx/l*Math.min(sp,l);b.y+=dy/l*Math.min(sp,l);b.hd=Math.atan2(dy,dx);b.run=(b.run||0)+dt*22}}
     else if(b.tm<=0){const ny=clamp(b.home.y+(Math.random()-.5)*300,12000,31000);b.goal={x:coastX(ny)-60-Math.random()*220,y:ny};b.goal.y=lerp(b.y,b.goal.y,.35);b.goal.x=coastX(b.goal.y)-60-Math.random()*220}
     b.z=0}}
-function updateBirds(dt){const L=listener();for(const b of S.birds){const far=Math.hypot(b.x-L.x,b.y-L.y)>2600;if(far&&b.st!=='fly'){b.song-=dt;continue}updateBird(b,dt)}}
+function updateBirds(dt){const L=listener();for(const b of S.birds){if(b.st==='dormant'){if((b.wake-=dt)<=0){b.wake=3+Math.random()*3;if(Math.hypot(b.home.x-L.x,b.home.y-L.y)<2300)gbActivate(b)}continue}const far=Math.hypot(b.x-L.x,b.y-L.y)>2600;if(far&&b.st!=='fly'){b.song-=dt;continue}updateBird(b,dt)}}
 
 /* ---------- actions ---------- */
 function useTarget(){
@@ -2142,13 +2709,13 @@ function doUse(){if(S.bino.on)return;const u=useTarget();
   else if(u==='land'){const sp=shoreSpot(S.boat);if(!sp)return;S.boat.v=0;SFX.boat(null,0);S.mode='walk';S.player.x=sp[0];S.player.y=sp[1];S.player.vx=S.player.vy=0;S.player.face=Math.atan2(sp[1]-S.boat.y,sp[0]-S.boat.x);S.boat=null;SFX.click()}
   else if(u==='travel')openTravel()}
 function doPish(){if(S.mode!=='walk'||S.bino.on||S.player.water==='swim')return;if(S.pishCD>0){toast('Give them a moment');return}S.pishCD=6;SFX.pish();
-  let n=0;for(const b of S.birds){if(b.sp!=='btbw'||b.st==='fly')continue;const d=Math.hypot(b.x-S.player.x,b.y-S.player.y);if(d<480){b.curious=18;b.tm=.3;n++;if(d>260){const ts=suitableTrees('btbw',S.player.x,S.player.y,90,220,false);if(ts.length){const tmp={sp:'btbw'};landOn(tmp,ts[0]);b.pending={tree:ts[0].id,perch:tmp.perch};flyTo(b,tmp.x,tmp.y,tmp.z,{st:'perch'});b.curious=18}}}}
+  let n=0;for(const b of S.birds){if(!(b.sp==='btbw'||gbKind(b.sp)==='perch'&&b.sp!=='beki')||b.st==='fly'||b.st==='dormant')continue;const d=Math.hypot(b.x-S.player.x,b.y-S.player.y);if(d<480){b.curious=18;b.tm=.3;n++;if(d>260){const ts=suitableTrees(b.sp,S.player.x,S.player.y,90,220,false);if(ts.length){const tmp={sp:b.sp};landOn(tmp,ts[0]);b.pending={tree:ts[0].id,perch:tmp.perch};flyTo(b,tmp.x,tmp.y,tmp.z,{st:'perch'});b.curious=18}}}}
   toast(n?'Pssh-pssh-pssh… something small is coming to look':'Pssh-pssh-pssh… nothing answered here')}
 
 /* ---------- gear ---------- */
 function cycleGear(){setGear(GEAR_IDS[(GEAR_IDS.indexOf(S.gear)+1)%GEAR_IDS.length])}
 function setGear(g){if(S.bino.on)toggleBino(false);S.gear=g;saveKit();updateGearUI();SFX.click();
-  toast(g==='scope'?'Spotting scope: stand still and raise it to set up the tripod (20–60×)':g==='cam'?'Camera: 100–600 mm zoom. Space or the shutter button takes a photo':'Binoculars: 8–18×, quick and handheld',3.2)}
+  toast(g==='scope'?'Spotting scope: stand still and raise it to set up the tripod (20–60×)':g==='cam'?'Camera: 100–600 mm zoom. '+(GPS.linked&&GPS.mode==='console'?'A takes a photo':'Space or the shutter button takes a photo'):'Binoculars: 8–18×, quick and handheld',3.2)}
 function shutter(){const B=S.bino;if(!B.on||S.gear!=='cam')return;if(B.cool>performance.now())return;B.cool=performance.now()+350;B.shoot=true;B.flash=1;SFX.shutter();const sb=$('shutterBtn');sb.classList.add('pressed');setTimeout(()=>sb.classList.remove('pressed'),120)}
 
 /* ---------- the Defender ----------
@@ -2563,7 +3130,7 @@ function cellTex(cx,cy){const k=cellKey(cx,cy);let c=TEX.get(k);if(c){c.used=S.t
   for(let j=0;j<N;j++)for(let i=0;i<N;i++){const o=((j+1)*W+i+1)*3,r=cr[o],gg=cr[o+1],bb=cr[o+2];
     let edge=false;for(let dj=-1;dj<=1&&!edge;dj++)for(let di=-1;di<=1;di++){const q=o+(dj*W+di)*3;if(Math.abs(cr[q]-r)+Math.abs(cr[q+1]-gg)+Math.abs(cr[q+2]-bb)>40){edge=true;break}}
     if(!edge){for(let b=0;b<TEXFINE;b++)for(let a=0;a<TEXFINE;a++)put(i*TEXFINE+a,j*TEXFINE+b,r,gg,bb)}
-    else for(let b=0;b<TEXFINE;b++)for(let a=0;a<TEXFINE;a++){const col=groundColor(x0+(i*TEXFINE+a+.5)*TEXRES/TEXFINE,y0+(j*TEXFINE+b+.5)*TEXRES/TEXFINE);put(i*TEXFINE+a,j*TEXFINE+b,col[0],col[1],col[2])}}
+    else for(let b=0;b<TEXFINE;b++)for(let a=0;a<TEXFINE;a++){let R=0,G2=0,B2=0;for(let q=0;q<4;q++){const col=groundColor(x0+(i*TEXFINE+a+(q&1?.75:.25))*TEXRES/TEXFINE,y0+(j*TEXFINE+b+(q&2?.75:.25))*TEXRES/TEXFINE);R+=col[0];G2+=col[1];B2+=col[2]}put(i*TEXFINE+a,j*TEXFINE+b,R/4,G2/4,B2/4)}}
   g.putImageData(img,0,0);c={cvs,used:S.t};TEX.set(k,c);
   if(TEX.size>TEX_KEEP){let old=null;for(const [kk,v] of TEX)if(!old||v.used<old[1].used)old=[kk,v];TEX.delete(old[0])}
   return c}
@@ -2667,13 +3234,14 @@ function birdOWPos(b){if((b.st==='perch'||b.st==='trunk')&&!b.hop&&b.tree){const
 function drawBirdOW(b,t){const [x,y]=birdOWPos(b);ctx.save();ctx.translate(x,y);
   if(b.st==='fly'){ctx.restore();return}
   const face=Math.cos(b.hd)>=0?1:-1;
+  if(GB[b.sp]){const s=OW_S*gbMapScale(b.sp);drawBird(b.sp,gbPose(b),s,face,{bob:b.bob,tailFlick:b.tail,run:!!b.goal&&b.st==='ground',ph:b.run||0,peck:b.peck,stem:b.st==='reed'?1.1*HS/s:0,water:b.st==='wade'?SPECIES[b.sp].len*GB[b.sp].shape.legs*.6:0});ctx.restore();return}
   if(b.st==='trunk')drawBird('pile','trunk',OW_S,face,{peck:b.peck>0?Math.sin(b.peck*PI*4)*.5:0});
   else if(b.sp==='pipl')drawBird('pipl','stand',OW_S,face,{run:!!b.goal,ph:b.run||0,peck:b.peck});
   else drawBird(b.sp,'perch',OW_S,face,{bob:b.bob,tailFlick:b.tail});
   ctx.restore()}
 function drawFlyingOW(b,t){const sx=b.x,sy=b.y-b.z*HS;
-  ell(b.x,b.y,FL[b.sp].WS*.25,FL[b.sp].WS*.1,'rgba(0,0,0,.16)');
-  ctx.save();ctx.translate(sx,sy);drawBird(b.sp,'top',OW_S*1.1,1,{heading:b.hd+PI/2,flap:b.flap});ctx.restore()}
+  ell(b.x,b.y,FL[b.sp].WS*.25*(GB[b.sp]?gbMapScale(b.sp):1),FL[b.sp].WS*.1*(GB[b.sp]?gbMapScale(b.sp):1),'rgba(0,0,0,.16)');
+  ctx.save();ctx.translate(sx,sy);drawBird(b.sp,'top',OW_S*1.1*(GB[b.sp]?gbMapScale(b.sp):1),1,{heading:b.hd+PI/2,flap:b.flap});ctx.restore()}
 function drawNote(x,y,t,k){const a=Math.min(1,k);ctx.save();ctx.globalAlpha=a;ctx.translate(x+Math.sin(t*4)*3,y-(1.8-k)*14);
   ctx.fillStyle='rgba(255,255,255,.92)';ctx.beginPath();ctx.ellipse(-3,4,3.2,2.4,-.4,0,TAU);ctx.fill();ctx.fillRect(-.6,-8,1.8,12);ctx.beginPath();ctx.moveTo(1.2,-8);ctx.quadraticCurveTo(7,-6,5,0);ctx.quadraticCurveTo(5,-4,1.2,-4.5);ctx.fill();ctx.restore()}
 
@@ -2756,8 +3324,8 @@ function drawWorld(t){ctx=mainCtx;ctx.setTransform(DPR,0,0,DPR,0,0);
     if(cx<0||cy<0||cx*CELL>=WW||cy*CELL>=WH)continue;const tx=cellTex(cx,cy);
     if(tx)ctx.drawImage(tx.cvs,cx*CELL,cy*CELL,CELL+1,CELL+1);else{ctx.fillStyle=rgb(groundColor(cx*CELL+500,cy*CELL+500));ctx.fillRect(cx*CELL,cy*CELL,CELL+1,CELL+1)}}
   if(x0<0){ctx.fillStyle='#6f6e69';ctx.fillRect(x0-10,y0-10,-x0+10,VH+20)}
-  ctx.save();ctx.globalAlpha=.9;ctx.fillStyle=speck;ctx.fillRect(x0,y0,VW,VH);ctx.restore();
-  drawSea(x0,y0,x1,y1,t);
+  ctx.save();ctx.globalAlpha=.55;ctx.fillStyle=speck;ctx.fillRect(x0,y0,VW,VH);ctx.restore();
+  drawSea(x0,y0,x1,y1,t);drawWaves(x0,y0,x1,y1,t);
   drawRoads(x0,y0,x1,y1);drawBridge(x0,y0,x1,y1);drawPiers(x0,y0,x1,y1);
   if(Math.abs(TRAIL.x-cam.x)<VW&&Math.abs(TRAIL.y-cam.y)<VH)drawTrailhead(t);
   for(const f of FENCES)if(f.x<x1&&f.x+f.w>x0&&f.y<y1+40&&f.y+f.h>y0)drawFence(f);
@@ -2779,7 +3347,7 @@ function drawWorld(t){ctx=mainCtx;ctx.setTransform(DPR,0,0,DPR,0,0);
   for(const v of parkedNear(cam.x,cam.y,Math.max(VW,VH)/2+300))if(vis(v.x,v.y))items.push({y:v.y,f:()=>drawVehicle(v),s:()=>vehShadow(v)});
   for(const v of[...TRAFFIC,TRACTOR])if(vis(v.x,v.y,260))items.push({y:v.y,f:()=>drawVehicle(v),s:()=>vehShadow(v)});
   for(const p of PEOPLE)if(vis(p.x,p.y,40))items.push({y:p.y,f:()=>drawPerson(p,t)});
-  for(const b of S.birds)if(b.st==='ground'&&Math.abs(b.x-cam.x)<VW/2+40&&Math.abs(b.y-cam.y)<VH/2+40){items.push({y:b.y,f:()=>{ell(b.x,b.y+.5,6,2,'rgba(0,0,0,.18)');drawBirdOW(b,t)}})}
+  for(const b of S.birds)if((b.st==='ground'||b.st==='wade'||b.st==='swim'||b.st==='reed')&&!b.under&&Math.abs(b.x-cam.x)<VW/2+60&&Math.abs(b.y-cam.y)<VH/2+80){items.push({y:b.y,f:()=>{if(b.st!=='swim'){const k=GB[b.sp]?Math.min(1.8,SPECIES[b.sp].len*gbMapScale(b.sp)/18):1;ell(b.x,b.y+.5,6*k,2*k,'rgba(0,0,0,.18)')}drawBirdOW(b,t)}})}
   if(S.mode==='walk')items.push({y:S.player.y,f:()=>{drawFacing();drawBirderInWater(S.player,t)}});
   for(const B of BOATS)if(vis(B.x,B.y,300))items.push({y:B.y+8,f:()=>drawBoat(B,t)});
 
@@ -2818,7 +3386,13 @@ function drawSea(x0,y0,x1,y1,t){
     for(let y=ys;y<=y1+step;y+=step){const x=coastX(y)+off+Math.sin(y/90+t+k)*5;y===ys?ctx.moveTo(x,y):ctx.lineTo(x,y)}ctx.stroke()}
   const ph=(Math.sin(t*1.3)+1)/2;ctx.fillStyle='rgba(255,255,255,.55)';ctx.beginPath();
   for(let y=ys;y<=y1+step;y+=step)ctx.lineTo(coastX(y)-2+ph*10,y);for(let y=y1+step;y>=ys;y-=step)ctx.lineTo(coastX(y)+10+ph*16+Math.sin(y/40+t*2)*3,y);ctx.fill();
-  ctx.fillStyle='rgba(255,255,255,.35)';const r=rng(Math.floor(t*2));for(let i=0;i<40;i++){const y=y0+r()*(y1-y0),x=coastX(y)+80+r()*900;if(x>x0&&x<x1)ctx.fillRect(x,y,6+r()*8,1.5)}}
+}
+const whash=(a,b)=>{let h=Math.imul(a|0,374761393)+Math.imul(b|0,668265263);h=Math.imul(h^(h>>>13),1274126177);return((h^(h>>>16))>>>0)/4294967296};
+function drawWaves(x0,y0,x1,y1,t){const G=130;ctx.lineCap='round';ctx.lineJoin='round';
+  for(let gy=Math.floor(y0/G)-1;gy<=Math.ceil(y1/G);gy++)for(let gx=Math.floor(x0/G)-1;gx<=Math.ceil(x1/G);gx++){const h=whash(gx,gy),h2=whash(gy+77,gx-31);
+    const x=gx*G+h*G*.85,y=gy*G+h2*G*.85,tt=terr(x,y);if(tt!==T.DEEP&&tt!==T.SHAL&&tt!==T.LAKE)continue;const d=wdist(x,y);if(d<(tt===T.LAKE?26:50))continue;
+    const ph=(t*.28+h*7)%1,a=Math.sin(ph*PI);if(a<.06)continue;const k=tt===T.DEEP?1:tt===T.LAKE?.6:.85,w=(15+h2*12)*k,lift=(4.5+h*2)*k,dx=(ph-.5)*10*k,yy=y-ph*3;
+    ctx.strokeStyle=`rgba(255,255,255,${(.42*a).toFixed(3)})`;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x-w+dx,yy);ctx.quadraticCurveTo(x-w*.5+dx,yy-lift,x+dx,yy);ctx.quadraticCurveTo(x+w*.5+dx,yy-lift,x+w+dx,yy);ctx.stroke()}}
 
 /* ---------- compass + minimap ---------- */
 const cmp=$('compass'),cmpCtx=cmp.getContext('2d');const mm=document.createElement('canvas');mm.width=mm.height=72;let mmT=0,mmAt=null;
@@ -2839,7 +3413,7 @@ function drawCompass(t){const L=listener(),SP=MMZ[clamp(S.mmZ??1,0,3)];
   const tx=70+(TRAIL.x-L.x)*k,ty=70+(TRAIL.y-L.y)*k;g.fillStyle='#ffc93c';g.beginPath();g.arc(tx,ty,4,0,TAU);g.fill();
   for(const B of BOATS){const bx=70+(B.x-L.x)*k,by=70+(B.y-L.y)*k;if(Math.abs(bx-70)<60&&Math.abs(by-70)<60){g.fillStyle=B===S.boat?'#ffc93c':{tour:'#c82846',kayak:'#e6781e',canoe:'#288c46'}[B.craft];g.beginPath();g.arc(bx,by,2.6,0,TAU);g.fill()}}
   if(S.mode!=='drive'){const cx=70+(S.car.x-L.x)*k,cy=70+(S.car.y-L.y)*k;g.fillStyle='#fff';g.fillRect(cx-3.5,cy-2.5,7,5);g.fillStyle='#3f5a43';g.fillRect(cx-2.5,cy-1.5,5,3)}
-  if(S.showBirds)for(const b of S.birds){const bx=70+(b.x-L.x)*k,by=70+(b.y-L.y)*k;g.fillStyle=b.sp==='btbw'?'#2d55a8':b.sp==='pile'?'#e3262c':'#ef8a2a';g.beginPath();g.arc(bx,by,2.4,0,TAU);g.fill()}
+  if(S.showBirds)for(const b of S.birds){const bx=70+(b.x-L.x)*k,by=70+(b.y-L.y)*k;g.fillStyle=GB[b.sp]?GB[b.sp].c.mm:b.sp==='btbw'?'#2d55a8':b.sp==='pile'?'#e3262c':'#ef8a2a';g.beginPath();g.arc(bx,by,2.4,0,TAU);g.fill()}
   g.restore();
   // ring
   g.lineWidth=10;g.strokeStyle='#ffffff';g.beginPath();g.arc(70,70,63,0,TAU);g.stroke();g.lineWidth=1.5;g.strokeStyle='#1f3a2c';g.beginPath();g.arc(70,70,58,0,TAU);g.stroke();
@@ -2924,13 +3498,18 @@ function drawPierBino(p){if(!p.mesh){const K=meshKit(),W=(p.x1-p.x0)/M,D=(p.y1-p
   drawMeshBino({x:(p.x0+p.x1)/2,y:(p.y0+p.y1)/2,ang:0},p.mesh)}
 function skyCols(){const y=listener().y,n=nN(y),s=nS(y);let top=mix(mix(hex('#7fb3df'),hex('#a9c3d6'),n),hex('#5aa8e3'),s),hor=mix(mix(hex('#dcebf2'),hex('#e8eef0'),n),hex('#eef4ec'),s);
   if(SEASON==='winter'){top=mix(top,hex('#b8c6d2'),.4);hor=mix(hor,hex('#eef1f3'),.4)}else if(SEASON==='fall'){hor=mix(hor,hex('#f4e6cf'),.35)}return{top,hor}}
+// A1 the bird most in front of you within ~60 m and ~35 degrees either side: where is it in the optic?
+function aimTarget(yaw){const E=binoEye();let best=null,bs=1e9;
+  for(const b of S.birds){if(b.st==='dormant'||b.under)continue;const dx=(b.x-E.x)/M,dy=(b.y-E.y)/M,dist=Math.hypot(dx,dy);if(dist<2||dist>60)continue;
+    const by=Math.atan2(dy,dx),da=Math.abs(angDiff(yaw,by));if(da>.62)continue;const sc=da*1.6+dist/60+(b.st==='fly'?.4:0);if(sc<bs){bs=sc;best={yaw:by,pitch:clamp(Math.atan2((b.z||0)+.1-E.h,dist),-.35,1.2),b}}}
+  return best}
 function toggleBino(on){on=on??!S.bino.on;if(paused())return;const B=S.bino;
   if(on&&S.mode==='walk'&&S.player.water==='swim'){toast('You can\'t use your optics while swimming. Wade in the shallows or take a boat.',2);return}
   if(on&&S.mode==='boat'&&S.gear==='scope'){toast('The scope needs solid ground. Use binoculars or the camera from a boat.',2);return}
   if(on){
     if(S.mode==='drive'&&Math.abs(S.car.v)>90){toast('Pull over first');return}
     if(S.gear==='scope'&&S.mode==='drive'){toast('Get out to set up the scope');return}
-    B.on=true;B.yaw=S.mode==='drive'?S.car.ang:S.player.face;B.pitch=.14;B.prog=0;B.target=null;S.player.moving=false;buildPano();SFX.click();
+    B.on=true;B.yaw=S.mode==='drive'?S.car.ang:S.player.face;B.pitch=.02;{const a=aimTarget(B.yaw);if(a){B.yaw=a.yaw;B.pitch=a.pitch}}B.prog=0;B.target=null;S.player.moving=false;buildPano();SFX.click();
     // the scope needs its tripod set up first
     if(S.gear==="scope"){B.fade=-1.2;B.setup=1.1;SFX.tripod();$('idtag').textContent='Setting up the tripod…';$('idtag').style.opacity=1}else B.fade=0;
     B.zoom=clamp(B.zoom,0,opticZooms().length-1)}
@@ -2987,7 +3566,7 @@ function drawBino(t){ctx=mainCtx;ctx.setTransform(DPR,0,0,DPR,0,0);const B=S.bin
   for(const c of cellsNear(E.x,E.y,RANGE*M)){
     for(const T of c.trees){const d=inView(T.x,T.y,T.h*.7);if(d==null||d<.8)continue;items.push({d,f:()=>drawTreeBino(T,treeBirds.get(T.id),d,t)})}
     for(const dd of c.decor){if(dd.k==='shell'||dd.k==='mound')continue;const d=inView(dd.x,dd.y,2);if(d==null||d>45||d<1)continue;items.push({d,f:()=>drawShrubBino(dd,t)})}}
-  for(const b of S.birds){if(b.st==='ground'||b.st==='fly'||b.hop||!b.tree){const d=inView(b.x,b.y,1);if(d==null)continue;items.push({d,f:()=>drawBirdBino(b,t,null)})}}
+  for(const b of S.birds){if(b.st==='dormant'||b.under)continue;if(b.st==='ground'||b.st==='fly'||b.hop||!b.tree){const d=inView(b.x,b.y,1);if(d==null)continue;items.push({d,f:()=>drawBirdBino(b,t,null)})}}
   {const d=S.mode!=='drive'?inView(S.car.x,S.car.y,3):null;if(d!=null&&d>2)items.push({d,f:()=>drawCarBino(d)})}
   for(const B of BOATS){if(B===S.boat&&S.mode==='boat')continue;const K=BOATK[B.craft],d=inView(B.x,B.y,K.L*.6);if(d==null||d<1.5)continue;
     items.push({d,f:()=>{const o={x:B.x,y:B.y,ang:B.ang,color:K.col};drawMeshBino(o,boatMesh(B.craft));
@@ -3021,18 +3600,19 @@ function coveredBy(it,x,y){if(it.r){const R=it.r;return x>R[0]&&x<R[2]&&y>R[1]&&
   const [bx,by,tx,ty,w0,w1]=it.t;if(y>by||y<ty)return false;const f=(by-y)/Math.max(1,by-ty);return Math.abs(x-lerp(bx,tx,f))<lerp(w0,w1,f)}
 function birdVisibility(){for(const b of S.birds){if(!b.scr||!b._pts)continue;let vis=0;for(const q of b._pts){let hid=false;for(let i=b._idx;i<BV.drawn.length;i++)if(coveredBy(BV.drawn[i],q[0],q[1])){hid=true;break}if(!hid)vis++}b.scr.vis=vis/b._pts.length}}
 function drawBirdBino(b,t){const E=BV.E;let wx=b.x,wy=b.y;
-  const p=bproj(wx,wy,b.z);if(!p)return;const s=p.s/100*BIRD_EX;const len=SPECIES[b.sp].len*s;
+  const p=bproj(wx,wy,b.z);if(!p)return;const s=p.s/100*BIRD_EX*(GB[b.sp]?gbBinoEx(b.sp):1);const len=SPECIES[b.sp].len*s;
   if(p.x<-len*2||p.x>VW+len*2||p.y<-len*2||p.y>VH+len*2)return;
   const lat=Math.cos(b.hd)*BV.rx+Math.sin(b.hd)*BV.ry;let face=lat>=0?1:-1;
   ctx.save();ctx.translate(p.x,p.y);
   if(b.st==='fly'){const above=b.z>E.h+.3;drawBird(b.sp,'fly',s,face,{flap:b.flap,ventral:above,detail:s>2})}
+  else if(GB[b.sp])drawBird(b.sp,gbPose(b),s,face,{bob:b.bob,tailFlick:b.tail,under:b.z>E.h+2,run:!!b.goal&&b.st==='ground',ph:b.run||0,peck:b.peck,stem:b.st==='reed'?110:0,water:b.st==='wade'?SPECIES[b.sp].len*GB[b.sp].shape.legs*.6:0,detail:s>1.6});
   else if(b.st==='trunk'){const T=treeById(b.tree),m=T&&model(T);if(m){const c=trunkAt(m,b.perch.h),cp=bproj(T.x+c[0]*M,T.y+c[1]*M,b.perch.h);if(cp)face=cp.x>=p.x?1:-1}
     drawBird('pile','trunk',s,face,{peck:b.peck>0?Math.sin(b.peck*PI*4)*.5:0,detail:s>1.6})}
   else if(b.sp==='pipl')drawBird('pipl','stand',s,face,{run:!!b.goal,ph:b.run||0,peck:b.peck,detail:s>1.6});
   else drawBird(b.sp,'perch',s,face,{bob:b.bob,tailFlick:b.tail,under:b.z>E.h+2,detail:s>1.6});
   ctx.restore();
   // how much of the bird is hidden by foliage or trunk drawn in front of it
-  const F=FL[b.sp],h=b.st==='trunk'?SPECIES.pile.len*.7*s:b.sp==='btbw'?8*s:13*s,cy=p.y-h*.5;const pts=[[p.x,cy],[p.x-len*.3,cy],[p.x+len*.3,cy],[p.x,cy-h*.3],[p.x,cy+h*.3],[p.x+len*.15,cy-h*.15],[p.x-len*.15,cy+h*.15]];
+  const F=FL[b.sp],h=GB[b.sp]&&b.st!=='fly'?SPECIES[b.sp].len*(GB[b.sp].shape.bh+GB[b.sp].shape.legs*.7+(GB[b.sp].shape.neck?.4:.12))*s:b.st==='trunk'?SPECIES.pile.len*.7*s:b.sp==='btbw'?8*s:13*s,cy=p.y-h*.5;const pts=[[p.x,cy],[p.x-len*.3,cy],[p.x+len*.3,cy],[p.x,cy-h*.3],[p.x,cy+h*.3],[p.x+len*.15,cy-h*.15],[p.x-len*.15,cy+h*.15]];
   b._idx=BV.drawn.length;b._pts=pts;
   b.scr={x:p.x,y:cy,len,hh:h*.5,vis:1,d:p.d}}
 
@@ -3116,7 +3696,54 @@ function capturePhoto(){const B=S.bino,best=B.best,ok=B.lock&&best;
 
 /* ---------- species plates (journal, new-species card, thumbnails) ---------- */
 const PLATE_BOUNDS={btbw:[-5.6,5.8,-9.4,2.4],pile:[-9.5,7.5,-26.5,16.5],pipl:[-9.2,9.4,-14.2,.8]};
-function plateBox(id,view){if(view==='perched')return PLATE_BOUNDS[id];const F=FL[id];return[-F.WS/2,F.WS/2,-F.L*.36-F.hr-F.bill,F.L*.18+F.tl]}
+const SHAPE_TXT={mall:'Large, heavy-bodied duck that floats high, with a long flat bill and a rounded head.',
+  colo:'Big, long-bodied diver that sits low in the water, with a thick neck, flat crown and heavy dagger bill.',
+  noga:'Very large seabird, pointed at both ends: long narrow wings, pointed tail and a pointed bill.',
+  brpe:'Huge, heavy waterbird with a very long bill and throat pouch, short legs and a thick, S-curved neck.',
+  gbhe:'Very tall wader with long legs, a long S-curved neck and a heavy dagger bill.',
+  greg:'Tall, slender wader; a thinner neck than the Great Blue Heron and long black legs.',
+  whib:'Medium wader with a long, down-curved bill and medium-length legs.',
+  rutu:'Stocky, short-legged shorebird with a short, slightly upturned wedge bill.',
+  sand:'Small, plump sandpiper with a short, straight black bill. Runs like a wind-up toy.',
+  ropi:'Plump body with a small head, short legs and a fairly long, rounded tail.',
+  beki:'Big-headed, with a shaggy crest, a long heavy bill, and short legs and tail.',
+  rbnu:'Tiny, compact and big-headed, with almost no neck, a short tail and a sharp, chisel-like bill.',
+  cawr:'Small, round wren with a long, often cocked tail and a slightly curved bill.',
+  grca:'Slim, long-tailed songbird with a rounded tail and a thin bill.',
+  eabl:'Small thrush with a round belly, short legs, a short notched tail and a thin bill.',
+  amro:'Large songbird with a round belly, long legs and a fairly long tail. A handy yardstick for other birds.',
+  ampi:'Slim, long-legged ground bird with a thin bill. Bobs its tail as it walks.',
+  snbu:'Chunky, short-legged bunting with a short conical bill and a notched tail.',
+  daju:'Medium sparrow with a round head, a small conical bill and a fairly long notched tail.',
+  eato:'Large, long-tailed sparrow with a thick conical bill.',
+  eame:'Chunky, short-tailed ground bird with a flat head and a long, sharp bill.',
+  rwbl:'Stocky blackbird with a flat crown, a sharply pointed bill and a rounded tail.',
+  prow:'Chunky, short-tailed warbler with a long, sharp bill.',
+  pawa:'Slim warbler with a thin, sharp bill. Pumps its tail.',
+  scta:'Medium, stocky songbird with a thick, pale bill.',
+  noca:'Long-tailed songbird with a tall crest and a thick, cone-shaped bill.',
+  pabu:'Small, compact bunting with a short, thick conical bill.',
+  pipl:'Small, round plover with a short, stubby bill and short orange legs.',
+  btbw:'Small, compact warbler with a short, thin bill.',
+  pile:'Crow-sized woodpecker with a pointed crest, a long neck and a chisel-like bill.'};
+function sizeRef(id){const L=SPECIES[id].len;let r=L>=60?'mall':'amro';if(r===id)r=id==='amro'?'daju':'amro';return r}
+function sizeText(id){const D=SPECIES[id],R=SPECIES[sizeRef(id)],k=D.len/R.len,nm=R.name.replace('Dark-eyed ','').replace('American ','');
+  const a=k>=1.6?`About ${k>=2.5?Math.round(k):(Math.round(k*2)/2)} times as long as a ${nm}`:k>=1.15?`A bit bigger than a ${nm}`:k>.87?`About the size of a ${nm}`:k>.6?`Smaller than a ${nm}`:`Much smaller than a ${nm}`;
+  return`${SHAPE_TXT[id]||''} ${a} (${Math.round(D.len)} cm long vs ${Math.round(R.len)} cm).`}
+function sizePose(id){return id==='pile'?'trunk':id==='pipl'?'stand':GB[id]?gbPlatePose(id):'perch'}
+function drawSizeCompare(cvs,id){const g=cvs.getContext('2d'),W=cvs.width,H=cvs.height,prev=ctx,ref=sizeRef(id);
+  g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,W,H);g.fillStyle='#f3eedd';g.fillRect(0,0,W,H);
+  const bx=[id,ref].map(k=>plateBox(k,'perched')),wd=bx.map(b=>b[1]-b[0]),ht=bx.map(b=>b[3]-b[2]),gap=Math.max(wd[0],wd[1])*.35;
+  const s=Math.min(W*.86/(wd[0]+wd[1]+gap),H*.66/Math.max(ht[0],ht[1])),base=H*.8;
+  g.strokeStyle='#cfc6aa';g.lineWidth=2;g.beginPath();g.moveTo(W*.04,base);g.lineTo(W*.96,base);g.stroke();
+  g.font=`600 ${Math.round(H*.075)}px Fredoka,system-ui`;const lab=k=>`${SPECIES[k].name} · ${Math.round(SPECIES[k].len)} cm`,slot=[0,1].map(i=>Math.max(wd[i]*s,g.measureText(lab(i?ref:id)).width+H*.1));
+  let x=(W-(slot[0]+slot[1]+gap*s*.5))/2;
+  [[ref,1],[id,0]].forEach(([k,i],n)=>{const b=bx[i],lay=document.createElement('canvas');lay.width=W;lay.height=H;const lg=lay.getContext('2d');
+    const ox=x+(slot[i]-wd[i]*s)/2-b[0]*s,oy=base-b[3]*s;lg.translate(ox,oy);ctx=lg;drawBird(k,sizePose(k),s,1,{detail:false});
+    lg.setTransform(1,0,0,1,0,0);lg.globalCompositeOperation='source-in';lg.fillStyle=k===id?'#2f4a3a':'#a7ad9f';lg.fillRect(0,0,W,H);g.drawImage(lay,0,0);
+    g.fillStyle=k===id?'#2f4a3a':'#7d8577';g.font=`600 ${Math.round(H*.075)}px Fredoka,system-ui`;g.textAlign='center';g.textBaseline='top';g.fillText(lab(k),x+slot[i]/2,base+H*.04);
+    x+=slot[i]+gap*s*.5});ctx=prev}
+function plateBox(id,view){if(view==='perched')return PLATE_BOUNDS[id]||gbPlateBox(id);const F=FL[id];return[-F.WS/2,F.WS/2,-F.L*.36-F.hr-F.bill,F.L*.18+F.tl]}
 function drawPlate(cvs,id,view='perched',o={}){const g=cvs.getContext('2d'),W=cvs.width,H=cvs.height;const prev=ctx;ctx=g;
   g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,W,H);
   const bg=g.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#f3eedd');bg.addColorStop(1,'#e6dfc8');g.fillStyle=bg;g.fillRect(0,0,W,H);
@@ -3127,10 +3754,11 @@ function drawPlate(cvs,id,view='perched',o={}){const g=cvs.getContext('2d'),W=cv
       g.fillStyle='#55803a';for(const [x,y,r] of[[-4.4,-1.2,1.3],[4.6,.4,1.1],[-3.2,.9,.9]]){g.beginPath();g.ellipse(x*s,y*s,r*s*1.6,r*s*.6,-.4,0,TAU);g.fill()}}
     if(id==='pile'){g.fillStyle='#6d5d4b';g.fillRect(0,-60*s,30*s,120*s);g.fillStyle='rgba(0,0,0,.14)';for(let i=0;i<6;i++)g.fillRect((2+i*4.6)*s,-60*s,.8*s,120*s);
       drawHole(14*s,-4*s,2.6*s,2.9*s)}
+    if(GB[id])gbPlateBg(g,id,s);
     if(id==='pipl'){g.fillStyle='#ead6a3';g.fillRect(-60*s,0,120*s,40*s);g.fillStyle='rgba(0,0,0,.05)';for(let i=0;i<30;i++)g.fillRect(((i*37)%120-60)*s,((i*13)%8)*.3*s,.6*s,.25*s)}}
   // bird on its own layer so an unseen species can be shown as a plain silhouette
   const lay=document.createElement('canvas');lay.width=W;lay.height=H;const lg=lay.getContext('2d');lg.translate(ox,oy);ctx=lg;
-  if(view==='perched')drawBird(id,id==='pile'?'trunk':id==='pipl'?'stand':'perch',s,1,{detail:true,under:true});
+  if(view==='perched')drawBird(id,id==='pile'?'trunk':id==='pipl'?'stand':GB[id]?gbPlatePose(id):'perch',s,1,{detail:true,under:true});
   else drawBird(id,'top',s,1,{flap:0,ventral:view==='ventral',detail:true,heading:0});
   if(o.locked){lg.setTransform(1,0,0,1,0,0);lg.globalCompositeOperation='source-in';lg.fillStyle='#3d4b40';lg.fillRect(0,0,W,H)}
   ctx=g;g.save();g.setTransform(1,0,0,1,0,0);g.drawImage(lay,0,0);g.restore();
@@ -3162,7 +3790,7 @@ function openNote(eyebrow,title,body,btns){$('noteEyebrow').textContent=eyebrow;
 function closeNote(){$('noteBack').hidden=true}
 function openTravel(){const n=speciesSeen();
   if(n<REGION_NEED)openNote('Trailhead · Ridge Road','Central is locked',`Log ${REGION_NEED} East Coast species to open the trail west. You have ${n} of ${REGION_NEED}.`,[['Keep birding',null]]);
-  else openNote('Trailhead · Ridge Road','Travel to Central?','The trail over the mountains is open. The Plains region is the next build: grasslands, prairie potholes and a new set of birds. For now the trail ends here.',[['Stay on the East Coast',null,true],['Preview the Plains',()=>toast('Central: coming in the next build',3.5)]])}
+  else openNote('Trailhead · Ridge Road','Travel to Central?','The trail over the mountains is open. Central is the next build: grasslands, prairie potholes and a new set of birds. For now the trail ends here.',[['Stay on the East Coast',null,true],['Preview Central',()=>toast('Central: coming in the next build',3.5)]])}
 
 /* ---------- field journal: life list, log, album, gear, regions, settings ---------- */
 let jTab='species',jDetail=null,jView='perched';const JF={zone:'',sp:'',group:''};let albumFilter='all';
@@ -3180,7 +3808,7 @@ function renderJournal(){const tabs=$('jTabs');tabs.innerHTML='';
   const P=$('jPanel');P.innerHTML='';P.scrollTop=0;
   if(jTab==='species'&&jDetail)return renderDetail(P,jDetail);
   if(jTab==='species'){const n=speciesSeen();
-    P.insertAdjacentHTML('beforeend',`<div class="prog"><span>${n}/${SP_ORDER.length} found</span><span class="bar"><i style="width:${n/SP_ORDER.length*100}%"></i></span><span>${n>=REGION_NEED?'Plains open':'Plains at '+REGION_NEED}</span></div><div class="splist" id="splist"></div>`);
+    P.insertAdjacentHTML('beforeend',`<div class="prog"><span>${n}/${SP_ORDER.length} found</span><span class="bar"><i style="width:${n/SP_ORDER.length*100}%"></i></span><span>${n>=REGION_NEED?'Central open':'Central at '+REGION_NEED}</span></div><div class="splist" id="splist"></div>`);
     const L=$('splist');for(const id of SP_ORDER){const D=SPECIES[id],j=S.journal.seen[id],show=j||S.showPlates;const b=document.createElement('button');b.className='spcard'+(j?'':' locked');
       b.innerHTML=`<canvas width="360" height="240"></canvas><b>${show?D.name:'Not yet seen'}</b><i>${show?D.sci:D.zone}</i><span class="seen">${j?`Seen ${j.count}× · ${fmtWhen(j.first.ts)}`:show?'Preview plate':'Unknown'}</span>`;
       b.onclick=()=>{jDetail=id;jView='perched';renderJournal()};L.appendChild(b);drawPlate(b.querySelector('canvas'),id,'perched',{locked:!show})}
@@ -3285,8 +3913,10 @@ function renderDetail(P,id){const D=SPECIES[id],j=S.journal.seen[id],show=!!j||S
   const fm=jView==='perched'?`<ol class="marks">${D.marks.map(m=>`<li><b>${m.n}</b><span>${m.t}</span></li>`).join('')}</ol>`:`<ul class="marks">${D.flightMarks.map(m=>`<li><b>•</b><span>${m}</span></li>`).join('')}</ul>`;
   I.innerHTML=`<p class="dname">${D.name}</p><p class="dsci">${D.sci}</p><div class="facts"><span>${D.group}</span><span>${D.sex}</span><span>Length ${D.lenTxt}</span><span>Wingspan ${D.wsTxt}</span></div>
     <div class="sub">Field marks</div>${fm}
+    <div class="sub">Size &amp; shape</div><p class="txt">${sizeText(id)}</p><canvas id="jSize" width="880" height="280" style="width:100%;height:auto;border-radius:10px;display:block;margin:6px 0 4px"></canvas>
     <div class="sub">Habitat</div><p class="txt">${D.habitat}</p><div class="habtags">${HAB_ORDER.filter(k=>HABITATS[k].play.includes(id)).map(k=>`<span style="border-color:${HAB_CATS[HABITATS[k].cat].col}">${HABITATS[k].name}</span>`).join('')}</div><div class="sub">Voice</div><p class="txt">${D.voice} <button class="btn ghost" id="jPlay" style="padding:4px 12px;font-size:13px;margin-left:4px">Play</button></p>
     ${j?`<div class="sub">Your notes</div><p class="hand">First seen ${fmtWhen(j.first.ts)}<br>${j.first.zone}, ${j.first.temp}°C<br>Logged ${j.count}× · ${shots.length} photo${shots.length===1?'':'s'}</p>`:'<p class="hand">Preview plate. Not in your journal yet.</p>'}`;
+  drawSizeCompare($('jSize'),id);
   $('jPlay').onclick=()=>{SFX.init();SFX.resume();if(id==='pile'){SFX.song('pile',1,0);setTimeout(()=>SFX.drum(1,0),1900)}else SFX.song(id,1,0)}}
 
 /* ---------- HUD wiring ---------- */
@@ -3309,7 +3939,7 @@ const ICONS={boat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 let lastUse='',stT=0;
 function updateHUD(dt){const u=useTarget()||'',uk=u+S.mode;if(uk!==lastUse){lastUse=uk;const b=$('useBtn');b.disabled=!u;$('useLbl').textContent=u==='travel'?'Travel':u==='exit'?'Get out':u==='board'?'Board':u==='land'||S.mode==='boat'?'Go ashore':'Drive';$('useIcon').innerHTML=ICONS[u==='board'||u==='land'||S.mode==='boat'?'boat':u||'drive'];b.classList.toggle('hot',!!u&&u!=='exit')}
   $('pishBtn').disabled=S.mode!=='walk';$('gearBtn').disabled=S.bino.on;
-  stT-=dt;if(stT<=0){stT=.5;const L=listener();const act=S.mode==='boat'&&S.boat?' · '+BOATK[S.boat.craft].name:S.mode==='walk'&&S.player.water?(S.player.water==='swim'?' · Swimming':' · Wading'):'';$('statusText').innerHTML=`${zoneName(L.x,L.y)} <span class="temp">· ${bandAt(L.y).name} · ${zoneCat(L.x,L.y)} · ${tempC(L.x,L.y)}°C${act}</span>`}
+  stT-=dt;if(stT<=0){stT=.5;const L=listener();const act=S.mode==='boat'&&S.boat?' · '+BOATK[S.boat.craft].name:S.mode==='walk'&&S.player.water?(S.player.water==='swim'?' · Swimming':' · Wading'):'';$('statusText').innerHTML=`${zoneName(L.x,L.y)} <span class="temp">· ${bandAt(L.y).name} ·${GPS.mode==='console'?'':' '+zoneCat(L.x,L.y)+' ·'} ${tempC(L.x,L.y)}°C${act}</span>`}
   if(toastT>0){toastT-=dt;if(toastT<=0)$('toast').style.opacity=0}}
 
 /* ---------- prototype panel ---------- */
@@ -3328,12 +3958,13 @@ const TRAVEL=[['Arctic tundra',()=>teleport(8300,1150)],['Cold north',()=>telepo
 
 $('callBtn').onclick=()=>{const L=listener();let msg=[];
   for(const sp of SP_ORDER){const b=S.birds.filter(q=>q.sp===sp).sort((a,c)=>Math.hypot(a.x-L.x,a.y-L.y)-Math.hypot(c.x-L.x,c.y-L.y))[0];if(!b)continue;b.logged=false;
-    if(sp==='pipl'){const y=L.y+80;b.x=coastX(y)-150;b.y=y;b.z=0;b.st='ground';b.goal=null;b.home={x:b.x,y};msg.push('plover on the beach due east')}
+    if(GB[sp]&&GB[sp].kind!=='perch'){const q=gbCallSpot(sp,L.x,L.y);if(!q){msg.push('no spot for the '+SPECIES[sp].name);continue}b.x=q[0];b.y=q[1];b.fly=null;b.under=0;b.home={x:b.x,y:b.y};const k=GB[sp].kind;b.st=k==='sea'||k==='swim'?'swim':k==='reed'?'reed':k==='wade'?'wade':'ground';b.z=gbRestZ(sp,b.st);b.goal=null;b.song=.5+Math.random()*4}
+    else if(sp==='pipl'){const y=L.y+80;b.x=coastX(y)-150;b.y=y;b.z=0;b.st='ground';b.goal=null;b.home={x:b.x,y};msg.push('plover on the beach due east')}
     else{const ts=suitableTrees(sp,L.x,L.y,sp==='pile'?160:100,sp==='pile'?380:260,false);if(!ts.length){msg.push(`no ${sp==='pile'?'big trees':'trees'} nearby`);continue}landOn(b,ts[Math.floor(Math.random()*ts.length)]);b.fly=null;b.hop=null;b.curious=sp==='btbw'?20:0;b.song=.5}}
-  toast('Moved: '+(msg.length?msg.join(', '):'warbler and woodpecker into nearby trees'),4)};
+  toast(msg.length?'Moved them all nearby, except: '+msg.slice(0,4).join(', '):'Moved one of each bird nearby',4)};
 $('markBtn').onclick=e=>{S.showBirds=!S.showBirds;e.currentTarget.setAttribute('aria-pressed',S.showBirds)};
 $('plateBtn').onclick=e=>{S.showPlates=!S.showPlates;e.currentTarget.setAttribute('aria-pressed',S.showPlates);if(S.showPlates)toggleJournal(true)};
-$('logAllBtn').onclick=()=>{for(const sp of SP_ORDER)if(!S.journal.seen[sp]){S.journal.seen[sp]={count:1,first:{ts:Date.now(),zone:'Logged from the prototype panel',temp:tempC(listener().x,listener().y)}};S.journal.log.push({sp,ts:Date.now(),zone:zoneName(listener().x,listener().y),temp:tempC(listener().x,listener().y),how:'bino',region:'East Coast'})}saveJournal();updateLife(true);toast('All three logged. The Central trail is open.')};
+$('logAllBtn').onclick=()=>{for(const sp of SP_ORDER)if(!S.journal.seen[sp]){S.journal.seen[sp]={count:1,first:{ts:Date.now(),zone:'Logged from the prototype panel',temp:tempC(listener().x,listener().y)}};S.journal.log.push({sp,ts:Date.now(),zone:zoneName(listener().x,listener().y),temp:tempC(listener().x,listener().y),how:'bino',region:'East Coast'})}saveJournal();updateLife(true);toast(`All ${SP_ORDER.length} logged. The Central trail is open.`)};
 $('resetBtn').onclick=()=>{S.journal={seen:{},log:[]};saveJournal();for(const b of S.birds)b.logged=false;updateLife();toast('Journal cleared')};
 
 /* ---------- update + loop ---------- */
@@ -3344,16 +3975,30 @@ function update(dt,t){S.t=t;S.pishCD=Math.max(0,S.pishCD-dt);
   const tg=camTarget(),k=1-Math.pow(.004,dt);S.cam.x+=(tg.x-S.cam.x)*k;S.cam.y+=(tg.y-S.cam.y)*k;
   const L=listener(),dc=coastX(L.y)-L.x;SFX.ambient(clamp(1-Math.abs(dc)/1400,0,1)*(S.bino.on?.7:1),clamp(forestMask(L.x,L.y)*1.6-.4,0,1)*(dc>500?1:0))}
 let last=performance.now(),TT=0;
+function drawCallCues(t){if(settings.callCues===false)return;ctx=mainCtx;ctx.setTransform(DPR,0,0,DPR,0,0);
+  const B=S.bino,mT=84,mB=128,mS=Math.min(78,VW*.14);
+  for(const b of S.birds){if(!(b.note>0))continue;let sx,sy,ok=true;
+    if(B.on){if(!BV)return;const E=BV.E,dx=(b.x-E.x)/M,dy=(b.y-E.y)/M,dist=Math.hypot(dx,dy),az=angDiff(BV.yaw,Math.atan2(dy,dx)),el=Math.atan2((b.z||0)-E.h,dist)-BV.pitch;
+      sx=VW/2+az*BV.ppr;sy=VH/2-el*BV.ppr;if(Math.abs(az)>1.4){sx=VW/2+Math.sign(az)*VW*4;sy=VH/2}}
+    else{const p=birdOWPos(b);sx=p[0]-S.cam.x+VW/2;sy=p[1]-18-S.cam.y+VH/2}
+    if(sx>mS&&sx<VW-mS&&sy>mT&&sy<VH-mB)continue;
+    // pull the point in along the line from the centre until it sits on the inset edge
+    const cx=VW/2,cy=(mT+VH-mB)/2,vx=sx-cx,vy=sy-cy,kx=vx?((vx>0?VW-mS:mS)-cx)/vx:1e9,ky=vy?((vy>0?VH-mB:mT)-cy)/vy:1e9,k=Math.min(kx,ky,1),ex=cx+vx*k,ey=cy+vy*k,ang=Math.atan2(vy,vx);
+    const a=Math.min(1,b.note/.6)*.95;ctx.save();ctx.globalAlpha=a;ctx.translate(ex,ey);
+    ctx.fillStyle='rgba(20,28,24,.72)';ctx.beginPath();ctx.arc(0,0,15,0,TAU);ctx.fill();
+    ctx.save();ctx.rotate(ang);ctx.fillStyle='#ffd166';ctx.beginPath();ctx.moveTo(23,0);ctx.lineTo(14,-7);ctx.lineTo(14,7);ctx.closePath();ctx.fill();ctx.restore();
+    const bob=Math.sin(t*6+b.x)*1.2;ctx.fillStyle='#fff';ctx.strokeStyle='#fff';ctx.lineWidth=1.8;ctx.beginPath();ctx.ellipse(-3,5+bob,3.6,2.7,-.4,0,TAU);ctx.fill();ctx.beginPath();ctx.moveTo(.3,4+bob);ctx.lineTo(.3,-7+bob);ctx.quadraticCurveTo(4,-5+bob,6,-1+bob);ctx.stroke();
+    ctx.restore()}}
 function frame(now){requestAnimationFrame(frame);const dt=Math.min(.05,(now-last)/1000);last=now;
-  try{if(!paused()){TT+=dt;update(dt,TT)}if(S.bino.on)drawBino(TT);else drawWorld(TT);updateHUD(dt);if(!S.bino.on)drawCompass(TT)}catch(err){console.error(err)}finally{ctx=mainCtx}}
+  try{if(!paused()){TT+=dt;update(dt,TT)}if(S.bino.on)drawBino(TT);else drawWorld(TT);drawCallCues(TT);updateHUD(dt);if(!S.bino.on)drawCompass(TT)}catch(err){console.error(err)}finally{ctx=mainCtx}}
 function start(data){
   if(data&&data.v===1&&data.player){Object.assign(S.player,data.player);Object.assign(S.car,data.car);S.mode=data.mode||'walk';$('title').classList.add('out');setTimeout(()=>$('title').hidden=true,800)}
   if(!(data&&data.v===1&&data.player))loadProgress();
   placeBirds();if(data&&data.v===1&&Array.isArray(data.birds)&&data.birds.length===S.birds.length)data.birds.forEach((b,i)=>Object.assign(S.birds[i],b));
   S.cam.x=listener().x;S.cam.y=listener().y;
-  applySettings();updateLife();requestAnimationFrame(frame)}
-$('startBtn').onclick=()=>{SFX.init();SFX.resume();const t=$('title');t.classList.add('out');setTimeout(()=>t.hidden=true,800);
-  setTimeout(()=>toast(S.backAt?`Welcome back to ${S.backAt}. Your Defender is waiting on the nearest road.`:'Your Defender is parked by the beach road. Listen, then raise the binoculars (B).',5),600)};
+  document.body.classList.toggle('on-title',!$('title').classList.contains('out'));applySettings();updateLife();requestAnimationFrame(frame)}
+$('startBtn').onclick=()=>{SFX.init();SFX.resume();const t=$('title');t.classList.add('out');document.body.classList.remove('on-title');setTimeout(()=>t.hidden=true,800);
+  setTimeout(()=>toast(S.backAt?`Welcome back to ${S.backAt}. Your Defender is waiting on the nearest road.`:'Your Defender is parked by the beach road. Listen, then raise the binoculars'+(GPS.linked?(GPS.mode==='console'?' (A).':'.'):' (B).'),5),600)};
 window.claude?.hot?.snapshot?.(()=>JSON.parse(JSON.stringify({v:1,mode:S.mode,player:S.player,car:S.car,birds:S.birds.map(b=>({x:b.x,y:b.y,z:b.z,st:b.st==='fly'?(b.sp==='pipl'?'ground':b.fly&&b.fly.next?b.fly.next.st:'perch'):b.st,tree:b.pending?b.pending.tree:b.tree,perch:b.pending?b.pending.perch:b.perch,hd:b.hd,home:b.home,logged:b.logged}))})));
 window.claude?.hot?.ready?window.claude.hot.ready(start):start(window.claude?.hot?.data??{});
 /* ---------- Pocket Arcade bridge (GP v1.1) ----------
@@ -3474,7 +4119,7 @@ function applySeason(s){if(!SEASON_INFO[s]||s===SEASON)return;SEASON=s;settings.
   CELLS.clear();TREE_BY_ID.clear();TEX.clear();LEAFSPR.clear();SPRITED.length=0;for(const k in SWATCH)delete SWATCH[k];bigMap=null;mmAt=null;
   placeBirds();updateSeasonUI();if($('title').classList.contains('out'))toast(SZ().name+(s==='winter'?': snow in the north, lakes frozen':s==='fall'?': autumn colours':''),2.2)}
 seasonButtons($('titleSeasons'));updateSeasonUI();
-if(location.protocol==="file:")window.__G={HABITATS,HAB_CATS,HAB_ORDER,habitatAt,placeName,zoneCat,terr,T,groundColor,BLD,BKIND,drawBuildingOW,drawBuildingShadow,drawBuildingBino,buildingMesh,PARKED,TRAFFIC,TRACTOR,VTYPES,vehMesh,drawMeshMap,drawMeshBino,drawVehicle,drawVehicleBino,vehShadow,PEOPLE,PKIND,personLook,drawPersonFig,drawPerson,drawPersonBino,drawDecor2,DEC2_NAME,LAKES,PIERS,applySeason,snowCover,seasonNow:()=>SEASON,cellsNear,waterAt,BOATS,BOATK,boatMesh,paddlePose,fastTravel,landSpot,carSpot,saveProgress,loadProgress,MAPL:()=>MAPL,BANDS,bandAt,FEATURES,CITY_LOTS,GPS,gpLabels,boatWater,waterKind,updateBoat,FIELDS,FARMS,CITY,PARK,AVES,STS,riverPoint,LAUNCHES,TRACKS,WD,wkey,wdist,BRIDGES,LH,habSwatch,setGear,shutter,cycleGear,renderJournal,refreshAlbum,ALBUM,openPhoto,closePhoto,drawShrubBino,drawCarBino,setCtx:c=>{ctx=c},getCtx:()=>ctx,setBV:v=>{BV=v},drawBird,drawPlate,drawTreeOW,drawTreeShadow,drawTreeBino,drawCar,drawBirder,drawDecor,drawFence,drawTrailhead,drawNote,namePill,openTravel,closeNote,toast,doPish,GC,LEAF,BARK,CARC,PL,WB,PW,FL,skyCols,buildPano,PANO,ZOOMS,TRAIL,START,FENCES,coastX,roadX,openNote,updateLife,renderJournal,S,toggleBino,teleport,toggleJournal,toggleMap,doUse,zoomBy,logSighting,showFound,closeFound,treesNear,model,suitableTrees,landOn,SPECIES};
+if(location.protocol==="file:")window.__G={HABITATS,HAB_CATS,HAB_ORDER,habitatAt,placeName,zoneCat,terr,T,groundColor,BLD,BKIND,drawBuildingOW,drawBuildingShadow,drawBuildingBino,buildingMesh,PARKED,TRAFFIC,TRACTOR,VTYPES,vehMesh,drawMeshMap,drawMeshBino,drawVehicle,drawVehicleBino,vehShadow,PEOPLE,PKIND,personLook,drawPersonFig,drawPerson,drawPersonBino,drawDecor2,DEC2_NAME,LAKES,PIERS,applySeason,snowCover,seasonNow:()=>SEASON,cellsNear,waterAt,GB,gbSpotOK,gbActivate,gbGeom,drawPlate,BOATS,BOATK,boatMesh,paddlePose,fastTravel,landSpot,carSpot,saveProgress,loadProgress,MAPL:()=>MAPL,BANDS,bandAt,FEATURES,CITY_LOTS,GPS,gpLabels,boatWater,waterKind,updateBoat,FIELDS,FARMS,CITY,PARK,AVES,STS,riverPoint,LAUNCHES,TRACKS,WD,wkey,wdist,BRIDGES,LH,habSwatch,setGear,shutter,cycleGear,renderJournal,refreshAlbum,ALBUM,openPhoto,closePhoto,drawShrubBino,drawCarBino,setCtx:c=>{ctx=c},getCtx:()=>ctx,setBV:v=>{BV=v},drawBird,drawPlate,drawTreeOW,drawTreeShadow,drawTreeBino,drawCar,drawBirder,drawDecor,drawFence,drawTrailhead,drawNote,namePill,openTravel,closeNote,toast,doPish,GC,LEAF,BARK,CARC,PL,WB,PW,FL,skyCols,buildPano,PANO,ZOOMS,TRAIL,START,FENCES,coastX,roadX,openNote,updateLife,renderJournal,S,toggleBino,teleport,toggleJournal,toggleMap,doUse,zoomBy,logSighting,showFound,closeFound,treesNear,model,suitableTrees,landOn,SPECIES,carWet,aimTarget,updateCar,listener,drawSizeCompare,sizeText,FORMS,gbBodyPath};
 
 })();
 </script>
