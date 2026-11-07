@@ -2663,8 +2663,8 @@ h1,h2,h3,.wordmark{font-weight:700;letter-spacing:0}
       <div class="seclabel">How it works</div>
       <div class="card" style="padding:15px"><div class="note">Everyone gets six cards face down in two rows. Each turn you do <b>one</b> thing:
         flip one of your face-down cards, <i>or</i> take the top discard and swap it for one of your cards, <i>or</i> draw from the deck and either swap it in or drop it on the discard pile.
-        <b>Two of the same in a column cancel out.</b> When someone has all six face up, everyone else gets one last turn. Lowest score wins. Two to four players.<br><br>
-        Ace 1 &middot; 2&ndash;10 face value &middot; Jack, Queen, King 10 &middot; Joker 0</div></div>
+        <b>Two of the same in a column cancel out.</b> When someone has all six face up, the round finishes so everyone has had the same number of turns. Lowest score wins. Two to four players.<br><br>
+        Ace 1 &middot; 2&ndash;10 face value &middot; Jack, Queen 10 &middot; King 0 &middot; Joker 0</div></div>
     </div>
   </section>
 
@@ -11231,8 +11231,9 @@ if(typeof module !== 'undefined' && module.exports) module.exports = PRISM;
    turn draw from the deck or take the top of the discard pile, then swap it for
    one of your cards — or, with a card from the deck, throw it away and flip one
    of yours instead. A pair in a column scores nothing. When someone has all six
-   face up, everyone else gets one more turn. Lowest score wins.
-   Ace 1, number cards their number, Jack/Queen/King 10, Joker 0. */
+   face up, the round of turns is played out, so everyone has had the same
+   number of turns, and the hole ends. Lowest score wins.
+   Ace 1, number cards their number, Jack/Queen 10, King 0, Joker 0. */
 const GOLF = (function(){
   const SUITS = ['S','H','D','C'];
   const RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
@@ -11246,7 +11247,7 @@ const GOLF = (function(){
   const rank  = c => c.startsWith('JK') ? 'JK' : c.slice(0, -1);
   const suit  = c => c.startsWith('JK') ? null : c.slice(-1);
   const isRed = c => c.startsWith('JK') ? c === 'JK1' : (suit(c) === 'H' || suit(c) === 'D');
-  function value(c){ const r = rank(c); if(r === 'JK') return 0; if(r === 'A') return 1; if(r === 'J' || r === 'Q' || r === 'K') return 10; return +r; }
+  function value(c){ const r = rank(c); if(r === 'JK' || r === 'K') return 0; if(r === 'A') return 1; if(r === 'J' || r === 'Q') return 10; return +r; }
   const clone = s => JSON.parse(JSON.stringify(s));
   /* every card that lands on the discard pile gets its own small twist */
   function tiltFor(s){ const R = rng((s.seed ^ Math.imul(s.tick + 1, 2654435761)) >>> 0); return Math.round((R() * 18 - 9) * 10) / 10; }
@@ -11255,12 +11256,15 @@ const GOLF = (function(){
   const gone = (s, k) => (s.quit || []).includes(k);
   const active = s => s.players.map((_, k) => k).filter(k => !gone(s, k));
   function firstActive(s, from){ const n = s.players.length; for(let d = 0; d < n; d++){ const k = (from + d) % n; if(!gone(s, k)) return k; } return from; }
-  /* the next seat round the table, ending the hole when it gets back to whoever went out */
+  /* The next seat round the table. Once someone has gone out, the round of
+     turns is finished and the hole ends when play gets back to whoever started
+     it, so everyone has had the same number of turns. */
   function passTurn(s, who){
     const n = s.players.length;
+    const start = s.starter == null ? (s.hole - 1) % n : s.starter;
     for(let d = 1; d <= n; d++){
       const k = (who + d) % n;
-      if(s.out !== null && k === s.out) return endHole(s);
+      if(s.out !== null && (k === start || k === s.out)) return endHole(s);
       if(!gone(s, k)){ s.turn = k; s.phase = 'draw'; return s; }
     }
     return endHole(s);
@@ -11514,6 +11518,7 @@ const GOLF = (function(){
     if(G.mode !== 'local') return Math.max(0, G.state.players.indexOf(meId()));
     /* table view: an iPad in the middle, everyone in their own seat, nothing turns */
     if(!flipOn() || tableOn()) return 0;
+    if(G.hold != null) return G.hold;      /* still showing the last player their move */
     const s = G.state;
     if(s.phase !== 'holeover' && !s.over) G.view = s.turn;
     return G.view || 0;
@@ -11681,6 +11686,7 @@ const GOLF = (function(){
     const topName = top ? nameOf(top.c) : '';
     if(s.over || s.phase === 'holeover') t = '';
     else if(G.mode === 'online' && GOLF.gone(s, s.players.indexOf(meId()))) t = 'You left this game. The others are still playing.';
+    else if(G.hold != null) t = 'Pass to ' + seatName(s.turn) + '.';
     else if(!myAction()) t = G.mode === 'solo' ? seatName(s.turn) + ' is thinking…' : 'Waiting for ' + seatName(s.turn) + '…';
     else if(s.phase === 'flip') t = (2 - s.flips[s.turn] === 2 ? 'Flip two of your cards' : 'Flip one more card') + ' \u2014 then ' + (s.flips.every((f, k) => k === s.turn || f >= 2) ? 'play begins.' : 'it\u2019s ' + seatName((s.turn + 1) % s.players.length) + '\u2019s turn to flip.');
     else if(s.phase === 'draw') t = (s.hands[s.turn].some(x => !x.up) ? 'Flip one of your cards, draw from the deck, or take the ' : 'Draw from the deck, or take the ') + topName + '.';
@@ -11715,13 +11721,26 @@ const GOLF = (function(){
       try{ await motion(); }catch(e){}
       if(mine !== gen) return;
     }
+    const was = G.state.turn;
     G.state = next;
-    busy = false;
+    /* Pass and play with the table turning: hold it facing whoever just moved
+       for a moment, so they see the card they flipped or swapped in before the
+       board turns to the next player. No one can tap during the hold. */
+    const hold = G.mode === 'local' && flipOn() && !tableOn() && next.turn !== was && next.phase !== 'holeover' && !next.over;
+    if(hold){ G.hold = was; busy = true; }
+    else busy = false;
     draw();
     if(G.state.last && G.state.last.kind === 'flip') flipIn(G.state.last.who, G.state.last.i);
     gsfx('tap')();
+    if(hold){
+      await wait(PASS_HOLD);
+      if(!G || mine !== gen) return;
+      G.hold = null; busy = false;
+      draw();
+    }
     afterMove();
   }
+  const PASS_HOLD = 1600;   /* ms the board waits before turning to the next player */
   function slotEl(seat, i){ return document.querySelector('.gfslot[data-seat="' + seat + '"][data-i="' + i + '"]'); }
   function flipIn(seat, i){ const el = slotEl(seat, i); if(el && !reduced()){ el.firstChild.classList.add('flipin'); } }
   const topOf = id => { const p = $$(id); return p.lastElementChild || p; };
