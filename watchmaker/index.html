@@ -1536,7 +1536,7 @@ function openModal(){for(const m of ['build','service']){const i=+(store.get('ca
   $('#modal').hidden=false;const first=document.querySelector('.job');if(first)first.focus();}
 document.querySelectorAll('.job').forEach(b=>b.addEventListener('click',()=>{setMode(b.dataset.mode);$('#modal').hidden=true;}));
 $('#modeChip').addEventListener('click',openModal);
-function setMode(m){MODE=m;store.set('cal1861-mode',m);STEPS=STEPSETS[m];loadChoices();let i=parseInt(store.get('cal1861-idx-'+m)||'0',10);if(!(i>=0&&i<=STEPS.length))i=0;
+function setMode(m){MODE=m;if(window.WAStats)WAStats.gameStart(m==='build'?'build':m==='service'?'service':m);store.set('cal1861-mode',m);STEPS=STEPSETS[m];loadChoices();let i=parseInt(store.get('cal1861-idx-'+m)||'0',10);if(!(i>=0&&i<=STEPS.length))i=0;
   procUI();ui.tool=null;ui.loupe=false;updateLens();syncTools();pickerFinale=false;jump(i);ui.cam=camTarget();render();}
 
 /* ================= controls ================= */
@@ -1578,5 +1578,7 @@ window.__bench={ptPart(id){const q=insidePt(id);return toClient(worldOf(id,q[0],
 })();
 
 </script>
+<script src="../shared/config.js"></script>
+<script src="../shared/analytics.js" defer></script>
 </body>
 </html>
