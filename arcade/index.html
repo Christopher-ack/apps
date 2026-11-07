@@ -352,6 +352,7 @@ body.no-tab:not(.full) .fs-btn svg{width:20px;height:20px}
 <script src="../shared/config.js"></script>
 <script src="../shared/vendor/supabase.js"></script>
 <script src="../shared/account.js"></script>
+<script src="../shared/analytics.js" defer></script>
 <script>
 (()=>{
 const $=id=>document.getElementById(id);
@@ -520,9 +521,9 @@ let inserting=false;
 function insertCart(){if(inserting)return;const el=document.querySelector(`.cart[data-i="${libSel}"]`),G=GAMES[libSel];if(!G)return;
   const quick=matchMedia('(prefers-reduced-motion: reduce)').matches;inserting=true;el?.classList.add('inserting');
   setTimeout(()=>{inserting=false;launch(G);el?.classList.remove('inserting')},quick?0:280)}
-function showLibrary(){if(current){send({type:'pause',paused:true});const was=current;captureGame(was);setTimeout(()=>captureGame(was),600)}frame.hidden=true;frame.src='about:blank';current=null;labels={};setLabels({});
+function showLibrary(){if(window.WAStats)WAStats.gameEnd();if(current){send({type:'pause',paused:true});const was=current;captureGame(was);setTimeout(()=>captureGame(was),600)}frame.hidden=true;frame.src='about:blank';current=null;labels={};setLabels({});
   lib.hidden=false;loading.hidden=true;setTop('Library','Choose a game');$('meter').hidden=true;clearToast();hasTab=gameReady=false;tabClass();document.body.classList.remove('full');P.game=null;save();applyCaps();closeSheet(false)}
-function launch(G){restoreGame(G);current=G;labels={};lib.hidden=true;loading.hidden=false;frame.hidden=false;frame.src=G.src;setTop(G.title,'Loading');$('meter').hidden=true;clearToast();hasTab=gameReady=false;tabClass();
+function launch(G){restoreGame(G);if(window.WAStats)WAStats.gameStart(G.id);current=G;labels={};lib.hidden=true;loading.hidden=false;frame.hidden=false;frame.src=G.src;setTop(G.title,'Loading');$('meter').hidden=true;clearToast();hasTab=gameReady=false;tabClass();
   setLabels(G.buttons);applyMode();P.game=G.id;save()}
 frame.addEventListener('load',()=>{if(current){send({type:'hello'});send({type:'mode',mode:P.mode});setTimeout(()=>{loading.hidden=true;if($('nowDetail').textContent==='Loading')setTop(current.title,'')},400);try{if(sheet.hidden)frame.contentWindow.focus()}catch(_){}}});
 function applyCaps(){if(!current)setLabels({a:'Play',b:'',l:'',r:'',select:'',start:'Arcade'})}
