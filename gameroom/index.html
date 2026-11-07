@@ -3207,6 +3207,7 @@ h1,h2,h3,.wordmark{font-weight:700;letter-spacing:0}
 <script src="../shared/config.js"></script>
 <script src="../shared/vendor/supabase.js"></script>
 <script src="../shared/account.js"></script>
+<script src="../shared/analytics.js" defer></script>
 <script>
 /* GameRoom settings. The database address and key come from shared/config.js. */
 window.GAMEROOM_CONFIG = {
@@ -3589,7 +3590,11 @@ const RENDER = {home:renderHome, play:renderPlay, t5:renderTakeFive,
                 chess:()=>window.__chessLobby(chessMode), deal:()=>window.__dealLobby(),
                 four:()=>window.__fourLobby(fourMode), golf:()=>window.__golfLobby(golfMode),
                 tools:renderTools, friends:renderFriends, me:renderMe};
+const STAT_GAMES = {t5:'take-five', chess:'chess', four:'connect-four', golf:'golf', eights:'eights', prism:'prism', five:'five-letters', deal:'deal'};
+let statScreen = null;
 function show(name){
+  if(window.WAStats && name !== statScreen){ statScreen = name;
+    if(STAT_GAMES[name]) WAStats.gameStart(STAT_GAMES[name]); else { WAStats.gameEnd(); if(name !== 'signin') WAStats.screen(name); } }
   SCREENS.forEach(s => $('#s-'+s).hidden = s!==name);
   $('#nav').hidden = (name==='signin');
   document.querySelectorAll('#nav button').forEach(b=>b.setAttribute('aria-current', String(b.dataset.tab===name)));
