@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0A0F26">
+<meta name="apple-mobile-web-app-title" content="Insights">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Web Apps</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Chakra+Petch:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Night-sky control room. Chart colours are the validated dark steps (blue = signed-in people,
+   magenta = visitors), checked against --panel; the map is a single series in signal teal. */
+:root{
+  color-scheme:dark;
+  --void:#0A0F26; --panel:#121A3A; --panel-2:#1A2350; --line:#26315F; --line-2:#323E73;
+  --ink:#EAF0FF; --ink-2:#AEB8DD; --muted:#8792BE;
+  --signal:#4FE0D0; --beacon:#FFB547;
+  --people:#3987e5; --visitors:#d55181; --bar:#3987e5;
+  --up:#4FD18B; --down:#FF7A8A;
+  --land:#1F2A57; --land-edge:#0E1533; --sea:#0F1636;
+  --display:"Chakra Petch",system-ui,sans-serif;
+  --text:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{background:var(--void)}
+body{margin:0;color:var(--ink);font:16px/1.5 var(--text);-webkit-text-size-adjust:100%;min-height:100vh;
+  background:radial-gradient(1200px 500px at 70% -120px,rgba(79,224,208,.09),transparent 70%),
+             radial-gradient(900px 600px at -10% 10%,rgba(57,135,229,.08),transparent 70%),var(--void);
+  padding:max(14px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(28px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+main{max-width:1160px;margin:0 auto}
+button,input,select{font:inherit;color:inherit}
+input,select,textarea{font-size:16px}
+:focus-visible{outline:2px solid var(--signal);outline-offset:2px;border-radius:6px}
+a{color:var(--signal)}
+h1,h2,h3{font-family:var(--display);font-weight:600;letter-spacing:.01em;margin:0}
+h2{font-size:22px;line-height:1.2}
+h3{font-size:16px;color:var(--ink-2);font-weight:600;margin-bottom:10px}
+
+/* top bar */
+.bar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:22px}
+.mark{display:flex;align-items:center;gap:10px}
+.mark svg{width:30px;height:30px;flex:none}
+.mark h1{font-size:24px;font-weight:700}
+.grow{flex:1}
+.live{display:inline-flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-2);padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:rgba(18,26,58,.6)}
+.live i{width:8px;height:8px;border-radius:50%;background:var(--beacon);box-shadow:0 0 0 0 rgba(255,181,71,.6);animation:ping 2.4s infinite}
+.live.off i{background:var(--muted);animation:none}
+@keyframes ping{0%{box-shadow:0 0 0 0 rgba(255,181,71,.55)}70%{box-shadow:0 0 0 9px rgba(255,181,71,0)}100%{box-shadow:0 0 0 0 rgba(255,181,71,0)}}
+.btn{border:1px solid var(--line-2);background:var(--panel);border-radius:10px;padding:7px 14px;cursor:pointer;color:var(--ink)}
+.btn:hover{border-color:var(--signal)}
+.rf{display:inline-flex;align-items:center;gap:7px}.rf svg{width:16px;height:16px}
+@media (max-width:480px){.rf span{display:none}.rf{padding:8px 9px}}
+.seg{display:flex;gap:2px;padding:3px;border:1px solid var(--line);border-radius:12px;background:rgba(18,26,58,.7);overflow-x:auto;scrollbar-width:none}
+.seg::-webkit-scrollbar{display:none}
+.seg button{border:0;background:none;border-radius:9px;padding:6px 12px;cursor:pointer;color:var(--ink-2);white-space:nowrap;flex:1}
+.seg button[aria-pressed="true"]{background:var(--panel-2);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line-2),0 0 12px rgba(79,224,208,.12)}
+.ranges{max-width:520px;width:100%}
+@media (max-width:480px){.ranges button{padding:6px 2px;font-size:15px}.bar{gap:10px}.mark h1{font-size:22px}}
+
+/* headline: the period in one sentence */
+.headline{margin:4px 0 26px;max-width:900px}
+.headline p{font-family:var(--display);font-weight:500;font-size:clamp(24px,4.2vw,40px);line-height:1.18;margin:0;color:var(--ink)}
+.headline p b{font-weight:700;color:var(--ink)}
+.headline .more{display:flex;flex-wrap:wrap;gap:6px 22px;margin-top:12px;font-size:15px;color:var(--ink-2)}
+.headline .more span b{color:var(--ink);font-weight:700}
+.chg{font-size:13px;margin-left:4px}
+.chg.up{color:var(--up)} .chg.down{color:var(--down)}
+
+/* panels: instrument frames with corner ticks */
+.panel{position:relative;background:linear-gradient(180deg,rgba(26,35,80,.55),rgba(18,26,58,.92));border:1px solid var(--line);border-radius:8px;padding:18px;margin-bottom:18px;min-width:0}
+.panel::before,.panel::after{content:"";position:absolute;width:14px;height:14px;border-color:var(--signal);opacity:.55;pointer-events:none}
+.panel::before{top:-1px;left:-1px;border-top:2px solid;border-left:2px solid;border-top-left-radius:8px}
+.panel::after{bottom:-1px;right:-1px;border-bottom:2px solid;border-right:2px solid;border-bottom-right-radius:8px}
+.phead{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.phead .note{margin:0}
+.duo{display:grid;grid-template-columns:1fr;gap:18px;margin-bottom:18px;align-items:start}
+.duo > .panel{margin-bottom:0}
+@media (min-width:900px){.duo{grid-template-columns:1fr 1fr}}
+.note{color:var(--muted);font-size:14px;margin:8px 0 0}
+
+/* chart */
+.chartwrap{position:relative}
+.chart svg{display:block;width:100%;height:var(--ch,230px)}
+.legend{display:flex;gap:16px;font-size:14px;color:var(--ink-2);margin-bottom:6px;flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:7px;vertical-align:-1px}
+.tip{position:absolute;pointer-events:none;background:#0C1230;border:1px solid var(--line-2);border-radius:8px;padding:8px 11px;font-size:14px;box-shadow:0 8px 28px rgba(0,0,0,.45);white-space:nowrap;z-index:5}
+.tip b{display:block;margin-bottom:3px;font-family:var(--display)}
+.tip .row{display:flex;gap:8px;align-items:center;color:var(--ink-2)}
+.tip .row span:last-child{margin-left:auto;color:var(--ink);font-variant-numeric:tabular-nums;padding-left:14px}
+.tip i{width:8px;height:8px;border-radius:2px;display:inline-block}
+details summary{cursor:pointer;color:var(--muted);font-size:14px;margin-top:8px}
+
+/* map */
+.map{position:relative}
+.map svg{display:block;width:100%;height:auto}
+.map .dot{fill:var(--signal);fill-opacity:.85;stroke:var(--void);stroke-width:1.5;cursor:pointer;transition:fill-opacity .15s}
+.map .dot:hover,.map .dot.on{fill-opacity:1;stroke:var(--ink)}
+.map .halo{fill:var(--signal);opacity:.16;pointer-events:none}
+.map .liveRing{fill:none;stroke:var(--beacon);stroke-width:2;pointer-events:none;transform-box:fill-box;transform-origin:center;animation:ring 2.4s infinite}
+@keyframes ring{0%{transform:scale(.6);opacity:.9}100%{transform:scale(2.2);opacity:0}}
+.map .lbl{font-family:var(--display);font-weight:600;fill:var(--ink);paint-order:stroke;stroke:var(--void);stroke-width:4px;pointer-events:none}
+.places{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:10px;font-size:14px;color:var(--ink-2)}
+.places b{color:var(--ink);font-variant-numeric:tabular-nums}
+.away{font-size:14px;color:var(--ink-2);margin-top:6px}
+
+/* bar lists */
+.bars{display:flex;flex-direction:column;gap:8px}
+.bars .r{display:grid;grid-template-columns:minmax(0,40%) 1fr auto;gap:12px;align-items:center;font-size:15px}
+.bars .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink-2)}
+.bars .t{height:8px;background:rgba(38,49,95,.7);border-radius:4px;overflow:hidden}
+.bars .t span{display:block;height:100%;background:var(--bar);border-radius:0 4px 4px 0;min-width:2px}
+.bars .v{font-variant-numeric:tabular-nums;text-align:right;min-width:3ch}
+.empty{color:var(--muted);font-size:15px;padding:4px 0}
+
+/* apps section */
+.explore{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+@media (min-width:900px){.explore{grid-template-columns:300px minmax(0,1fr)}}
+.pick{display:flex;flex-direction:column;gap:6px;max-height:none}
+@media (max-width:899px){.pick{flex-direction:row;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}.pick button{min-width:190px}}
+.pick button{display:flex;align-items:center;gap:10px;text-align:left;border:1px solid var(--line);background:rgba(10,15,38,.45);border-radius:8px;padding:9px 11px;cursor:pointer;color:var(--ink)}
+.pick button:hover{border-color:var(--line-2)}
+.pick button[aria-pressed="true"]{border-color:var(--signal);background:rgba(79,224,208,.07)}
+.pick .nm{display:block;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pick .sub{display:block;font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pick .tx{min-width:0;flex:1}
+.pick .k{font-family:var(--display);font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink-2);font-size:14px}
+.pick .sep{font-size:13px;color:var(--muted);margin:10px 2px 2px}
+@media (max-width:899px){.pick .sep{display:none}}
+.ico{width:32px;height:32px;border-radius:8px;flex:none;display:grid;place-items:center;font:700 14px var(--display);color:#0A0F26;background:var(--c,#4FE0D0)}
+.av{width:32px;height:32px;border-radius:50%;flex:none;display:grid;place-items:center;font:700 14px var(--display);color:#fff;background:var(--h,#555);overflow:hidden}
+.av img{width:100%;height:100%;object-fit:cover}
+.av.anon{background:transparent;border:1px dashed var(--line-2);color:var(--muted)}
+.view{min-width:0}
+.vhead{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.vhead .ico,.vhead .av{width:44px;height:44px;font-size:18px;border-radius:10px}
+.vhead .av{border-radius:50%}
+.vhead .sub{color:var(--muted);font-size:14px}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:18px}
+@media (min-width:640px){.stats{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.stat{border-left:2px solid var(--line-2);padding:2px 0 2px 12px}
+.stat .v{font:600 24px/1.2 var(--display);font-variant-numeric:tabular-nums}
+.stat .l{font-size:13px;color:var(--muted)}
+.cols{display:grid;grid-template-columns:1fr;gap:20px}
+@media (min-width:640px){.cols{grid-template-columns:1fr 1fr}}
+.block{margin-bottom:20px}
+.block:last-child{margin-bottom:0}
+.tbl{width:100%;border-collapse:collapse;font-size:15px}
+.tbl th{text-align:left;font-weight:700;color:var(--muted);font-size:13px;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+.tbl td{padding:8px;border-bottom:1px solid rgba(38,49,95,.7);vertical-align:middle}
+.tbl .num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.scroll{overflow-x:auto}
+.pill{display:inline-block;font-size:13px;padding:2px 9px;border-radius:999px;border:1px solid var(--line-2);color:var(--ink-2);margin:2px 5px 2px 0}
+
+/* tech grid */
+.tech{display:grid;grid-template-columns:1fr;gap:22px}
+@media (min-width:640px){.tech{grid-template-columns:1fr 1fr}}
+@media (min-width:980px){.tech{grid-template-columns:1fr 1fr 1fr}}
+
+/* activity feed */
+.feed{list-style:none;margin:0;padding:0}
+.feed li{display:grid;grid-template-columns:96px 1fr;gap:12px;padding:9px 0;border-bottom:1px solid rgba(38,49,95,.7);font-size:15px}
+.feed li:last-child{border-bottom:0}
+.feed .when{color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums;padding-top:2px}
+.feed .meta{color:var(--muted);font-size:13px}
+.feed.plain li{grid-template-columns:1fr auto}
+
+.gate{max-width:380px;margin:18vh auto 0;text-align:center}
+.gate h1{font-size:28px}
+.loading{color:var(--muted);padding:80px 0;text-align:center;font-family:var(--display)}
+.foot{color:var(--muted);font-size:14px;margin-top:6px}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main id="app"><div class="loading">Loading…</div></main>
+
+<script src="../shared/config.js"></script>
+<script src="../shared/vendor/supabase.js"></script>
+<script src="../shared/account.js"></script>
+<script src="map.js"></script>
+<script>
+/* Insights: analytics for every Web Apps app. Not linked from anywhere and not an app in the
+   accounts system; to anyone but the site admin it's "Page not found", and the database only
+   returns the numbers to the site admin (see the analytics SQL). */
+(function(){
+'use strict';
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const WA = window.WebApps;
+const FIX = window.__STATS_FIXTURE || null;        // made-up data for previews; never set on the live site
+const M = typeof MAP !== 'undefined' ? MAP : null;
+
+/* ---------- names ---------- */
+const APPS = {   // colours from each app's tile on the home page
+  home:{name:'Web Apps home', c:'#9BA8D6', act:null},
+  gameroom:{name:'GameRoom', c:'#FF5C62', act:'Games'},
+  arcade:{name:'Pocket Arcade', c:'#9B8CFF', act:'Games'},
+  'brick-builds':{name:'Brick Builds', c:'#E8B04B', act:null},
+  remix:{name:'Remix', c:'#3FC4D8', act:null},
+  gifbox:{name:'GIFbox', c:'#FF5FA2', act:null},
+  watchmaker:{name:'Watchmakers Bench', c:'#C9A25E', act:'Jobs'},
+  'f1-circuits':{name:'F1 Circuits', c:'#4ED08E', act:null}};
+const appName = a => (APPS[a] && APPS[a].name) || titleize(a);
+const GAME_NAMES = {'take-five':'Take Five', 'daily-quiz':'Daily quiz', chess:'Chess', 'connect-four':'Connect Four',
+  'five-letters':'Five Letters', golf:'Golf', eights:'Crazy Eights', prism:'Prism', deal:'Deal', 'big-year':'Big Year',
+  build:'Build a movement', service:'Service a watch'};
+const gameName = g => GAME_NAMES[g] || titleize(g);
+function titleize(s){ return String(s || '').replace(/[-_]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); }
+const plural = (n, one, many) => num(n) + ' ' + (Math.round(n) === 1 ? one : (many || one + 's'));
+
+/* ---------- formatting ---------- */
+const nf = new Intl.NumberFormat();
+const num = n => nf.format(Math.round(n || 0));
+function dur(s){ s = Math.round(s || 0); if(s < 60) return s + ' s'; const m = Math.round(s / 60); if(m < 60) return m + ' min';
+  const h = Math.floor(m / 60), r = m % 60; return h + ' h' + (r ? ' ' + r + ' min' : ''); }
+function durWords(s){ const h = (s || 0) / 3600; if(h >= 10) return plural(Math.round(h), 'hour'); if(h >= 1) return (Math.round(h * 10) / 10) + ' hours';
+  const m = Math.round((s || 0) / 60); return plural(m, 'minute'); }
+function ago(t){ if(!t) return 'never'; const d = (Date.now() - new Date(t)) / 1000;
+  if(d < 60) return 'just now'; if(d < 3600) return Math.floor(d / 60) + ' min ago'; if(d < 86400) return Math.floor(d / 3600) + ' h ago';
+  if(d < 86400 * 7) return Math.floor(d / 86400) + ' d ago';
+  return new Date(t).toLocaleDateString(undefined, {month:'short', day:'numeric', year: new Date(t).getFullYear() === new Date().getFullYear() ? undefined : 'numeric'}); }
+function clock(t){ const d = new Date(t), same = d.toDateString() === new Date().toDateString();
+  const tm = d.toLocaleTimeString(undefined, {hour:'numeric', minute:'2-digit'});
+  return same ? tm : d.toLocaleDateString(undefined, {month:'short', day:'numeric'}) + ', ' + tm; }
+const dayKey = d => { const x = new Date(d); return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); };
+
+/* Where someone is, from the time zone their browser reports (no IP address is stored). */
+const TZ_US = [[/^America\/(New_York|Detroit|Indiana\/(Indianapolis|Vincennes|Winamac|Marengo|Petersburg|Vevay)|Kentucky|Toronto|Nassau|Montreal|Iqaluit|Nipigon|Thunder_Bay|Indianapolis|Louisville)/, 'US Eastern'],
+  [/^America\/(Chicago|Winnipeg|Menominee|North_Dakota|Rainy_River|Resolute|Rankin_Inlet|Matamoros|Indiana\/(Knox|Tell_City))/, 'US Central'],
+  [/^America\/(Denver|Phoenix|Boise|Edmonton|Yellowknife|Cambridge_Bay|Inuvik|Ojinaga|Creston|Dawson_Creek|Fort_Nelson)/, 'US Mountain'],
+  [/^America\/(Los_Angeles|Vancouver|Tijuana|Whitehorse|Dawson$)/, 'US Pacific'],
+  [/^America\/(Anchorage|Juneau|Sitka|Nome|Yakutat|Metlakatla)/, 'Alaska'], [/^Pacific\/Honolulu/, 'Hawaii'],
+  [/^America\/(Halifax|Glace_Bay|Moncton|Goose_Bay|Puerto_Rico)/, 'Atlantic time'], [/^America\/St_Johns/, 'Newfoundland']];
+function place(tz){ if(!tz) return 'Unknown'; for(const [re, name] of TZ_US) if(re.test(tz)) return name;
+  if(/^(Etc\/)?UTC$|^Etc\/GMT$/.test(tz)) return 'Not shared';
+  const p = tz.split('/'); return (p[p.length - 1] || tz).replace(/_/g, ' '); }
+const isUS = tz => !!(M && M.tz[tz] && M.tz[tz][0] === 'US');
+
+/* ---------- data ---------- */
+const RANGES = [['today','Today'],['7d','7 days'],['30d','30 days'],['90d','90 days'],['all','All time']];
+const RANGE_WORDS = {today:'Today', '7d':'This week', '30d':'Last 30 days', '90d':'Last 90 days', all:'So far'};
+const ls = {get(k, d){ try{ return localStorage.getItem(k) || d; }catch(_){ return d; } }, set(k, v){ try{ localStorage.setItem(k, v); }catch(_){} }};
+let RANGE = ls.get('insights.range', '7d'), BY = ls.get('insights.by', 'app'), SEL_APP = null, SEL_WHO = null, MAPV = ls.get('insights.map', '');
+let D = null;
+
+function rangeStart(r){ const d = new Date(); d.setHours(0,0,0,0);
+  if(r === 'today') return d; if(r === 'all') return new Date('2020-01-01T00:00:00Z');
+  d.setDate(d.getDate() - (parseInt(r) - 1)); return d; }
+async function fetchEvents(fromISO){
+  if(FIX) return FIX.events.filter(e => e.at >= fromISO);
+  const out = [];
+  for(let off = 0; ; off += 1000){
+    const {data, error} = await WA.client.from('analytics_events')
+      .select('at,vid,sid,user_id,app,kind,name,secs,ref,device,browser,os,tz,lang,standalone')
+      .gte('at', fromISO).order('at', {ascending:true}).range(off, off + 999);
+    if(error) throw error;
+    out.push(...data);
+    if(data.length < 1000 || out.length >= 200000) break;
+  }
+  return out;
+}
+async function rpc(name){ if(FIX) return FIX[name]; const {data, error} = await WA.client.rpc(name); if(error) throw error; return data; }
+
+async function load(){
+  const from = rangeStart(RANGE), span = Date.now() - from.getTime();
+  const prevFrom = RANGE === 'all' ? null : new Date(from.getTime() - span);
+  const liveFrom = new Date(Date.now() - 10 * 60 * 1000);
+  const start = new Date(Math.min((prevFrom || from).getTime(), liveFrom.getTime()));
+  const [ev, people, games] = await Promise.all([fetchEvents(start.toISOString()), rpc('analytics_people'), rpc('analytics_games')]);
+  D = {all: ev, ev: ev.filter(e => new Date(e.at) >= from), prev: prevFrom ? ev.filter(e => new Date(e.at) >= prevFrom && new Date(e.at) < from) : null,
+       live: ev.filter(e => new Date(e.at) >= liveFrom), people: (people || []).filter(p => !p.admin), games: games || {}, from, loadedAt: new Date()};
+  D.byId = Object.fromEntries((people || []).map(p => [p.id, p]));
+  D.vidUser = {}; for(const e of D.all) if(e.user_id) D.vidUser[e.vid] = e.user_id;   // a browser that signed in is that person
+  // number the anonymous browsers in the order they first showed up, so they can be told apart
+  D.vidNo = {}; let n = 0; for(const e of D.all) if(!D.vidUser[e.vid] && !(e.vid in D.vidNo)) D.vidNo[e.vid] = ++n;
+}
+const keyOf = e => e.user_id || D.vidUser[e.vid] || ('v:' + e.vid);
+const isPersonKey = k => !String(k).startsWith('v:');
+function whoName(k){ if(isPersonKey(k)){ const p = D.byId[k]; return p ? (p.name || p.username) : 'Someone'; } return 'Visitor ' + (D.vidNo[k.slice(2)] || ''); }
+
+function summarize(ev){
+  const s = {views:0, time:0, plays:0, signins:0, people:new Set(), visitors:new Set()};
+  for(const e of ev){
+    const k = keyOf(e); (isPersonKey(k) ? s.people : s.visitors).add(k);
+    if(e.kind === 'view') s.views++; else if(e.kind === 'time') s.time += e.secs || 0;
+    else if(e.kind === 'game_start') s.plays++; else if(e.kind === 'signin') s.signins++;
+  }
+  return s;
+}
+
+/* ---------- helpers ---------- */
+function av(k){
+  if(!isPersonKey(k)) return `<span class="av anon" aria-hidden="true">${esc(String(D.vidNo[k.slice(2)] || '?'))}</span>`;
+  const p = D.byId[k] || {}; if(p.avatar) return `<span class="av"><img src="${esc(p.avatar)}" alt=""></span>`;
+  const n = p.name || p.username || '?'; return `<span class="av" style="--h:${WA && WA.colorFor ? WA.colorFor(n) : '#3987e5'}">${esc(([...n.trim()][0] || '?').toUpperCase())}</span>`; }
+const ico = a => `<span class="ico" style="--c:${(APPS[a] || {}).c || '#4FE0D0'}" aria-hidden="true">${esc(appName(a)[0])}</span>`;
+function barList(rows, fmt = num, empty = 'Nothing yet.'){
+  rows = rows.filter(r => r[1] > 0);
+  if(!rows.length) return `<div class="empty">${esc(empty)}</div>`;
+  const max = Math.max(...rows.map(r => r[1]));
+  return '<div class="bars">' + rows.map(([n, v]) => `<div class="r"><span class="n" title="${esc(n)}">${esc(n)}</span><span class="t"><span style="width:${(v / max * 100).toFixed(1)}%"></span></span><span class="v">${esc(fmt(v))}</span></div>`).join('') + '</div>';
+}
+function countBy(list, key){ const m = new Map(); for(const x of list){ const k = key(x); if(k == null) continue; m.set(k, (m.get(k) || 0) + 1); } return [...m].sort((a, b) => b[1] - a[1]); }
+function sumBy(list, key, val){ const m = new Map(); for(const x of list){ const k = key(x); if(k == null) continue; m.set(k, (m.get(k) || 0) + val(x)); } return [...m].sort((a, b) => b[1] - a[1]); }
+function chg(now, before){
+  if(before == null) return '';
+  if(!before) return now ? '<span class="chg up">new</span>' : '';
+  const p = Math.round((now - before) / before * 100); if(!p) return '<span class="chg">same</span>';
+  return `<span class="chg ${p > 0 ? 'up' : 'down'}" title="${p > 0 ? 'up' : 'down'} ${Math.abs(p)}% on the period before">${p > 0 ? '▲' : '▼'} ${Math.abs(p)}%</span>`;
+}
+function describe(e){
+  const app = esc(appName(e.app));
+  switch(e.kind){
+    case 'view': return `opened ${app}`;
+    case 'time': return `spent ${dur(e.secs)} in ${app}`;
+    case 'signin': return `signed in on ${app}`;
+    case 'signout': return `signed out on ${app}`;
+    case 'screen': return `went to ${esc(titleize(e.name))} in ${app}`;
+    case 'game_start': return `started ${esc(gameName(e.name))} in ${app}`;
+    case 'game_end': return `played ${esc(gameName(e.name))} for ${dur(e.secs)}`;
+    default: return esc(e.kind);
+  }
+}
+const metaOf = e => [titleize(e.device), e.browser, place(e.tz)].filter(Boolean).join(', ');
+
+/* ---------- chart: people and visitors per day (or hour today) ---------- */
+function chartData(){
+  const hourly = RANGE === 'today', buckets = [], now = new Date();
+  if(hourly){ for(let h = 0; h <= now.getHours(); h++){ const d = new Date(D.from); d.setHours(h); buckets.push({k:h, d, label:d.toLocaleTimeString(undefined, {hour:'numeric'})}); } }
+  else { let start = new Date(D.from);
+    if(RANGE === 'all'){ start = D.ev[0] ? new Date(D.ev[0].at) : new Date(); start.setHours(0,0,0,0); }
+    for(let d = new Date(start); d <= now; d.setDate(d.getDate() + 1)) buckets.push({k:dayKey(d), d:new Date(d), label:d.toLocaleDateString(undefined, {month:'short', day:'numeric'})}); }
+  const idx = new Map(buckets.map((b, i) => [b.k, i])), ppl = buckets.map(() => new Set()), anon = buckets.map(() => new Set());
+  for(const e of D.ev){ const d = new Date(e.at), i = idx.get(hourly ? d.getHours() : dayKey(d)); if(i == null) continue;
+    const k = keyOf(e); (isPersonKey(k) ? ppl : anon)[i].add(k); }
+  return buckets.map((b, i) => ({...b, people:ppl[i].size, visitors:anon[i].size}));
+}
+function bar(x, yBase, w, h, r, fill){ if(h <= 0) return ''; r = Math.min(r, h, w / 2); const yt = yBase - h;
+  return `<path d="M${x} ${yBase}V${yt + r}Q${x} ${yt} ${x + r} ${yt}H${x + w - r}Q${x + w} ${yt} ${x + w} ${yt + r}V${yBase}Z" fill="${fill}"/>`; }
+function drawChart(){
+  const host = $('#chart'); if(!host) return;
+  const data = chartData(), W = Math.max(280, host.clientWidth), H = innerWidth >= 900 ? 330 : 230, L = 30, R = 4, T = 10, B = 26;
+  host.style.setProperty('--ch', H + 'px');
+  const max = Math.max(1, ...data.map(d => d.people + d.visitors));
+  const step = max <= 5 ? 1 : max <= 10 ? 2 : max <= 25 ? 5 : max <= 50 ? 10 : Math.ceil(max / 50) * 10;
+  const top = Math.ceil(max / step) * step, y = v => T + (H - T - B) * (1 - v / top);
+  const bw = (W - L - R) / data.length, gap = Math.min(6, bw * .3), w = Math.max(1, bw - gap);
+  let g = '';
+  for(let v = 0; v <= top; v += step) g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="${v ? 'var(--line)' : 'var(--line-2)'}" stroke-width="1"/><text x="${L - 7}" y="${y(v) + 4}" text-anchor="end" font-size="11" fill="var(--muted)">${v}</text>`;
+  const every = Math.ceil(data.length / Math.max(2, Math.floor((W - L) / 64)));
+  data.forEach((d, i) => {
+    const x = L + i * bw + gap / 2, r = Math.min(4, w / 2);
+    if(d.people) g += bar(x, y(0), w, y(0) - y(d.people), d.visitors ? 0 : r, 'var(--people)');
+    if(d.visitors){ const y0 = d.people ? y(d.people) - 2 : y(0); g += bar(x, y0, w, Math.max(1, y0 - y(d.people + d.visitors)), r, 'var(--visitors)'); }
+    if(i % every === 0) g += `<text x="${x + w / 2}" y="${H - 8}" text-anchor="middle" font-size="11" fill="var(--muted)">${esc(d.label)}</text>`;
+    g += `<rect class="hit" data-i="${i}" x="${L + i * bw}" y="${T}" width="${bw}" height="${H - T - B}" fill="transparent"/>`;
+  });
+  host.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Signed-in people and visitors per ${RANGE === 'today' ? 'hour' : 'day'}">${g}</svg>`;
+  const tip = $('#tip');
+  const hideTip = () => { tip.hidden = true; host.querySelectorAll('.hit').forEach(h => h.setAttribute('fill', 'transparent')); };
+  host.querySelectorAll('.hit').forEach(el => {
+    const showTip = () => { hideTip(); const d = data[+el.dataset.i];
+      tip.innerHTML = `<b>${esc(RANGE === 'today' ? d.label : d.d.toLocaleDateString(undefined, {weekday:'short', month:'short', day:'numeric'}))}</b>
+        <div class="row"><i style="background:var(--people)"></i><span>Signed-in people</span><span>${d.people}</span></div>
+        <div class="row"><i style="background:var(--visitors)"></i><span>Visitors</span><span>${d.visitors}</span></div>`;
+      tip.hidden = false; el.setAttribute('fill', 'rgba(234,240,255,.06)');
+      const bb = el.getBBox(), sc = host.clientWidth / W;
+      tip.style.left = Math.max(0, Math.min(host.clientWidth - tip.offsetWidth, (bb.x + bb.width / 2) * sc - tip.offsetWidth / 2)) + 'px'; tip.style.top = '-8px'; };
+    el.addEventListener('pointerenter', e => { if(e.pointerType === 'mouse') showTip(); });
+    el.addEventListener('pointerleave', e => { if(e.pointerType === 'mouse') hideTip(); });
+    el.addEventListener('pointerdown', showTip);
+  });
+}
+
+/* ---------- map: where people are, by time zone ---------- */
+function mapGroups(){
+  const firstByKey = new Map(); for(const e of D.ev) if(!firstByKey.has(keyOf(e))) firstByKey.set(keyOf(e), e);
+  const liveKeys = new Set(D.live.map(keyOf));
+  const groups = new Map();
+  for(const [k, e] of firstByKey){ const label = place(e.tz); let g = groups.get(label);
+    if(!g) groups.set(label, g = {label, people:0, visitors:0, tzs:new Map(), live:0, us:isUS(e.tz)});
+    if(isPersonKey(k)) g.people++; else g.visitors++; if(liveKeys.has(k)) g.live++;
+    g.tzs.set(e.tz, (g.tzs.get(e.tz) || 0) + 1); }
+  for(const g of groups.values()){ const tz = [...g.tzs].sort((a, b) => b[1] - a[1])[0][0]; g.pos = M && M.tz[tz]; g.n = g.people + g.visitors; }
+  return [...groups.values()].sort((a, b) => b.n - a.n);
+}
+function drawMap(){
+  const host = $('#map'); if(!host || !M) return;
+  const groups = mapGroups(), us = groups.filter(g => g.us).reduce((a, g) => a + g.n, 0), all = groups.reduce((a, g) => a + g.n, 0);
+  const view = MAPV || (us >= all / 2 ? 'us' : 'world');
+  document.querySelectorAll('[data-mv]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mv === view)));
+  const V = view === 'us' ? M.us : M.world;
+  const shown = groups.filter(g => g.pos && (view === 'world' ? true : g.pos.length > 3));
+  const max = Math.max(1, ...shown.map(g => g.n));
+  const xy = g => view === 'us' ? [g.pos[3], g.pos[4]] : [g.pos[1], g.pos[2]];
+  const scale = view === 'us' ? 1.6 : 1;
+  let s = view === 'us'
+    ? `<path d="${M.us.nation}" fill="var(--land)"/><path d="${M.us.states}" fill="none" stroke="var(--land-edge)" stroke-width="1.2"/>`
+    : `<path d="${M.world.sphere}" fill="var(--sea)" stroke="var(--line)" stroke-width="1"/><path d="${M.world.grat}" fill="none" stroke="var(--line)" stroke-width=".5" opacity=".7"/><path d="${M.world.land}" fill="var(--land)"/><path d="${M.world.borders}" fill="none" stroke="var(--land-edge)" stroke-width=".6"/>`;
+  shown.slice().reverse().forEach((g, i) => { const [x, y] = xy(g), r = (5 + 15 * Math.sqrt(g.n / max)) * scale;
+    s += `<circle class="halo" cx="${x}" cy="${y}" r="${r * 1.9}"/>`;
+    if(g.live) s += `<circle class="liveRing" cx="${x}" cy="${y}" r="${r}"/>`;
+    s += `<circle class="dot" data-g="${esc(g.label)}" cx="${x}" cy="${y}" r="${r}"><title>${esc(g.label)}: ${g.n}</title></circle>`; });
+  // label the three biggest; each label tries right, left, above, then below its dot, avoiding dots and other labels
+  const fs = V.w / 38, boxes = shown.map(g => { const [x, y] = xy(g), r = (5 + 15 * Math.sqrt(g.n / max)) * scale; return [x - r, y - r, x + r, y + r]; });
+  const hits = (A, B) => A[0] < B[2] && A[2] > B[0] && A[1] < B[3] && A[3] > B[1];
+  shown.slice(0, 3).forEach(g => { const [x, y] = xy(g), r = (5 + 15 * Math.sqrt(g.n / max)) * scale, tw = g.label.length * fs * .58, pad = 6;
+    const opts = [[x + r + pad, y + fs * .35, 'start', [x + r + pad, y - fs * .6, x + r + pad + tw, y + fs * .5]],
+                  [x - r - pad, y + fs * .35, 'end', [x - r - pad - tw, y - fs * .6, x - r - pad, y + fs * .5]],
+                  [x, y - r - pad, 'middle', [x - tw / 2, y - r - pad - fs, x + tw / 2, y - r - pad]],
+                  [x, y + r + pad + fs * .8, 'middle', [x - tw / 2, y + r + pad, x + tw / 2, y + r + pad + fs]]];
+    const fits = o => o[3][0] >= 0 && o[3][2] <= V.w && o[3][1] >= 0 && o[3][3] <= V.h;
+    const own = boxes[shown.indexOf(g)];
+    const o = opts.find(o => fits(o) && !boxes.some(B => B !== own && hits(o[3], B))) || opts.find(fits) || opts[0];
+    boxes.push(o[3]);
+    s += `<text class="lbl" x="${o[0]}" y="${o[1]}" text-anchor="${o[2]}" style="font-size:${fs.toFixed(1)}px">${esc(g.label)}</text>`; });
+  host.innerHTML = `<svg viewBox="0 0 ${V.w} ${V.h}" role="img" aria-label="Map of where people and visitors are">${s}</svg><div id="mtip" class="tip" hidden></div>`;
+  const missing = groups.filter(g => !shown.includes(g));
+  $('#places').innerHTML = groups.slice(0, 8).map(g => `<span>${esc(g.label)} <b>${g.n}</b></span>`).join('') || '<span class="empty">No visits in this period.</span>';
+  $('#away').textContent = missing.length && view === 'us' ? 'Also outside the US map: ' + missing.map(g => g.label + ' (' + g.n + ')').join(', ') + '.' : '';
+  const tip = $('#mtip');
+  host.querySelectorAll('.dot').forEach(el => {
+    const g = groups.find(x => x.label === el.dataset.g);
+    const show = () => { host.querySelectorAll('.dot').forEach(d => d.classList.remove('on')); el.classList.add('on');
+      tip.innerHTML = `<b>${esc(g.label)}</b><div class="row"><i style="background:var(--people)"></i><span>Signed-in people</span><span>${g.people}</span></div><div class="row"><i style="background:var(--visitors)"></i><span>Visitors</span><span>${g.visitors}</span></div>${g.live ? `<div class="row"><i style="background:var(--beacon)"></i><span>Here now</span><span>${g.live}</span></div>` : ''}`;
+      tip.hidden = false; const b = el.getBoundingClientRect(), h = host.getBoundingClientRect();
+      tip.style.left = Math.max(0, Math.min(h.width - tip.offsetWidth, b.left - h.left + b.width / 2 - tip.offsetWidth / 2)) + 'px';
+      tip.style.top = Math.max(0, b.top - h.top - tip.offsetHeight - 8) + 'px'; };
+    el.addEventListener('pointerenter', e => { if(e.pointerType === 'mouse') show(); });
+    el.addEventListener('pointerleave', e => { if(e.pointerType === 'mouse'){ tip.hidden = true; el.classList.remove('on'); } });
+    el.addEventListener('pointerdown', show);
+  });
+}
+
+/* ---------- page ---------- */
+function gate(html){ $('#app').innerHTML = `<div class="gate">${html}</div>`; }
+function notHere(){ document.title = 'Web Apps'; gate(`<h1>Page not found</h1><p class="note">There's nothing here.</p><p><a href="../">Web Apps home</a></p>`); }
+const LOGO = `<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="13" fill="none" stroke="var(--line-2)" stroke-width="1.5"/><circle cx="16" cy="16" r="7.5" fill="none" stroke="var(--signal)" stroke-width="1.5" stroke-dasharray="3 3"/><circle cx="16" cy="16" r="2.6" fill="var(--signal)"/><circle cx="26.5" cy="9.5" r="2.2" fill="var(--beacon)"/></svg>`;
+
+function render(){
+  const s = summarize(D.ev), p = D.prev ? summarize(D.prev) : null;
+  const liveKeys = [...new Set(D.live.map(keyOf))];
+  const liveNames = liveKeys.filter(isPersonKey).map(whoName), liveAnon = liveKeys.filter(k => !isPersonKey(k)).length;
+  const liveTxt = liveKeys.length ? [...liveNames, liveAnon ? plural(liveAnon, 'visitor') : null].filter(Boolean).join(', ') + ' online now' : 'No one online';
+  const people = s.people.size, visitors = s.visitors.size;
+  const sentence = people + visitors
+    ? `${RANGE_WORDS[RANGE]}: <b>${plural(people, 'person', 'people')}</b> and <b>${plural(visitors, 'visitor')}</b> spent <b>${durWords(s.time)}</b> across the apps.`
+    : `${RANGE_WORDS[RANGE]}: no one has visited yet.`;
+
+  $('#app').innerHTML = `
+  <div class="bar"><div class="mark">${LOGO}<h1>Insights</h1></div>
+    <span class="live ${liveKeys.length ? '' : 'off'}" title="Active in the last 10 minutes"><i></i>${esc(liveTxt)}</span>
+    <span class="grow"></span><button class="btn rf" id="refresh" aria-label="Refresh"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M16 10a6 6 0 1 1-1.8-4.3M16 3.5v3.3h-3.3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Refresh</span></button></div>
+  <div class="seg ranges" role="group" aria-label="Time range" style="margin-bottom:22px">${RANGES.map(([k, l]) => `<button data-r="${k}" aria-pressed="${k === RANGE}">${l}</button>`).join('')}</div>
+  <section class="headline"><p>${sentence}</p>
+    <div class="more"><span><b>${num(s.views)}</b> page views${p ? chg(s.views, p.views) : ''}</span><span><b>${num(s.plays)}</b> games and jobs started${p ? chg(s.plays, p.plays) : ''}</span>
+      <span><b>${num(s.signins)}</b> sign-ins${p ? chg(s.signins, p.signins) : ''}</span>${p ? `<span>People${chg(people, p.people.size)}</span><span>Visitors${chg(visitors, p.visitors.size)}</span>` : ''}</div></section>
+  <div class="duo">
+    <section class="panel"><div class="phead"><h2>${RANGE === 'today' ? 'Hour by hour' : 'Day by day'}</h2></div>
+      <div class="legend"><span><i style="background:var(--people)"></i>Signed-in people</span><span><i style="background:var(--visitors)"></i>Visitors</span></div>
+      <div class="chartwrap"><div id="chart" class="chart"></div><div id="tip" class="tip" hidden></div></div>
+      <details><summary>Show as a table</summary><div class="scroll"><table class="tbl" id="chartTbl"></table></div></details></section>
+    <section class="panel"><div class="phead"><h2>Where they are</h2><span class="grow"></span>
+      <div class="seg" role="group" aria-label="Map"><button data-mv="us">US</button><button data-mv="world">World</button></div></div>
+      <div id="map" class="map"></div><div id="places" class="places"></div><div id="away" class="away"></div>
+      <p class="note">Placed by each browser's time zone, so a dot marks a region, not a town. No IP addresses are kept.</p></section>
+  </div>
+  <section class="panel"><div class="phead"><h2>Apps</h2><span class="grow"></span>
+      <div class="seg" role="group" aria-label="View"><button data-by="app" aria-pressed="${BY === 'app'}">By app</button><button data-by="who" aria-pressed="${BY === 'who'}">By person</button></div></div>
+    <div class="explore"><div class="pick" id="pick"></div><div class="view" id="view"></div></div></section>
+  <section class="panel"><div class="phead"><h2>Devices and sources</h2></div><div class="tech">${techBlocks()}</div>
+    <p class="note">Each browser is counted once, signed in or not.</p></section>
+  <section class="panel"><div class="phead"><h2>Recent activity</h2></div>${feed(D.ev.slice().reverse(), 60)}</section>
+  <p class="foot">Only you can see this page and its numbers. Your own visits and play aren't counted. Updated ${esc(D.loadedAt.toLocaleTimeString(undefined, {hour:'numeric', minute:'2-digit'}))}.</p>`;
+
+  drawChart(); drawMap(); renderExplore();
+  const cd = chartData();
+  $('#chartTbl').innerHTML = `<tr><th>${RANGE === 'today' ? 'Hour' : 'Day'}</th><th class="num">Signed-in people</th><th class="num">Visitors</th></tr>` +
+    cd.slice().reverse().map(d => `<tr><td>${esc(d.label)}</td><td class="num">${d.people}</td><td class="num">${d.visitors}</td></tr>`).join('');
+  document.querySelectorAll('[data-r]').forEach(b => b.addEventListener('click', () => { RANGE = b.dataset.r; ls.set('insights.range', RANGE); refresh(); }));
+  document.querySelectorAll('[data-mv]').forEach(b => b.addEventListener('click', () => { MAPV = b.dataset.mv; ls.set('insights.map', MAPV); drawMap(); }));
+  document.querySelectorAll('[data-by]').forEach(b => b.addEventListener('click', () => { BY = b.dataset.by; ls.set('insights.by', BY);
+    document.querySelectorAll('[data-by]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); renderExplore(); }));
+  $('#refresh').addEventListener('click', refresh);
+}
+
+/* ---------- Apps: by app or by person ---------- */
+function appRows(){
+  const m = new Map(Object.keys(APPS).map(k => [k, {k, views:0, time:0, plays:0, who:new Set()}]));
+  for(const e of D.ev){ let a = m.get(e.app); if(!a) m.set(e.app, a = {k:e.app, views:0, time:0, plays:0, who:new Set()});
+    if(e.kind === 'view') a.views++; if(e.kind === 'time') a.time += e.secs || 0; if(e.kind === 'game_start') a.plays++; a.who.add(keyOf(e)); }
+  return [...m.values()].filter(a => a.k !== 'insights').sort((a, b) => b.time - a.time || b.views - a.views);
+}
+function whoRows(){
+  const m = new Map(D.people.map(p => [p.id, {k:p.id, time:0, views:0, plays:0, last:p.last_sign_in || null}]));
+  for(const e of D.ev){ const k = keyOf(e); let r = m.get(k); if(!r) m.set(k, r = {k, time:0, views:0, plays:0, last:null});
+    if(e.kind === 'time') r.time += e.secs || 0; if(e.kind === 'view') r.views++; if(e.kind === 'game_start') r.plays++;
+    if(!r.last || e.at > r.last) r.last = e.at; }
+  for(const e of D.all){ const r = m.get(keyOf(e)); if(r && (!r.last || e.at > r.last)) r.last = e.at; }
+  const rows = [...m.values()];
+  const ppl = rows.filter(r => isPersonKey(r.k)).sort((a, b) => String(b.last || '').localeCompare(String(a.last || '')));
+  const anon = rows.filter(r => !isPersonKey(r.k) && (r.time || r.views)).sort((a, b) => b.time - a.time || b.views - a.views);
+  return {ppl, anon};
+}
+function renderExplore(){
+  const pick = $('#pick'); if(!pick) return;
+  if(BY === 'app'){
+    const rows = appRows(); if(!SEL_APP || !rows.some(r => r.k === SEL_APP)) SEL_APP = rows[0] && rows[0].k;
+    pick.innerHTML = rows.map(r => `<button data-a="${esc(r.k)}" aria-pressed="${r.k === SEL_APP}">${ico(r.k)}<span class="tx"><span class="nm">${esc(appName(r.k))}</span><span class="sub">${r.views ? plural(r.views, 'view') + ', ' + dur(r.time) : 'No visits this period'}</span></span></button>`).join('');
+    pick.querySelectorAll('[data-a]').forEach(b => b.addEventListener('click', () => { SEL_APP = b.dataset.a; renderExplore(); }));
+    $('#view').innerHTML = appView(SEL_APP, rows.find(r => r.k === SEL_APP));
+  } else {
+    const {ppl, anon} = whoRows();
+    const all = [...ppl, ...anon]; if(!SEL_WHO || !all.some(r => r.k === SEL_WHO)) SEL_WHO = all[0] && all[0].k;
+    const btn = r => `<button data-w="${esc(r.k)}" aria-pressed="${r.k === SEL_WHO}">${av(r.k)}<span class="tx"><span class="nm">${esc(whoName(r.k))}</span><span class="sub">${isPersonKey(r.k) ? 'Last active ' + esc(ago(r.last)) : esc(anonSub(r.k))}</span></span><span class="k">${r.time ? dur(r.time) : ''}</span></button>`;
+    pick.innerHTML = ppl.map(btn).join('') + (anon.length ? `<div class="sep">Visitors not signed in</div>` + anon.slice(0, 30).map(btn).join('') : '');
+    pick.querySelectorAll('[data-w]').forEach(b => b.addEventListener('click', () => { SEL_WHO = b.dataset.w; renderExplore(); }));
+    $('#view').innerHTML = all.length ? whoView(SEL_WHO, all.find(r => r.k === SEL_WHO)) : '<div class="empty">No one yet.</div>';
+  }
+}
+function anonSub(k){ const e = D.all.find(x => keyOf(x) === k); return e ? [titleize(e.device), e.browser, place(e.tz)].filter(Boolean).join(', ') : ''; }
+const stat = (v, l) => `<div class="stat"><div class="v">${v}</div><div class="l">${esc(l)}</div></div>`;
+
+function appView(k, r){
+  if(!k) return '<div class="empty">No apps yet.</div>';
+  r = r || {views:0, time:0, plays:0, who:new Set()};
+  const ev = D.ev.filter(e => e.app === k), act = (APPS[k] || {}).act;
+  const people = [...r.who].filter(isPersonKey).length, visitors = r.who.size - people;
+  let h = `<div class="vhead">${ico(k)}<div><h2>${esc(appName(k))}</h2><div class="sub">${plural(people, 'person', 'people')} and ${plural(visitors, 'visitor')} this period</div></div></div>
+    <div class="stats">${stat(num(r.views), 'Page views')}${stat(num(r.who.size), 'People and visitors')}${stat(dur(r.time), 'Time spent')}${act ? stat(num(r.plays), act + ' started') : stat(r.views ? dur(r.time / Math.max(1, r.views)) : '–', 'Average visit')}</div>`;
+  const timeBy = sumBy(ev.filter(e => e.kind === 'time'), e => whoName(keyOf(e)), e => e.secs || 0);
+  if(act){
+    h += `<div class="cols block"><div><h3>${act} started</h3>${barList(countBy(ev.filter(e => e.kind === 'game_start'), e => gameName(e.name)), num, 'None this period.')}</div>
+      <div><h3>Time on each</h3>${barList(sumBy(ev.filter(e => e.kind === 'game_end'), e => gameName(e.name), e => e.secs || 0), dur, 'No time recorded this period.')}</div></div>`;
+  }
+  h += `<div class="cols block"><div><h3>Time by person</h3>${barList(timeBy, dur, 'No time recorded this period.')}</div>
+    <div><h3>${act ? act + ' by person' : 'Visits by person'}</h3>${barList(act ? countBy(ev.filter(e => e.kind === 'game_start'), e => whoName(keyOf(e))) : countBy(ev.filter(e => e.kind === 'view'), e => whoName(keyOf(e))), num, 'No one this period.')}</div></div>`;
+  h += appSaved(k);
+  h += `<div class="block"><h3>Recent activity</h3>${feed(ev.slice().reverse(), 12)}</div>`;
+  return h;
+}
+function appSaved(k){
+  const G = D.games;
+  if(k === 'gameroom'){
+    const all = G.gameroom_matches || [], inRange = all.filter(m => new Date(m.at) >= D.from);
+    const open = all.filter(m => !/^(complete|completed|finished|done|over)$/i.test(m.status || '')).length;
+    const per = new Map(); for(const m of inRange) for(const pl of (m.players || [])){ const r = per.get(pl.u) || {n:0, w:0}; r.n++; if(/^(won|win|winner)$/i.test(pl.s || '')) r.w++; per.set(pl.u, r); }
+    const dq = (G.gameroom_daily || []).filter(x => new Date(x.day + 'T12:00:00') >= D.from), wd = (G.gameroom_words || []).filter(x => new Date(x.day + 'T12:00:00') >= D.from);
+    return `<div class="cols block"><div><h3>Online matches started</h3>${barList(countBy(inRange, m => gameName(m.game)), num, 'No online matches this period.')}
+        <p class="note">${plural(all.length, 'online match', 'online matches')} in all, ${num(open)} still going.</p></div>
+      <div><h3>Online matches by player</h3>${per.size ? `<table class="tbl"><tr><th>Player</th><th class="num">Played</th><th class="num">Won</th></tr>${[...per].sort((a, b) => b[1].n - a[1].n).map(([u, r]) => `<tr><td>${esc(whoName(u))}</td><td class="num">${r.n}</td><td class="num">${r.w || '–'}</td></tr>`).join('')}</table>` : '<div class="empty">No online matches this period.</div>'}</div></div>
+      <div class="cols block"><div><h3>Daily quiz days</h3>${barList(countBy(dq, x => whoName(x.u)), num, 'No daily quiz this period.')}</div>
+      <div><h3>Daily word days</h3>${barList(countBy(wd, x => whoName(x.u)), num, 'No daily word this period.')}</div></div>`;
+  }
+  if(k === 'arcade'){
+    const rows = (G.arcade || []).filter(r => r.games && Object.keys(r.games).length);
+    return `<div class="block"><h3>Last played, from each person's saves</h3>${rows.length ? '<div class="scroll"><table class="tbl"><tr><th>Player</th><th>Games</th></tr>' + rows.map(r => `<tr><td>${esc(whoName(r.u))}</td><td>${Object.entries(r.games).sort((a, b) => (b[1] || 0) - (a[1] || 0)).map(([g, t]) => `<span class="pill">${esc(gameName(g))}, ${esc(ago(t))}</span>`).join('')}</td></tr>`).join('') + '</table></div>' : '<div class="empty">No saved games yet.</div>'}</div>`;
+  }
+  if(k === 'brick-builds'){
+    const rows = (G.brick || []).slice().sort((a, b) => String(b.updated).localeCompare(String(a.updated)));
+    return `<div class="block"><h3>Last saved a build</h3>${rows.length ? '<ul class="feed plain">' + rows.map(r => `<li><span>${esc(whoName(r.u))}</span><span class="when">${esc(ago(r.updated))}</span></li>`).join('') + '</ul>' : '<div class="empty">No saves yet.</div>'}</div>`;
+  }
+  if(k === 'gifbox'){
+    const gb = G.gifbox || {};
+    return `<div class="cols block"><div><h3>GIFs saved</h3>${barList(Object.entries(gb.gifs || {}).map(([u, n]) => [u === 'library' ? 'The Library' : whoName(u), n]).sort((a, b) => b[1] - a[1]), num, 'No GIFs yet.')}</div>
+      <div><h3>Collections</h3>${barList(Object.entries(gb.collections || {}).map(([u, n]) => [whoName(u), n]).sort((a, b) => b[1] - a[1]), num, 'No collections yet.')}</div></div>`;
+  }
+  return '';
+}
+function whoView(k, r){
+  const mine = D.ev.filter(e => keyOf(e) === k), person = isPersonKey(k), p = person ? D.byId[k] || {} : null;
+  const time = mine.filter(e => e.kind === 'time').reduce((a, e) => a + (e.secs || 0), 0);
+  const plays = mine.filter(e => e.kind === 'game_start').length, signins = mine.filter(e => e.kind === 'signin').length;
+  let h = `<div class="vhead">${av(k)}<div><h2>${esc(whoName(k))}</h2><div class="sub">${person ? '@' + esc(p.username) + ', account made ' + esc(new Date(p.created).toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'})) : esc(anonSub(k)) + ', not signed in'}</div></div></div>
+    <div class="stats">${stat(esc(ago(r && r.last)), 'Last active')}${stat(dur(time), 'Time this period')}${stat(num(plays), 'Games and jobs started')}${person ? stat(num(signins), 'Sign-ins') : stat(num(mine.filter(e => e.kind === 'view').length), 'Page views')}</div>
+    <div class="cols block"><div><h3>Time by app</h3>${barList(sumBy(mine.filter(e => e.kind === 'time'), e => appName(e.app), e => e.secs || 0), dur, 'No time recorded this period.')}</div>
+      <div><h3>Games and jobs started</h3>${barList(countBy(mine.filter(e => e.kind === 'game_start'), e => gameName(e.name)), num, 'None this period.')}</div></div>`;
+  if(person){
+    const saved = personSaved(k);
+    if(saved) h += `<div class="block"><h3>Saved in the apps</h3>${saved}</div>`;
+    h += `<div class="block"><h3>Member of</h3>${(p.apps || []).length ? p.apps.map(a => `<span class="pill">${esc(appName(a.app))}${a.status !== 'active' ? ', ' + esc(a.status) : ''}${a.role === 'admin' ? ', admin' : ''}</span>`).join('') : '<span class="empty">No apps yet</span>'}
+      <p class="note">Last signed in ${esc(p.last_sign_in ? ago(p.last_sign_in) : 'never')}.</p></div>`;
+  }
+  h += `<div class="block"><h3>Recent activity</h3>${feed(mine.slice().reverse(), 25, true)}</div>`;
+  return h;
+}
+function personSaved(id){
+  const G = D.games, out = [];
+  const m = (G.gameroom_matches || []).filter(x => (x.players || []).some(pl => pl.u === id));
+  if(m.length){ const wins = m.filter(x => x.players.some(pl => pl.u === id && /^(won|win|winner)$/i.test(pl.s || ''))).length;
+    out.push(['GameRoom', `${plural(m.length, 'online match', 'online matches')}${wins ? ', ' + wins + ' won' : ''}`]); }
+  const dq = (G.gameroom_daily || []).filter(x => x.u === id); if(dq.length) out.push(['Daily quiz', plural(dq.length, 'day')]);
+  const wd = (G.gameroom_words || []).filter(x => x.u === id); if(wd.length) out.push(['Daily word', plural(wd.length, 'day')]);
+  const ar = (G.arcade || []).find(x => x.u === id);
+  if(ar && ar.games && Object.keys(ar.games).length) out.push(['Pocket Arcade', Object.entries(ar.games).sort((a, b) => (b[1] || 0) - (a[1] || 0)).map(([g, t]) => `${gameName(g)} (${ago(t)})`).join(', ')]);
+  const br = (G.brick || []).find(x => x.u === id); if(br) out.push(['Brick Builds', 'last saved ' + ago(br.updated)]);
+  const gf = G.gifbox && G.gifbox.gifs && G.gifbox.gifs[id], gc = G.gifbox && G.gifbox.collections && G.gifbox.collections[id];
+  if(gf || gc) out.push(['GIFbox', `${plural(gf || 0, 'GIF')}, ${plural(gc || 0, 'collection')}`]);
+  return out.length ? '<ul class="feed plain">' + out.map(([a, t]) => `<li><span>${esc(a)}</span><span style="color:var(--ink-2);text-align:right">${esc(t)}</span></li>`).join('') + '</ul>' : '';
+}
+function techBlocks(){
+  const first = new Map(); for(const e of D.ev) if(!first.has(keyOf(e))) first.set(keyOf(e), e);
+  const v = [...first.values()];
+  const block = (t, rows) => `<div><h3>${t}</h3>${barList(rows, num, 'No visits this period.')}</div>`;
+  return block('Device', countBy(v, e => titleize(e.device || 'unknown'))) + block('Browser', countBy(v, e => e.browser || 'Unknown')) +
+    block('System', countBy(v, e => e.os || 'Unknown')) + block('Opened as', countBy(v, e => e.standalone ? 'Home-screen app' : 'In the browser')) +
+    block('Came from', countBy(D.ev.filter(e => e.kind === 'view'), e => e.ref || 'Typed in, bookmark or app').slice(0, 8)) +
+    block('Language', countBy(v, e => e.lang || 'Unknown').slice(0, 8));
+}
+function feed(list, max, mine){
+  list = list.filter(e => e.kind !== 'time' || (e.secs || 0) >= 20).slice(0, max);
+  if(!list.length) return '<div class="empty">Nothing in this period.</div>';
+  return '<ul class="feed">' + list.map(e => `<li><span class="when">${esc(clock(e.at))}</span><span>${mine ? '' : '<b>' + esc(whoName(keyOf(e))) + '</b> '}${describe(e)}<div class="meta">${esc(metaOf(e))}</div></span></li>`).join('') + '</ul>';
+}
+
+/* ---------- start ---------- */
+let busy = false;
+async function refresh(){
+  if(busy) return; busy = true; const r = $('#refresh'); if(r){ r.disabled = true; const t = r.querySelector('span'); if(t) t.textContent = 'Loading…'; }
+  try{ await load(); render(); }
+  catch(e){ gate(`<h1>Couldn't load the numbers</h1><p class="note">${esc(e.message || e)}</p><button class="btn" onclick="location.reload()">Try again</button>`); }
+  busy = false;
+}
+async function route(){
+  const me = FIX ? FIX.me : WA && WA.me;
+  if(!me || !me.is_admin) return notHere();       // signed out or not the admin: the page doesn't exist
+  document.title = 'Insights';
+  ls.set('wa.stats.off', '1');                    // this device is yours: don't count it
+  await refresh();
+}
+document.addEventListener('pointerdown', e => {    // a tap anywhere else closes a tooltip
+  if(!e.target.closest) return;
+  if(!e.target.closest('#chart')){ const t = $('#tip'); if(t) t.hidden = true; }
+  if(!e.target.closest('#map')){ const t = $('#mtip'); if(t) t.hidden = true; document.querySelectorAll('.dot.on').forEach(d => d.classList.remove('on')); }
+});
+let lastW = innerWidth;
+addEventListener('resize', () => { if(D && Math.abs(innerWidth - lastW) > 20){ lastW = innerWidth; drawChart(); } });
+(async () => {
+  if(!FIX){ if(!WA || WA.mode !== 'supabase'){ notHere(); return; }
+    await WA.ready; let last = WA.me && WA.me.id; WA.onChange(m => { const id = m && m.id; if(id !== last){ last = id; route(); } }); }
+  route();
+})();
+})();
+</script>
+</body>
+</html>
