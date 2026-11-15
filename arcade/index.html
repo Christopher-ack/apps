@@ -417,6 +417,37 @@ addEventListener('message',e=>{const m=e.data;if(!m||m.gp!==1||e.source!==frame.
   else if(m.type==='status')setStatus(m);
   else if(m.type==='toast')showToast(m.text);
   else if(m.type==='menu')sheet.hidden?openSheet():closeSheet()});
+// ---- rooms for games that play together (Big Year multiplayer). The game never touches the database: it sends {mp:1} messages
+//      and the arcade relays them over Supabase Realtime, one private channel per room. Only signed-in Pocket Arcade members
+//      can join (policies on realtime.messages, see arcade_002_rooms.sql). Without an account the game keeps its own test rooms.
+const ROOM={ch:null,key:'',state:null,game:'',sid:Math.random().toString(36).slice(2,8)};   // sid: one per arcade page, so the same account on two devices counts as two players
+function toRoomGame(m){try{frame.contentWindow.postMessage({mp:1,...m},'*')}catch(_){}}
+function roomMe(){return ME?{id:ME.id+'.'+ROOM.sid,name:(ME.display_name||ME.username||'Birder').slice(0,24)}:null}
+function roomOnline(){return !!(ME&&WA&&WA.mode==='supabase'&&WA.client)}
+async function roomLeave(){const ch=ROOM.ch;ROOM.ch=null;ROOM.key='';ROOM.state=null;if(!ch)return;
+  try{await ch.untrack()}catch(_){}try{await WA.client.removeChannel(ch)}catch(_){}}
+function roomMembers(){const st=ROOM.ch?ROOM.ch.presenceState():{};
+  return Object.entries(st).map(([id,a])=>({id,state:((a&&a[a.length-1])||{}).state||{}}))}
+async function roomJoin(game,room,state){
+  game=String(game||'').replace(/[^a-z0-9-]/g,'').slice(0,30);room=String(room||'').toUpperCase().replace(/[^A-Z0-9-]/g,'').slice(0,16);
+  if(!game||!room)return toRoomGame({type:'error',message:'That room code doesn\'t look right.'});
+  const key='arcade:'+game+':'+room;
+  if(ROOM.ch&&ROOM.key===key){ROOM.state=state;try{await ROOM.ch.track({state})}catch(_){}toRoomGame({type:'joined',room,me:roomMe()});toRoomGame({type:'presence',members:roomMembers()});return}
+  await roomLeave();ROOM.key=key;ROOM.state=state;ROOM.game=game;
+  try{await WA.client.realtime.setAuth()}catch(_){}
+  const ch=WA.client.channel(key,{config:{private:true,presence:{key:roomMe().id},broadcast:{self:false}}});ROOM.ch=ch;
+  ch.on('presence',{event:'sync'},()=>{if(ROOM.ch===ch)toRoomGame({type:'presence',members:roomMembers()})});
+  ch.on('broadcast',{event:'m'},({payload})=>{if(ROOM.ch===ch&&payload&&payload.from!==roomMe().id)toRoomGame({type:'msg',from:payload.from,ev:payload.ev,data:payload.data})});
+  ch.subscribe(async st=>{if(ROOM.ch!==ch)return;
+    if(st==='SUBSCRIBED'){try{await ch.track({state:ROOM.state})}catch(_){}toRoomGame({type:'joined',room,me:roomMe()})}
+    else if(st==='CHANNEL_ERROR'||st==='TIMED_OUT'){toRoomGame({type:'error',message:st==='TIMED_OUT'?'The room didn\'t answer. Check your connection and try again.':'Couldn\'t open the room. Only Pocket Arcade members can play together.'});roomLeave()}})}
+addEventListener('message',e=>{const m=e.data;if(!m||m.mp!==1||e.source!==frame.contentWindow||!current)return;
+  if(m.type==='hello'){if(WA&&WA.mode==='supabase')toRoomGame({type:'hi',me:roomOnline()?roomMe():null});return}   // no answer in local test mode: the game uses its own test rooms
+  if(!roomOnline())return;
+  if(m.type==='join')roomJoin(m.game||current.id,m.room,m.state||{});
+  else if(m.type==='leave')roomLeave();
+  else if(m.type==='track'){ROOM.state=m.state||{};if(ROOM.ch)ROOM.ch.track({state:ROOM.state}).catch(()=>{})}
+  else if(m.type==='send'&&ROOM.ch)ROOM.ch.send({type:'broadcast',event:'m',payload:{from:roomMe().id,ev:String(m.ev||'').slice(0,20),data:m.data}}).catch(()=>{})});
 // ---- top bar: where the game is, its current goal, a meter, and short messages
 function setTop(title,detail,tone){$('nowText').textContent=title||'';$('nowDetail').textContent=detail||'';$('nowTitle').classList.toggle('danger',tone==='danger')}
 function setStatus(m){setTop(m.text||(current&&current.title),m.detail,m.tone);const mt=m.meter,box=$('meter');box.hidden=!mt;
@@ -521,7 +552,7 @@ let inserting=false;
 function insertCart(){if(inserting)return;const el=document.querySelector(`.cart[data-i="${libSel}"]`),G=GAMES[libSel];if(!G)return;
   const quick=matchMedia('(prefers-reduced-motion: reduce)').matches;inserting=true;el?.classList.add('inserting');
   setTimeout(()=>{inserting=false;launch(G);el?.classList.remove('inserting')},quick?0:280)}
-function showLibrary(){if(window.WAStats)WAStats.gameEnd();if(current){send({type:'pause',paused:true});const was=current;captureGame(was);setTimeout(()=>captureGame(was),600)}frame.hidden=true;frame.src='about:blank';current=null;labels={};setLabels({});
+function showLibrary(){roomLeave();if(window.WAStats)WAStats.gameEnd();if(current){send({type:'pause',paused:true});const was=current;captureGame(was);setTimeout(()=>captureGame(was),600)}frame.hidden=true;frame.src='about:blank';current=null;labels={};setLabels({});
   lib.hidden=false;loading.hidden=true;setTop('Library','Choose a game');$('meter').hidden=true;clearToast();hasTab=gameReady=false;tabClass();document.body.classList.remove('full');P.game=null;save();applyCaps();closeSheet(false)}
 function launch(G){restoreGame(G);if(window.WAStats)WAStats.gameStart(G.id);current=G;labels={};lib.hidden=true;loading.hidden=false;frame.hidden=false;frame.src=G.src;setTop(G.title,'Loading');$('meter').hidden=true;clearToast();hasTab=gameReady=false;tabClass();
   setLabels(G.buttons);applyMode();P.game=G.id;save()}
@@ -701,6 +732,7 @@ async function loadState(){let st=null;
   try{localStorage.setItem('pocket-prefs',JSON.stringify(P))}catch(_){}
   applySkin();hb.setAttribute('aria-pressed',P.haptic);applyMode()}
 async function startSession(){
+  roomLeave();
   const me=WA.me;
   if(!me){ME=null;MEMBER=null;GS={};renderAccount();return showSignIn()}
   ME=me;
