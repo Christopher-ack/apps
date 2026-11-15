@@ -434,7 +434,7 @@ async function roomJoin(game,room,state){
   const key='arcade:'+game+':'+room;
   if(ROOM.ch&&ROOM.key===key){ROOM.state=state;try{await ROOM.ch.track({state})}catch(_){}toRoomGame({type:'joined',room,me:roomMe()});toRoomGame({type:'presence',members:roomMembers()});return}
   await roomLeave();ROOM.key=key;ROOM.state=state;ROOM.game=game;
-  try{await WA.client.realtime.setAuth()}catch(_){}
+  try{const r=await WA.client.auth.getSession(),t=r&&r.data&&r.data.session&&r.data.session.access_token;if(t)await WA.client.realtime.setAuth(t)}catch(_){}   // private channels need the signed-in token
   const ch=WA.client.channel(key,{config:{private:true,presence:{key:roomMe().id},broadcast:{self:false}}});ROOM.ch=ch;
   ch.on('presence',{event:'sync'},()=>{if(ROOM.ch===ch)toRoomGame({type:'presence',members:roomMembers()})});
   ch.on('broadcast',{event:'m'},({payload})=>{if(ROOM.ch===ch&&payload&&payload.from!==roomMe().id)toRoomGame({type:'msg',from:payload.from,ev:payload.ev,data:payload.data})});
