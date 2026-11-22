@@ -1,0 +1,1532 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Volleyball Notebook</title>
+<meta name="description" content="A volleyball coach's notebook: roster, lineups for every set, rotations, subs, playing time, stats, a scorecard, a scoreboard and animated drills.">
+<meta name="application-name" content="Volleyball Notebook">
+<meta name="apple-mobile-web-app-title" content="VB Notebook">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0E1A3B">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="apple-touch-icon" sizes="167x167" href="apple-touch-icon-167.png">
+<link rel="apple-touch-icon" sizes="152x152" href="apple-touch-icon-152.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+:root{
+  --navy:#0E1A3B; --navy2:#1A2B5E; --orange:#FF7A1A; --orange2:#E35F00; --blue:#2F7BFF;
+  --bg:#F2F3F7; --card:#FFFFFF; --ink:#0E1A3B; --muted:#636D88; --line:#DCE0EA; --soft:#EEF0F6;
+  --court:#EDA25E; --court2:#E08E45; --ok:#1E9E6A; --warn:#E8A317; --bad:#D6453D;
+  --us:var(--orange); --them:var(--blue);
+  --head:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,sans-serif;
+  --st:env(safe-area-inset-top,0px); --sb:env(safe-area-inset-bottom,0px);
+}
+html,body{margin:0;height:100%}
+body{font:15px/1.4 var(--body);color:var(--ink);background:var(--bg);-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent;overscroll-behavior-y:none}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
+input,select,textarea{font:inherit;color:inherit}
+a{color:var(--orange2)}
+[hidden]{display:none!important}
+#app{min-height:100%;display:flex;flex-direction:column}
+
+/* Top bar */
+.top{position:sticky;top:0;z-index:20;background:var(--navy);color:#fff;padding:calc(var(--st) + 9px) 12px 9px 14px;display:flex;align-items:center;gap:8px}
+.brand{display:flex;align-items:center;gap:9px;flex:none}
+.brand .logo{width:34px;height:34px;flex:none}
+.brand .bt{display:flex;flex-direction:column;line-height:1}
+.brand .bt small{font:700 10.5px/1 var(--head);letter-spacing:2.2px;color:var(--orange);text-transform:uppercase}
+.brand .bt span{font:700 21px/1 var(--head);letter-spacing:.3px;margin-top:2px}
+.top .sp{flex:1}
+.gd{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.1);border-radius:999px;padding:7px 12px;font-weight:600;font-size:14px;max-width:44vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gd small{opacity:.7;font-weight:500}
+.gear{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none}
+.gear.on{background:rgba(255,255,255,.16)}
+.gear svg{width:22px;height:22px}
+
+main{flex:1;padding:14px 14px calc(84px + var(--sb));max-width:1100px;width:100%;margin:0 auto}
+
+/* Bottom nav */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;background:#fff;border-top:1px solid var(--line);display:flex;padding:6px 4px calc(6px + var(--sb))}
+nav.tabs button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;font:600 11.5px/1 var(--body);color:var(--muted);border-radius:12px;min-width:0}
+nav.tabs button svg{width:24px;height:24px}
+nav.tabs button.on{color:var(--orange2)}
+
+
+/* Common */
+h2{font:700 24px/1.1 var(--head);text-transform:uppercase;letter-spacing:.3px;margin:4px 0 10px}
+h3{font:700 18px/1.1 var(--head);text-transform:uppercase;letter-spacing:.3px;margin:0 0 8px}
+.muted{color:var(--muted)}
+.card{background:var(--card);border-radius:16px;padding:14px;box-shadow:0 1px 2px rgba(14,26,59,.06);border:1px solid var(--line)}
+.card + .card{margin-top:12px}
+.row{display:flex;align-items:center;gap:8px}
+.wrap{flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 16px;border-radius:12px;font-weight:700;background:var(--soft);color:var(--ink);text-decoration:none}
+.btn.pri{background:var(--orange);color:#fff}
+.btn.dark{background:var(--navy);color:#fff}
+.btn.ghost{background:transparent;border:1.5px solid var(--line)}
+.btn.bad{background:#FBE6E4;color:var(--bad)}
+.btn.sm{min-height:34px;padding:0 12px;font-size:14px;border-radius:10px}
+.btn.wide{width:100%}
+.btn:disabled{opacity:.45}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;font:700 12px/1.2 var(--body);background:var(--soft);color:var(--muted);white-space:nowrap}
+.pill.ok{background:#DDF3EA;color:#137551}
+.pill.part{background:#FFF0CF;color:#8A5B00}
+.pill.live{background:#FFE5D3;color:var(--orange2)}
+.pill.done{background:var(--navy);color:#fff}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none;margin:0 -14px;padding-left:14px;padding-right:14px}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;min-height:38px;padding:0 14px;border-radius:999px;background:#fff;border:1.5px solid var(--line);font-weight:700;font-size:14px;display:inline-flex;align-items:center;gap:6px}
+.chip.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.chip .dot{width:7px;height:7px;border-radius:50%;background:var(--orange)}
+.chip.alt{border-style:dashed}
+.empty{text-align:center;padding:36px 18px}
+.empty img{width:84px;height:84px;border-radius:20px;margin-bottom:8px}
+.empty p{color:var(--muted);max-width:360px;margin:6px auto 18px}
+.num{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:34px;padding:0 6px;border-radius:10px;background:var(--navy);color:#fff;font:700 18px/1 var(--head)}
+.num.o{background:var(--orange)}
+.lbl{font:600 12px/1 var(--body);text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.field input,.field select,.field textarea{min-height:46px;border:1.5px solid var(--line);border-radius:12px;padding:0 12px;background:#fff;font-size:16px;width:100%}
+.field textarea{padding:10px 12px;min-height:70px;resize:vertical}
+.seg{display:flex;background:var(--soft);border-radius:12px;padding:3px}
+.seg button{flex:1;min-height:38px;border-radius:9px;font-weight:700;font-size:14px;color:var(--muted);padding:0 6px}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.1)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* Court (lineup) */
+.court{position:relative;background:linear-gradient(var(--court),var(--court2));border-radius:14px;padding:14px 10px 12px;border:3px solid #fff;box-shadow:0 0 0 1px var(--line), inset 0 0 0 2px rgba(255,255,255,.35);max-width:520px;margin:0 auto}
+.net{height:10px;margin:-14px -10px 12px;background:repeating-linear-gradient(90deg,#fff 0 2px,transparent 2px 8px),var(--navy);border-radius:10px 10px 0 0;position:relative}
+.net::after{content:"NET";position:absolute;right:8px;top:-1px;font:700 9px/12px var(--head);color:#fff;letter-spacing:1px;background:var(--navy);padding:0 4px}
+.atk{position:absolute;left:0;right:0;top:calc(50% + 2px);border-top:2px dashed rgba(255,255,255,.75)}
+.cgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;position:relative}
+.spot{position:relative;background:rgba(255,255,255,.92);border-radius:14px;min-height:98px;padding:10px 6px 8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-align:center;box-shadow:0 2px 0 rgba(14,26,59,.15)}
+.spot .pos{position:absolute;top:6px;left:8px;font:700 12px/1 var(--head);color:var(--muted)}
+.spot .slot{position:absolute;top:6px;right:8px;font:700 11px/1 var(--head);color:var(--muted);letter-spacing:.5px}
+.spot .jn{font:800 32px/1 var(--head);color:var(--navy)}
+.spot .nm{font-weight:700;font-size:13px;line-height:1.15;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.spot .rl{font-size:11px;color:var(--muted);font-weight:600}
+.spot.empty-s{background:rgba(255,255,255,.45);border:2px dashed rgba(255,255,255,.95);box-shadow:none;color:#fff;font-weight:700}
+.spot.empty-s .pos{color:#fff}
+.spot.srv{box-shadow:0 0 0 3px var(--orange),0 2px 0 rgba(14,26,59,.15)}
+.spot .ball{position:absolute;bottom:-9px;right:-6px;width:24px;height:24px}
+.spot.lib{background:#E9F1FF}
+.spot.lib .jn{color:var(--blue)}
+.spot .tm{position:absolute;bottom:6px;left:8px;font:700 11px/1 var(--head);color:var(--muted)}
+.court.mini{padding:10px 6px 8px;border-width:2px}
+.court.mini .net{margin:-10px -6px 8px;height:7px}
+.court.mini .net::after{display:none}
+.court.mini .cgrid{gap:6px}
+.court.mini .spot{min-height:58px;padding:6px 3px;border-radius:10px}
+.court.mini .spot .jn{font-size:22px}
+.court.mini .spot .nm{font-size:11px}
+.court.mini .spot .pos{font-size:10px;top:4px;left:5px}
+.court.mini .spot .slot,.court.mini .spot .rl{display:none}
+
+/* Live strip */
+.strip{display:flex;align-items:stretch;gap:8px;margin-bottom:12px}
+.tbox{flex:1;border-radius:14px;padding:10px 12px;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:8px;position:relative;min-width:0}
+.tbox.us{background:var(--us)} .tbox.them{background:var(--them)}
+.tbox .tn{font:700 15px/1.1 var(--head);text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tbox .sc{font:800 44px/1 var(--head)}
+.tbox .sv{font:600 11px/1 var(--body);opacity:.9;display:flex;align-items:center;gap:4px;margin-top:4px}
+.tbox .sv svg{width:14px;height:14px}
+.ctl{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px auto 0;max-width:520px}
+.ctl .btn{min-height:54px;font-size:16px}
+.ctl .btn.us{background:var(--us);color:#fff}
+.ctl .btn.them{background:var(--them);color:#fff}
+.meta{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:10px 0}
+.bench{display:flex;gap:6px;flex-wrap:wrap}
+.bp{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:5px 10px 5px 5px;font-weight:600;font-size:14px}
+.bp .num{min-width:28px;height:28px;font-size:15px;border-radius:8px;background:var(--muted)}
+.banner{background:#FFF0CF;color:#6B4600;border-radius:12px;padding:10px 12px;font-weight:600;display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.banner .btn{margin-left:auto}
+.banner.info{background:#E9F1FF;color:#123E8C}
+
+.layout{display:grid;gap:14px}
+@media (min-width:820px){
+  .layout.two{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);align-items:start}
+  .plan{grid-template-columns:repeat(3,1fr)!important}
+  .dlist{grid-template-columns:repeat(3,1fr)!important}
+}
+.plan{display:grid;grid-template-columns:1fr;gap:12px}
+.plan .card{padding:12px;margin:0}
+@media (min-width:560px) and (max-width:819px){.plan,.dlist{grid-template-columns:repeat(2,1fr)!important}}
+
+/* Tables */
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{font:600 11px/1.1 var(--body);text-transform:uppercase;letter-spacing:.4px;color:var(--muted);text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:bottom}
+.tbl td{padding:8px 6px;border-bottom:1px solid var(--soft);vertical-align:middle}
+.tbl td.c,.tbl th.c{text-align:center}
+.tbl .sm{font-size:12px;color:var(--muted)}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+@media (min-width:560px){.tiles{grid-template-columns:repeat(4,1fr)}}
+.tile{background:var(--soft);border-radius:12px;padding:10px 12px}
+.tile b{display:block;font:800 28px/1 var(--head)}
+.tile span{font-size:12px;color:var(--muted);font-weight:600}
+.tile em{font-style:normal;font-size:12px;color:var(--muted);display:block;margin-top:2px}
+.bar{height:8px;border-radius:4px;background:var(--soft);overflow:hidden;min-width:60px}
+.bar i{display:block;height:100%;background:var(--ok)}
+.pm{font:700 15px var(--head)}
+.pm.up{color:var(--ok)} .pm.dn{color:var(--bad)}
+.tile b .pm{font-size:inherit}
+
+/* Roster */
+.plist{display:flex;flex-direction:column}
+.prow{display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:1px solid var(--soft);text-align:left;width:100%}
+.prow:last-child{border-bottom:0}
+.prow .nm{font-weight:700;flex:1}
+.prow .num{min-width:40px;height:40px;font-size:20px;border-radius:12px}
+
+/* Scoresheet */
+.ss{background:#FFFDF7;border:1.5px solid #CFC8B5;border-radius:12px;padding:10px;font-family:var(--head)}
+.ssh{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.ssh .tag{width:28px;height:28px;border-radius:50%;color:#fff;font:800 15px/28px var(--head);text-align:center}
+.ssh .tn{font:800 18px/1 var(--head);text-transform:uppercase;letter-spacing:.4px}
+.ssh .big{margin-left:auto;font:800 30px/1 var(--head)}
+.sg{width:100%;border-collapse:collapse;table-layout:fixed}
+.sg th,.sg td{border:1px solid #CFC8B5;text-align:center;padding:3px 2px;vertical-align:top}
+.sg th{font:700 13px/1.4 var(--head);background:#F3EEDF}
+.sg td.rh{font:600 10px/1.2 var(--body);text-transform:uppercase;color:#6D6650;background:#F8F5EA;width:56px;vertical-align:middle;letter-spacing:.3px}
+.sg .st{font:800 22px/1.2 var(--head)}
+.sg .st.cur{color:var(--orange2);text-decoration:underline;text-underline-offset:3px}
+.sg .sb{display:block;font:600 13px/1.25 var(--head);color:#333}
+.sg .sb i{font-style:normal;color:#8B8470;font-size:11px}
+.sg .tb{display:block;margin:2px auto;min-width:30px;border:1.5px solid #9C9580;border-radius:4px;font:700 14px/20px var(--head)}
+.sg .tb.open{border-style:dashed;color:var(--orange2);border-color:var(--orange)}
+.runs{display:grid;grid-template-columns:repeat(15,1fr);gap:2px;margin-top:8px}
+.runs span{font:700 13px/22px var(--head);text-align:center;color:#8B8470;position:relative;border-radius:4px}
+.runs span.x{color:var(--ink)}
+.runs span.x::after{content:"";position:absolute;left:18%;right:18%;top:50%;border-top:2px solid currentColor;transform:rotate(-55deg)}
+.runs span.last{box-shadow:0 0 0 1.5px var(--ink);border-radius:50%}
+.ssf{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font:600 13px/1.3 var(--body);color:#555}
+.ssf b{font-family:var(--head);font-size:15px;color:var(--ink)}
+.tob{display:inline-block;min-width:44px;border:1.5px solid #9C9580;border-radius:4px;text-align:center;font:700 13px/20px var(--head);margin-left:4px}
+.sclog{font:500 13px/1.5 var(--body);max-height:220px;overflow:auto}
+.oppin{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.oppin label{display:flex;flex-direction:column;align-items:center;gap:4px;font:700 13px var(--head)}
+.oppin input{width:100%;min-height:44px;text-align:center;border:1.5px solid var(--line);border-radius:10px;font:700 20px var(--head)}
+
+/* Scoreboard */
+.sbwrap{position:fixed;left:0;right:0;top:0;bottom:calc(63px + var(--sb));display:flex;flex-direction:column;background:#000;z-index:10}
+.sbt{display:flex;flex:1;min-height:0}
+.half{flex:1;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;user-select:none;-webkit-user-select:none;touch-action:manipulation;overflow:hidden}
+.half.h{background:var(--orange)} .half.a{background:var(--blue)}
+.half .nmb{position:absolute;top:calc(var(--st) + 14px);left:0;right:0;text-align:center;font:800 clamp(22px,4.5vw,44px)/1 var(--head);text-transform:uppercase;letter-spacing:1px;padding:0 54px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.half .pts{font:800 clamp(120px,30vw,340px)/.85 var(--head);font-variant-numeric:tabular-nums;letter-spacing:-4px}
+.half .sets{display:flex;gap:8px;margin-top:16px}
+.half .sets i{width:16px;height:16px;border-radius:50%;border:2.5px solid #fff;display:block}
+.half .sets i.f{background:#fff}
+.half .minus{position:absolute;bottom:14px;width:56px;height:56px;border-radius:50%;background:rgba(0,0,0,.18);font:800 34px/1 var(--head);display:flex;align-items:center;justify-content:center}
+.half.h .minus{left:14px} .half.a .minus{right:14px}
+.half .srv{position:absolute;top:calc(var(--st) + 12px);width:40px;height:40px}
+.half.h .srv{left:10px} .half.a .srv{right:10px}
+.half .edit{position:absolute;bottom:20px;font:600 13px var(--body);opacity:.85;background:rgba(0,0,0,.15);padding:8px 12px;border-radius:999px}
+.half.h .edit{right:14px} .half.a .edit{left:14px}
+.sbbar{display:flex;gap:8px;justify-content:center;padding:8px;background:#0b0b0b}
+.sbbar .btn{background:#222;color:#fff;min-height:40px}
+
+/* Drills */
+.dlist{display:grid;grid-template-columns:1fr;gap:12px}
+.dcard{display:flex;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(14,26,59,.06)}
+.dcard .thumb{background:#2E4A8A;width:118px;flex:none;display:flex;align-items:center}
+.dcard .thumb svg{width:100%;height:auto;display:block}
+.dcard .dt{flex:1;min-width:0}
+.dcard .dt{padding:10px 12px 12px}
+.dcard .dt b{font:700 19px/1.1 var(--head);text-transform:uppercase;letter-spacing:.3px;display:block}
+.dcard .dt p{margin:4px 0 0;color:var(--muted);font-size:13.5px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.dfield{background:#2E4A8A;border-radius:16px;overflow:hidden;touch-action:none;max-width:560px;margin:0 auto;position:relative}
+.dfield svg{display:block;width:100%;height:auto;max-height:calc(100vh - 300px);user-select:none;-webkit-user-select:none}
+.dnote{min-height:48px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-weight:600;margin:10px auto 0;max-width:560px;display:flex;gap:10px;align-items:flex-start}
+.dnote .sn{flex:none;font:800 13px/22px var(--head);background:var(--navy);color:#fff;border-radius:6px;padding:0 7px;letter-spacing:.4px}
+.dctl{display:flex;gap:8px;justify-content:center;align-items:center;margin:10px auto 0;max-width:560px}
+.dctl .btn{min-width:52px}
+.dctl .play{min-width:110px}
+.steps{display:flex;gap:6px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none}
+.steps::-webkit-scrollbar{display:none}
+.tools{display:flex;gap:6px;flex-wrap:wrap}
+.tok{cursor:grab}
+.tok.sel circle.r,.tok.sel rect.r,.tok.sel path.r{stroke:#FFD23F;stroke-width:.14}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted);font-weight:600;margin-top:8px;justify-content:center}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;vertical-align:-2px;margin-right:4px}
+
+/* Sheet */
+.scrim{position:fixed;inset:0;background:rgba(14,26,59,.45);z-index:50;display:flex;align-items:flex-end;justify-content:center;animation:fade .15s}
+.sheet{background:#fff;width:100%;max-width:560px;max-height:88vh;overflow:auto;border-radius:20px 20px 0 0;padding:8px 16px calc(18px + var(--sb));animation:up .2s ease-out}
+@media (min-width:700px){.scrim{align-items:center}.sheet{border-radius:20px}}
+.grab{width:40px;height:5px;border-radius:3px;background:var(--line);margin:4px auto 12px}
+.sheet .opt{display:flex;align-items:center;gap:12px;width:100%;padding:10px 6px;border-bottom:1px solid var(--soft);text-align:left;font-weight:600}
+.sheet .opt:last-child{border-bottom:0}
+.sheet .opt .sub{margin-left:auto;font-size:12px;color:var(--muted);font-weight:600}
+@keyframes up{from{transform:translateY(30px);opacity:0}}
+@keyframes fade{from{opacity:0}}
+.toast{position:fixed;left:50%;bottom:calc(84px + var(--sb));transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 16px;border-radius:12px;font-weight:600;z-index:60;box-shadow:0 6px 20px rgba(0,0,0,.2);animation:up .2s;max-width:90vw;text-align:center}
+.stat{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+.stat div{background:var(--soft);border-radius:12px;padding:8px;text-align:center}
+.stat b{display:block;font:800 24px/1 var(--head)}
+.stat span{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase}
+.ibtn{width:38px;height:38px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center}
+.ibtn:active{background:var(--soft)}
+.pill.sw{background:#E9F1FF;color:#123E8C}
+.dcard{cursor:pointer}
+.dcard.shared{border-color:#FFB37A;box-shadow:inset 4px 0 0 var(--orange),0 1px 2px rgba(14,26,59,.06)}
+.helpbtn{width:30px;height:30px;border-radius:50%;background:var(--navy);color:#fff;font:800 17px/30px var(--head);text-align:center;flex:none;margin-left:6px}
+.tourdim{position:fixed;inset:0;z-index:80}
+.tourhole{position:fixed;z-index:81;border-radius:14px;box-shadow:0 0 0 3px var(--orange),0 0 0 9999px rgba(8,14,34,.62);pointer-events:none;transition:all .25s ease}
+.tourcard{position:fixed;z-index:82;width:min(360px,calc(100vw - 24px));background:#fff;border-radius:16px;padding:14px 16px 12px;box-shadow:0 14px 40px rgba(0,0,0,.35);transition:top .25s ease,left .25s ease}
+.tourcard h3{margin:0 0 6px}
+.tourcard p{margin:0 0 12px;font-size:15px;line-height:1.45}
+.tourcard .tn{font:700 12px var(--body);color:var(--muted);letter-spacing:.4px}
+.tourcard .dots{display:flex;gap:4px;margin-right:auto;flex-wrap:wrap;max-width:140px}
+.tourcard .dots i{width:6px;height:6px;border-radius:50%;background:var(--line)}
+.tourcard .dots i.on{background:var(--orange)}
+.qg{margin:0;padding-left:20px;line-height:1.5}
+.qg li{margin-bottom:8px}
+.rolebar{display:flex;align-items:center;gap:8px;background:#E9F1FF;color:#123E8C;border-radius:12px;padding:8px 12px;font-size:13.5px;margin-bottom:12px}
+.rolebar svg{width:18px;height:18px;flex:none}
+.err{color:var(--bad);font-weight:600;font-size:14px;min-height:20px}
+.acct{display:flex;align-items:center;gap:10px;background:var(--soft);border-radius:12px;padding:10px 12px;margin-bottom:10px}
+.acct .av{width:36px;height:36px;border-radius:50%;overflow:hidden;flex:none}
+/* Side rail on iPad and larger */
+@media (min-width:700px){
+  nav.tabs{top:0;right:auto;width:92px;flex-direction:column;justify-content:flex-start;gap:4px;border-top:0;border-right:1px solid var(--line);padding:calc(var(--st) + 66px) 8px calc(12px + var(--sb))}
+  nav.tabs button{flex:none;padding:12px 0;font-size:12px;gap:5px}
+  nav.tabs button.on{background:#FFF1E6}
+  nav.tabs button svg{width:26px;height:26px}
+  .top{margin-left:0;z-index:35}
+  main{padding-left:calc(92px + 20px);padding-right:20px;padding-bottom:calc(24px + var(--sb));max-width:none}
+  main>*{max-width:1100px;margin-left:auto;margin-right:auto}
+  .sbwrap{left:92px;bottom:0}
+  .toast{bottom:calc(24px + var(--sb));left:calc(50% + 46px)}
+  .chips{margin:0;padding-left:0;padding-right:0}
+}
+
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="top">
+    <div class="brand"><svg class="logo" viewBox="-54 -54 108 108" aria-hidden="true"><defs><clipPath id="slg0"><path d="M0 0 A58 58 0 0 1 0.00 -50.00 A50 50 0 0 1 43.30 25.00 A58 58 0 0 0 0 0 Z"/></clipPath><clipPath id="slg1"><path d="M0 0 A58 58 0 0 1 43.30 25.00 A50 50 0 0 1 -43.30 25.00 A58 58 0 0 0 0 0 Z"/></clipPath><clipPath id="slg2"><path d="M0 0 A58 58 0 0 1 -43.30 25.00 A50 50 0 0 1 0.00 -50.00 A58 58 0 0 0 0 0 Z"/></clipPath><clipPath id="balllg"><circle r="49"/></clipPath></defs><circle r="50" fill="#fff"/><g clip-path="url(#balllg)"><circle cx="-52.34" cy="-25.00" r="77.5" fill="none" stroke="#FF7A1A" stroke-width="13" clip-path="url(#slg0)"/><circle cx="47.82" cy="-32.82" r="77.5" fill="none" stroke="#FF7A1A" stroke-width="13" clip-path="url(#slg1)"/><circle cx="4.52" cy="57.82" r="77.5" fill="none" stroke="#FF7A1A" stroke-width="13" clip-path="url(#slg2)"/><g fill="none" stroke="#0E1A3B" stroke-width="4" stroke-linecap="round"><path d="M0 0 A58 58 0 0 1 0.00 -50.00"/><path d="M0 0 A58 58 0 0 1 43.30 25.00"/><path d="M0 0 A58 58 0 0 1 -43.30 25.00"/><circle cx="-52.34" cy="-25.00" r="71" clip-path="url(#slg0)"/><circle cx="-52.34" cy="-25.00" r="84" clip-path="url(#slg0)"/><circle cx="47.82" cy="-32.82" r="71" clip-path="url(#slg1)"/><circle cx="47.82" cy="-32.82" r="84" clip-path="url(#slg1)"/><circle cx="4.52" cy="57.82" r="71" clip-path="url(#slg2)"/><circle cx="4.52" cy="57.82" r="84" clip-path="url(#slg2)"/></g></g><circle r="48.3" fill="none" stroke="#0E1A3B" stroke-width="4"/></svg><div class="bt"><small>Volleyball</small><span>Notebook</span></div></div>
+    <div class="sp"></div>
+    <button class="gd" id="gdBtn" data-act="games" hidden></button>
+    <button class="gear" id="gearBtn" data-act="tab" data-tab="settings" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+  </header>
+  <main id="main"></main>
+  <nav class="tabs" id="tabs">
+    <button data-act="tab" data-tab="game"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 12h18M9 4v16M15 4v16"/></svg>Lineup</button>
+    <button data-act="tab" data-tab="sheet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 11h7M9 15h7M9 19h4"/></svg>Scorecard</button>
+    <button data-act="tab" data-tab="board"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M12 5v14M6.5 10v4M16 10h2.5v2H16v2h2.5"/></svg>Scoreboard</button>
+    <button data-act="tab" data-tab="drills"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M8 16c3-1 4-4 6-6" stroke-dasharray="2 2.6"/><path d="M14 10l1.4-3.2M14 10l3.2-1"/><path d="M4 4l4 4M8 4L4 8"/></svg>Drills</button>
+    <button data-act="tab" data-tab="roster"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><circle cx="17" cy="9" r="2.5"/><path d="M17 14c2.3 0 4 1.4 4.5 4"/></svg>Roster</button>
+  </nav>
+</div>
+<script src="../shared/config.js"></script>
+<script src="../shared/vendor/supabase.js"></script>
+<script src="../shared/account.js"></script>
+<script>
+(function(){
+'use strict';
+const APP='volleyball';
+const DEVICE_KEY='vbnotebook.v1', MODE_KEY='vbnotebook.saveTo', ACCT_KEY='vbnotebook.acct.', LOCAL_KEY='vbnotebook.local.';
+const POSITIONS=['OH','MH','S','OPP','L','DS'];
+const POSNAME={OH:'Outside',MH:'Middle',S:'Setter',OPP:'Opposite',L:'Libero',DS:'Defensive'};
+const ROMAN=['I','II','III','IV','V','VI'];
+const LEVELS={
+  ms:{name:'Middle school',sets:3,pts:25,decider:15,subs:18,tos:2,note:'Most middle school leagues play high school (NFHS) rules: best of 3, the third set to 15, 18 subs a set and 2 timeouts. Leagues can change these, so check yours.'},
+  hs:{name:'High school (NFHS)',sets:5,pts:25,decider:15,subs:18,tos:2,note:'Best of 5 with the fifth set to 15, 18 subs a set and 2 timeouts. Libero swaps don\'t count as subs.'},
+  club:{name:'Club (USA Volleyball)',sets:3,pts:25,decider:15,subs:12,tos:2,note:'12 subs a set. Many club events play best of 3 with the third set to 15.'},
+  college:{name:'College (NCAA)',sets:5,pts:25,decider:15,subs:15,tos:2,note:'Best of 5, 15 subs a set.'},
+  intl:{name:'International (FIVB)',sets:5,pts:25,decider:15,subs:6,tos:2,note:'Only 6 subs a set.'},
+  custom:{name:'Custom',note:'Set your own numbers below.'}
+};
+const BALL='<svg class="ball" viewBox="-54 -54 108 108"><defs><clipPath id="ssv0"><path d="M0 0 A58 58 0 0 1 0.00 -50.00 A50 50 0 0 1 43.30 25.00 A58 58 0 0 0 0 0 Z"/></clipPath><clipPath id="ssv1"><path d="M0 0 A58 58 0 0 1 43.30 25.00 A50 50 0 0 1 -43.30 25.00 A58 58 0 0 0 0 0 Z"/></clipPath><clipPath id="ssv2"><path d="M0 0 A58 58 0 0 1 -43.30 25.00 A50 50 0 0 1 0.00 -50.00 A58 58 0 0 0 0 0 Z"/></clipPath><clipPath id="ballsv"><circle r="49"/></clipPath></defs><circle r="50" fill="#fff"/><g clip-path="url(#ballsv)"><circle cx="-52.34" cy="-25.00" r="77.5" fill="none" stroke="#FF7A1A" stroke-width="13" clip-path="url(#ssv0)"/><circle cx="47.82" cy="-32.82" r="77.5" fill="none" stroke="#FF7A1A" stroke-width="13" clip-path="url(#ssv1)"/><circle cx="4.52" cy="57.82" r="77.5" fill="none" stroke="#FF7A1A" stroke-width="13" clip-path="url(#ssv2)"/><g fill="none" stroke="#0E1A3B" stroke-width="5" stroke-linecap="round"><path d="M0 0 A58 58 0 0 1 0.00 -50.00"/><path d="M0 0 A58 58 0 0 1 43.30 25.00"/><path d="M0 0 A58 58 0 0 1 -43.30 25.00"/><circle cx="-52.34" cy="-25.00" r="71" clip-path="url(#ssv0)"/><circle cx="-52.34" cy="-25.00" r="84" clip-path="url(#ssv0)"/><circle cx="47.82" cy="-32.82" r="71" clip-path="url(#ssv1)"/><circle cx="47.82" cy="-32.82" r="84" clip-path="url(#ssv1)"/><circle cx="4.52" cy="57.82" r="71" clip-path="url(#ssv2)"/><circle cx="4.52" cy="57.82" r="84" clip-path="url(#ssv2)"/></g></g><circle r="48.3" fill="none" stroke="#0E1A3B" stroke-width="5"/></svg>';
+const BALLW='<svg viewBox="-54 -54 108 108"><defs><clipPath id="ssw0"><path d="M0 0 A58 58 0 0 1 0.00 -50.00 A50 50 0 0 1 43.30 25.00 A58 58 0 0 0 0 0 Z"/></clipPath><clipPath id="ssw1"><path d="M0 0 A58 58 0 0 1 43.30 25.00 A50 50 0 0 1 -43.30 25.00 A58 58 0 0 0 0 0 Z"/></clipPath><clipPath id="ssw2"><path d="M0 0 A58 58 0 0 1 -43.30 25.00 A50 50 0 0 1 0.00 -50.00 A58 58 0 0 0 0 0 Z"/></clipPath><clipPath id="ballsw"><circle r="49"/></clipPath></defs><circle r="50" fill="#fff"/><g clip-path="url(#ballsw)"><circle cx="-52.34" cy="-25.00" r="77.5" fill="none" stroke="#FF7A1A" stroke-width="13" clip-path="url(#ssw0)"/><circle cx="47.82" cy="-32.82" r="77.5" fill="none" stroke="#FF7A1A" stroke-width="13" clip-path="url(#ssw1)"/><circle cx="4.52" cy="57.82" r="77.5" fill="none" stroke="#FF7A1A" stroke-width="13" clip-path="url(#ssw2)"/><g fill="none" stroke="#0E1A3B" stroke-width="5" stroke-linecap="round"><path d="M0 0 A58 58 0 0 1 0.00 -50.00"/><path d="M0 0 A58 58 0 0 1 43.30 25.00"/><path d="M0 0 A58 58 0 0 1 -43.30 25.00"/><circle cx="-52.34" cy="-25.00" r="71" clip-path="url(#ssw0)"/><circle cx="-52.34" cy="-25.00" r="84" clip-path="url(#ssw0)"/><circle cx="47.82" cy="-32.82" r="71" clip-path="url(#ssw1)"/><circle cx="47.82" cy="-32.82" r="84" clip-path="url(#ssw1)"/><circle cx="4.52" cy="57.82" r="71" clip-path="url(#ssw2)"/><circle cx="4.52" cy="57.82" r="84" clip-path="url(#ssw2)"/></g></g><circle r="48.3" fill="none" stroke="#0E1A3B" stroke-width="5"/></svg>';
+
+/* ================= state ================= */
+const uid=()=>Math.random().toString(36).slice(2,10);
+const RULES0={level:'ms',sets:3,pts:25,decider:15,playAll:false,subs:18,tos:2,measure:'points'};
+function blankTeam(name){return {id:uid(),name:name||'Our Team',players:[],games:[],cur:null,settings:Object.assign({},RULES0)}}
+function blank(){const t=blankTeam();return {v:1,teams:[t],teamId:t.id,drills:[],favDrills:[],ui:{tab:'game',view:'plan',set:0,stat:'all',dfocus:'All',rview:'players',rsort:'num',player:null},
+  board:{home:'Home',away:'Away',h:0,a:0,hs:0,as:0,serve:'h',swap:false,hist:[]}}}
+// Each team keeps its own roster, game days and rules. S.players, S.games, S.cur, S.team and S.settings point at the current team.
+function norm(s){
+  const b=blank();if(!s||s.v!==1)return attach(b);
+  const o=Object.assign({},b,s,{ui:Object.assign(b.ui,s.ui||{}),board:Object.assign(b.board,s.board||{})});
+  if(!Array.isArray(s.teams)||!s.teams.length){   // before teams existed: one roster at the top level
+    const t=blankTeam((s.team&&s.team.name)||'Our Team');t.players=s.players||[];t.games=s.games||[];t.cur=s.cur||null;Object.assign(t.settings,s.settings||{});
+    o.teams=[t];o.teamId=t.id}
+  ['players','games','cur','team','settings'].forEach(k=>delete o[k]);
+  o.teams.forEach(t=>{t.settings=Object.assign({},RULES0,t.settings||{});if(t.settings.subLimit){delete t.settings.subLimit}
+    ['players','games'].forEach(k=>{if(!Array.isArray(t[k]))t[k]=[]});if(!t.cur&&t.games.length)t.cur=t.games[t.games.length-1].id;if(!t.name)t.name='Our Team'});
+  if(!o.teams.some(t=>t.id===o.teamId))o.teamId=o.teams[0].id;
+  if(!Array.isArray(o.drills))o.drills=[];if(!Array.isArray(o.favDrills))o.favDrills=[];
+  return attach(o)}
+function attach(o){const T=()=>o.teams.find(t=>t.id===o.teamId)||o.teams[0];
+  const prop=(k,get,set)=>Object.defineProperty(o,k,{get,set,enumerable:false,configurable:true});
+  prop('players',()=>T().players,v=>{T().players=v});prop('games',()=>T().games,v=>{T().games=v});prop('cur',()=>T().cur,v=>{T().cur=v});
+  prop('team',()=>T(),()=>{});prop('settings',()=>T().settings,v=>{T().settings=v});return o}
+const lsGet=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}};
+const lsSet=(k,v)=>{try{if(v==null)localStorage.removeItem(k);else localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+const hasData=s=>!!s&&((s.players&&s.players.length)||(s.games&&s.games.length)||(s.drills&&s.drills.length)||(Array.isArray(s.teams)&&s.teams.some(t=>(t.players&&t.players.length)||(t.games&&t.games.length))));
+let S=norm(lsGet(DEVICE_KEY));
+let saveTo='device';try{if(localStorage.getItem(MODE_KEY)==='account')saveTo='account'}catch(e){}
+let ME=null, syncState='', saveTimer=null, saving=null;
+const WA=window.WebApps||null;
+const onAccount=()=>saveTo==='account'&&!!ME;
+const store={
+  async load(){if(WA.mode==='supabase'){const r=await WA.client.from('volleyball_state').select('state').eq('user_id',ME.id).maybeSingle();if(r.error)throw r.error;return r.data?r.data.state:null}return lsGet(LOCAL_KEY+ME.id)},
+  async put(st){if(WA.mode==='supabase'){const r=await WA.client.from('volleyball_state').upsert({user_id:ME.id,state:st,updated_at:new Date().toISOString()});if(r.error)throw r.error;return}lsSet(LOCAL_KEY+ME.id,st)}
+};
+function save(){
+  if(DEMO)return;
+  if(onAccount()){lsSet(ACCT_KEY+ME.id,S);clearTimeout(saveTimer);syncState='saving';saveTimer=setTimeout(pushState,700);if(S.team&&S.team.cloud)queueCloud()}
+  else lsSet(DEVICE_KEY,S);
+}
+const personal=st=>{const o=JSON.parse(JSON.stringify(st));o.teams=(o.teams||[]).filter(t=>!t.cloud);return o};
+async function pushState(){clearTimeout(saveTimer);saveTimer=null;if(!onAccount())return;const snap=personal(S);
+  const run=async()=>{try{await store.put(snap);syncState='saved';}catch(e){syncState='error';toast("Couldn't save to your account. It will try again on your next change.")}if(S.ui.tab==='settings')render()};
+  saving=(saving||Promise.resolve()).then(run);return saving}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&saveTimer)pushState()});
+async function startAccount(){
+  if(!WA||!WA.me){ME=null;S=norm(lsGet(DEVICE_KEY));render();return}
+  const me=WA.me;ME={id:me.id,username:me.username,name:me.display_name};
+  try{const apps=await WA.apps();const a=apps.find(x=>x.slug===APP);if(a&&!a.status)await WA.join(APP)}catch(e){}
+  if(saveTo!=='account'){render();return}
+  const cached=lsGet(ACCT_KEY+ME.id);S=norm(cached);syncState='';
+  try{const st=await store.load();
+    if(st&&(hasData(st)||Array.isArray(st.teams))){S=norm(st);syncState='saved'}
+    else{const dev=lsGet(DEVICE_KEY);if(hasData(dev)&&!hasData(cached)){S=norm(dev);lsSet(ACCT_KEY+ME.id,S);await pushState();toast("Copied this device's notebook into your account")}else if(hasData(cached)){await pushState()}else syncState='saved'}
+  }catch(e){syncState='offline';toast('Offline. Showing your last saved notebook.')}
+  await loadCloud(true);await refreshDrills();
+  lsSet(ACCT_KEY+ME.id,S);render();
+}
+
+/* ================= shared teams =================
+   A shared team lives in volleyball_teams (everything but live scoring) and volleyball_sets (each set's scoring),
+   so a scorekeeper can score without touching the roster. Roles: owner, coach, scorekeeper, viewer. */
+const LIVE_KEYS=['first','opp','started','ended','ev','startedAt','endedAt'];
+const roleOf=t=>t&&t.cloud?t.role:'owner';
+const canEdit=t=>['owner','coach'].includes(roleOf(t||S.team));
+const canScore=t=>['owner','coach','scorekeeper'].includes(roleOf(t||S.team));
+const canShare=t=>['owner','coach'].includes(roleOf(t||S.team));
+const ROLE_NAME={owner:'Owner',coach:'Coach',scorekeeper:'Scorekeeper',viewer:'Viewer'};
+function canon(v){if(Array.isArray(v))return '['+v.map(canon).join(',')+']';if(v&&typeof v==='object')return '{'+Object.keys(v).filter(k=>v[k]!==undefined).sort().map(k=>JSON.stringify(k)+':'+canon(v[k])).join(',')+'}';return JSON.stringify(v===undefined?null:v)}
+function splitTeam(t){
+  const sets={};const games=t.games.map(g=>({id:g.id,date:g.date,opp:g.opp,sets:g.sets.map((x,i)=>{const live={};LIVE_KEYS.forEach(k=>{if(x[k]!==undefined)live[k]=x[k]});sets[g.id+'|'+i]=live;return {lineup:x.lineup,libero:x.libero}})}));
+  return {struct:{name:t.name,players:t.players,games,settings:t.settings},sets}}
+function joinTeam(struct,rows,prev){
+  const t=Object.assign(blankTeam(struct.name),{name:struct.name||'Team',players:struct.players||[],settings:Object.assign({},RULES0,struct.settings||{})});
+  t.games=(struct.games||[]).map(g=>({id:g.id,date:g.date,opp:g.opp,sets:(g.sets||[]).map((x,i)=>Object.assign(newSet(),{lineup:x.lineup||[null,null,null,null,null,null],libero:x.libero||null},(rows&&rows[g.id+'|'+i])||{}))}));
+  t.cur=prev&&prev.cur&&t.games.some(g=>g.id===prev.cur)?prev.cur:(t.games.length?t.games[t.games.length-1].id:null);
+  return t}
+const CL={};   // what the server has, per shared team, to send only what changed
+function snapshot(t,structData,rows){const c=CL[t.id]={struct:canon(structData),sets:{}};
+  t.games.forEach(g=>g.sets.forEach((x,i)=>{const k=g.id+'|'+i;c.sets[k]=canon(rows&&rows[k]?rows[k]:splitTeam({games:[{id:g.id,sets:[x]}],players:[],settings:{}}).sets[g.id+'|0'])}))}
+
+const CLOUD={
+  ok(){return !!(WA&&ME&&saveTo==='account')},
+  sb(){return WA.mode==='supabase'},
+  async list(){
+    if(this.sb()){const c=WA.client;
+      const t=await c.from('volleyball_teams').select('id,owner,name,data');if(t.error)throw t.error;if(!t.data.length)return [];
+      const ids=t.data.map(x=>x.id);
+      const [m,st]=await Promise.all([c.from('volleyball_team_members').select('team_id,role').eq('user_id',ME.id),c.from('volleyball_sets').select('team_id,game_id,idx,data').in('team_id',ids)]);
+      if(m.error)throw m.error;if(st.error)throw st.error;
+      return t.data.map(r=>({id:r.id,owner:r.owner,name:r.name,data:r.data,role:r.owner===ME.id?'owner':((m.data.find(x=>x.team_id===r.id)||{}).role||'viewer'),
+        sets:Object.fromEntries(st.data.filter(x=>x.team_id===r.id).map(x=>[x.game_id+'|'+x.idx,x.data]))}))}
+    const d=LDB.get();return Object.values(d.teams).filter(t=>LDB.role(d,t.id)).map(t=>({id:t.id,owner:t.owner,name:t.name,data:t.data,role:LDB.role(d,t.id),sets:Object.assign({},d.sets[t.id]||{})}))},
+  async create(name,data){
+    if(this.sb()){const r=await WA.client.from('volleyball_teams').insert({owner:ME.id,name,data}).select('id').single();if(r.error)throw r.error;return r.data.id}
+    const d=LDB.get();const id=crypto.randomUUID?crypto.randomUUID():uid()+uid();d.teams[id]={id,owner:ME.id,name,data};d.sets[id]={};d.members[id]={};LDB.put(d);return id},
+  async putTeam(id,name,data){
+    if(this.sb()){const r=await WA.client.from('volleyball_teams').update({name,data}).eq('id',id).select('id');if(r.error)throw r.error;if(!r.data.length)throw new Error('Only coaches can change this team.');return}
+    const d=LDB.get();if(!['owner','coach'].includes(LDB.role(d,id)))throw new Error('Only coaches can change this team.');Object.assign(d.teams[id],{name,data});LDB.put(d)},
+  async putSet(id,key,data){const [game_id,idx]=key.split('|');
+    if(this.sb()){const r=await WA.client.from('volleyball_sets').upsert({team_id:id,game_id,idx:+idx,data});if(r.error)throw r.error;return}
+    const d=LDB.get();if(!['owner','coach','scorekeeper'].includes(LDB.role(d,id)))throw new Error("You can't score for this team.");(d.sets[id]=d.sets[id]||{})[key]=data;LDB.put(d)},
+  async share(id,username,role){
+    if(this.sb()){const r=await WA.client.rpc('volleyball_share',{p_team:id,p_username:username,p_role:role});if(r.error)throw new Error(r.error.message);return r.data}
+    const d=LDB.get();const r=LDB.role(d,id);if(!['owner','coach'].includes(r))throw new Error("Only the team's owner or a coach can share it.");
+    if(r==='coach'&&role==='coach')throw new Error("Only the team's owner can add coaches.");
+    const u=String(username).trim().toLowerCase().replace(/^@/,'');const a=(await WA.admin.accounts()).find(x=>x.username===u);if(!a)throw new Error("There's no account with that username.");
+    if(a.id===d.teams[id].owner)throw new Error("That's the team's owner.");const cur=(d.members[id]||{})[a.id];if(r==='coach'&&cur==='coach')throw new Error("Only the team's owner can change a coach.");
+    (d.members[id]=d.members[id]||{})[a.id]=role;LDB.put(d);return {user_id:a.id,username:a.username,display_name:a.display_name,role}},
+  async unshare(id,user){
+    if(this.sb()){const r=await WA.client.rpc('volleyball_unshare',{p_team:id,p_user:user});if(r.error)throw new Error(r.error.message);return}
+    const d=LDB.get();const r=LDB.role(d,id);const cur=(d.members[id]||{})[user];if(!cur)return;
+    if(!(user===ME.id||r==='owner'||(r==='coach'&&['scorekeeper','viewer'].includes(cur))))throw new Error("You can't remove that person.");delete d.members[id][user];LDB.put(d)},
+  async members(id){
+    if(this.sb()){const r=await WA.client.rpc('volleyball_members',{p_team:id});if(r.error)throw new Error(r.error.message);return r.data}
+    const d=LDB.get();const acc=await WA.admin.accounts();const by=uid=>acc.find(a=>a.id===uid)||{username:'?'};const t=d.teams[id];
+    return [{user_id:t.owner,username:by(t.owner).username,display_name:by(t.owner).display_name,role:'owner'}].concat(Object.entries(d.members[id]||{}).map(([u,r])=>({user_id:u,username:by(u).username,display_name:by(u).display_name,role:r})))},
+  async publishDrill(d){const data=JSON.parse(JSON.stringify(d));delete data.cloudId;delete data.id;
+    if(this.sb()){const r=await WA.client.from('volleyball_drills').upsert({id:d.cloudId,owner:ME.id,data});if(r.error)throw r.error;return}
+    const db=LDB.get();db.drills=db.drills||{};db.drills[d.cloudId]={owner:ME.id,data,updated_at:Date.now()};LDB.put(db)},
+  async shareDrill(cid,username){
+    if(this.sb()){const r=await WA.client.rpc('volleyball_drill_share',{p_drill:cid,p_username:username});if(r.error)throw new Error(r.error.message);return r.data}
+    const db=LDB.get();const u=String(username).trim().toLowerCase().replace(/^@/,'');const a=(await WA.admin.accounts()).find(x=>x.username===u);
+    if(!a)throw new Error("There's no account with that username.");if(a.id===ME.id)throw new Error("That's you.");
+    db.dshares=db.dshares||{};(db.dshares[cid]=db.dshares[cid]||{})[a.id]=1;LDB.put(db);return {user_id:a.id,username:a.username,display_name:a.display_name}},
+  async drillPeople(cid){
+    if(this.sb()){const r=await WA.client.rpc('volleyball_drill_people',{p_drill:cid});if(r.error)throw new Error(r.error.message);return r.data}
+    const db=LDB.get();const acc=await WA.admin.accounts();return Object.keys((db.dshares||{})[cid]||{}).map(u=>{const a=acc.find(x=>x.id===u)||{};return {user_id:u,username:a.username,display_name:a.display_name}})},
+  async unshareDrill(cid,user){
+    if(this.sb()){const r=await WA.client.from('volleyball_drill_shares').delete().eq('drill_id',cid).eq('user_id',user);if(r.error)throw r.error;return}
+    const db=LDB.get();if(db.dshares&&db.dshares[cid])delete db.dshares[cid][user];LDB.put(db)},
+  async sharedDrills(){
+    if(this.sb()){const r=await WA.client.rpc('volleyball_shared_drills');if(r.error)throw r.error;return r.data}
+    const db=LDB.get();const acc=await WA.admin.accounts();return Object.entries(db.dshares||{}).filter(([cid,m])=>m[ME.id]&&db.drills&&db.drills[cid]).map(([cid])=>{const d=db.drills[cid];const a=acc.find(x=>x.id===d.owner)||{};return {id:cid,data:d.data,owner_username:a.username,owner_name:a.display_name}})},
+  async myShareCounts(){
+    if(this.sb()){const r=await WA.client.from('volleyball_drill_shares').select('drill_id,user_id').neq('user_id',ME.id);if(r.error)throw r.error;const o={};r.data.forEach(x=>{o[x.drill_id]=(o[x.drill_id]||0)+1});return o}
+    const db=LDB.get();const o={};Object.entries(db.dshares||{}).forEach(([cid,m])=>{if(db.drills&&db.drills[cid]&&db.drills[cid].owner===ME.id){const n=Object.keys(m).length;if(n)o[cid]=n}});return o},
+  async delDrill(cid){
+    if(this.sb()){const r=await WA.client.from('volleyball_drills').delete().eq('id',cid);if(r.error)throw r.error;return}
+    const db=LDB.get();if(db.drills)delete db.drills[cid];if(db.dshares)delete db.dshares[cid];LDB.put(db)},
+  async del(id){if(this.sb()){const r=await WA.client.from('volleyball_teams').delete().eq('id',id);if(r.error)throw r.error;return}
+    const d=LDB.get();if(LDB.role(d,id)!=='owner')throw new Error('Only the owner can delete the team.');delete d.teams[id];delete d.sets[id];delete d.members[id];LDB.put(d)}
+};
+// Local test mode: shared teams live in this browser so two tabs can stand in for two people.
+const LDB={K:'vbnotebook.cloud.v1',get(){return lsGet(this.K)||{teams:{},sets:{},members:{}}},put(d){lsSet(this.K,d)},
+  role(d,id){const t=d.teams[id];if(!t||!ME)return null;if(t.owner===ME.id)return 'owner';return (d.members[id]||{})[ME.id]||null}};
+
+let CH=null;
+async function subscribeCloud(){
+  if(CH){try{CH.unsubscribe?CH.unsubscribe():WA.client.removeChannel(CH)}catch(e){}CH=null}
+  if(!CLOUD.ok())return;
+  if(!CLOUD.sb()){if(!subscribeCloud.local){subscribeCloud.local=1;window.addEventListener('storage',e=>{if(e.key===LDB.K&&CLOUD.ok())Promise.all([loadCloud(),refreshDrills()]).then(()=>softRender())})}return}
+  try{const c=WA.client;const ses=await c.auth.getSession();const tok=ses&&ses.data&&ses.data.session&&ses.data.session.access_token;if(tok)c.realtime.setAuth(tok);
+    CH=c.channel('vb-'+ME.id+'-'+uid())
+      .on('postgres_changes',{event:'*',schema:'public',table:'volleyball_teams'},p=>remoteTeam(p))
+      .on('postgres_changes',{event:'*',schema:'public',table:'volleyball_sets'},p=>remoteSet(p))
+      .on('postgres_changes',{event:'*',schema:'public',table:'volleyball_team_members'},()=>loadCloud().then(()=>softRender()))
+      .subscribe(st=>{if(st==='SUBSCRIBED'&&subscribeCloud.lost){subscribeCloud.lost=0;loadCloud().then(()=>softRender())}if(st==='CHANNEL_ERROR'||st==='TIMED_OUT'||st==='CLOSED')subscribeCloud.lost=1})
+  }catch(e){}
+}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&CLOUD.ok()){Promise.all([S.teams.some(t=>t.cloud)?loadCloud():null,refreshDrills()]).then(()=>softRender())}});
+function remoteTeam(p){if(DEMO)return;
+  if(p.eventType==='DELETE'){const id=p.old&&p.old.id;if(id&&S.teams.some(t=>t.id===id&&t.cloud))loadCloud().then(()=>softRender());return}
+  const r=p.new;if(!r)return;const t=S.teams.find(x=>x.id===r.id&&x.cloud);if(!t){loadCloud().then(()=>softRender());return}
+  const c=CL[t.id];if(c&&c.struct===canon(r.data))return;
+  const rows={};t.games.forEach(g=>g.sets.forEach((x,i)=>{const live={};LIVE_KEYS.forEach(k=>{if(x[k]!==undefined)live[k]=x[k]});rows[g.id+'|'+i]=live}));
+  const nt=joinTeam(r.data,rows,t);Object.assign(t,{name:nt.name,players:nt.players,games:nt.games,settings:nt.settings,cur:nt.cur});
+  if(c)c.struct=canon(r.data);else snapshot(t,r.data,rows);
+  t.games.forEach(g=>g.sets.forEach((x,i)=>{const k=g.id+'|'+i;if(CL[t.id].sets[k]==null)CL[t.id].sets[k]=canon(rows[k]||{})}));
+  cacheOnly();softRender()}
+function remoteSet(p){if(DEMO)return;
+  const r=p.new;if(!r||!r.team_id)return;const t=S.teams.find(x=>x.id===r.team_id&&x.cloud);if(!t)return;
+  const k=r.game_id+'|'+r.idx;const c=CL[t.id]||(CL[t.id]={struct:'',sets:{}});if(c.sets[k]===canon(r.data))return;
+  const g=t.games.find(x=>x.id===r.game_id);if(!g||!g.sets[r.idx]){loadCloud().then(()=>softRender());return}
+  const x=g.sets[r.idx];LIVE_KEYS.forEach(kk=>{if(r.data[kk]!==undefined)x[kk]=r.data[kk]});c.sets[k]=canon(r.data);cacheOnly();softRender()}
+function cacheOnly(){if(ME)lsSet(ACCT_KEY+ME.id,S)}
+async function loadCloud(first){if(DEMO)return;
+  if(!CLOUD.ok()){const had=S.teams.some(t=>t.cloud);S.teams=S.teams.filter(t=>!t.cloud);if(!S.teams.length)S.teams=[blankTeam()];if(had&&!S.teams.some(t=>t.id===S.teamId))S.teamId=S.teams[0].id;return}
+  let rows;try{rows=await CLOUD.list()}catch(e){return}
+  const pref=S.ui.teamPref||S.teamId;const keep=S.teams.filter(t=>!t.cloud);
+  const shared=rows.map(r=>{const prev=S.teams.find(t=>t.id===r.id);const t=joinTeam(Object.assign({},r.data,{name:r.name||(r.data&&r.data.name)}),r.sets,prev);
+    t.id=r.id;t.cloud=true;t.role=r.role;t.owner=r.owner;snapshot(t,r.data,r.sets);return t});
+  const gone=S.teams.filter(t=>t.cloud&&!rows.some(r=>r.id===t.id));
+  let list=keep.concat(shared);
+  if(shared.length)list=list.filter(t=>t.cloud||t.players.length||t.games.length||t.name!=='Our Team'||list.filter(x=>!x.cloud).length>1);
+  if(!list.length)list=[blankTeam()];
+  S.teams=list;
+  if(list.some(t=>t.id===pref))S.teamId=pref;else if(!list.some(t=>t.id===S.teamId))S.teamId=list[0].id;
+  if(gone.some(t=>t.id===pref)&&!first)toast(`You're no longer on ${gone.find(t=>t.id===pref).name}.`);
+  await subscribeCloud();
+}
+async function refreshDrills(){
+  if(DEMO)return;if(!CLOUD.ok()){if(SHARED.length||Object.keys(MYSHARES).length){SHARED=[];MYSHARES={};return true}return false}
+  try{const [rows,counts]=await Promise.all([CLOUD.sharedDrills(),CLOUD.myShareCounts()]);
+    const next=rows.map(r=>Object.assign({},r.data,{id:'sh:'+r.id,cloudId:r.id,received:true,from:{username:r.owner_username,name:r.owner_name}}));
+    const changed=canon(next)!==canon(SHARED)||canon(counts)!==canon(MYSHARES);SHARED=next;MYSHARES=counts;return changed}catch(e){return false}}
+let cloudTimer=null,cloudChain=Promise.resolve(),cloudState='';
+function queueCloud(){clearTimeout(cloudTimer);cloudState='saving';cloudTimer=setTimeout(()=>{cloudChain=cloudChain.then(cloudSync)},250)}
+async function cloudSync(){
+  const t=S.team;if(!t||!t.cloud||!CLOUD.ok())return;const sp=splitTeam(t);const c=CL[t.id]||(CL[t.id]={struct:'',sets:{}});
+  try{
+    const sj=canon(sp.struct);if(sj!==c.struct&&canEdit(t)){await CLOUD.putTeam(t.id,t.name,sp.struct);c.struct=sj}
+    if(canScore(t))for(const k in sp.sets){const j=canon(sp.sets[k]);if(j!==c.sets[k]){await CLOUD.putSet(t.id,k,sp.sets[k]);c.sets[k]=j}}
+    cloudState='saved';
+  }catch(e){cloudState='error';toast(e.message&&/coach|score|owner/i.test(e.message)?e.message:"Couldn't save that change to the shared team. Check your connection.")}
+}
+let pendingRender=false;
+function softRender(){const a=document.activeElement;if(a&&a.closest&&a.closest('#main')&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)){pendingRender=true;return}render()}
+document.addEventListener('focusout',()=>{if(pendingRender){pendingRender=false;setTimeout(()=>{if(!(document.activeElement&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)))render()},50)}});
+async function makeShared(t){
+  const sp=splitTeam(t);const id=await CLOUD.create(t.name,sp.struct);
+  for(const k in sp.sets){const x=sp.sets[k];if(x.started||x.ev&&x.ev.length||(x.opp||[]).some(Boolean)||x.first==='them')await CLOUD.putSet(id,k,x)}
+  const was=S.teamId===t.id;t.id=id;t.cloud=true;t.role='owner';t.owner=ME.id;snapshot(t,sp.struct,sp.sets);
+  if(was){S.teamId=id;S.ui.teamPref=id}
+  save();await subscribeCloud();return t}
+
+/* ================= helpers ================= */
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $=s=>document.querySelector(s);
+const P=id=>S.players.find(p=>p.id===id);
+const G=()=>S.games.find(g=>g.id===S.cur)||null;
+const newSet=()=>({lineup:[null,null,null,null,null,null],libero:null,opp:['','','','','',''],first:'us',started:false,ended:false,ev:[]});
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const fmtDate=s=>{if(!s)return'';const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d).toLocaleDateString('en-US',{month:'short',day:'numeric'})};
+const byNum=(a,b)=>(+a.num||999)-(+b.num||999)||a.name.localeCompare(b.name);
+const short=p=>p?(p.name.split(' ')[0]):'';
+const pct=(a,b)=>b?Math.round(100*a/b)+'%':'–';
+function num(id){const p=P(id);return p?'#'+p.num+' '+short(p):'?'}
+
+/* ================= replay: everything about a set comes from its event list ================= */
+// Slots I-VI are the starting-lineup columns. Rotation r: position p holds slot (r+p-1)%6.
+const slotAt=(p,r)=>(r+p-1)%6;
+const posOf=(slot,r)=>((slot-r)%6+6)%6+1;
+function replay(set){
+  const R={sc:{us:0,them:0},serve:set.first,r:{us:0,them:0},slots:{us:set.lineup.slice(),them:set.opp.slice()},
+    lib:{},subs:{us:0,them:0},subLog:{us:[],them:[]},tos:{us:[],them:[]},terms:{us:[],them:[]},term:null,
+    run:{us:[],them:[]},pt:{},rallies:0,log:[],
+    rot:Array.from({length:6},()=>({w:0,l:0,rw:0,rl:0,sw:0,sl:0})),
+    tm:{srv:0,srvW:0,rcv:0,rcvW:0,oSrv:0,oSrvW:0,best:{us:0,them:0},cur:{w:null,n:0}}};
+  const mark=id=>R.pt[id]||(R.pt[id]={rallies:0,rots:0,started:false,left:false,ins:0,outs:0,on:false,srv:0,srvW:0,terms:0,pm:0,won:0});
+  const scoreStr=t=>t==='us'?R.sc.us+'-'+R.sc.them:R.sc.them+'-'+R.sc.us;
+  const onCourt=()=>R.slots.us.filter(Boolean);
+  const startTerm=t=>{R.term={team:t,slot:R.r[t]%6,from:R.sc[t]};if(t==='us'){const id=R.slots.us[R.r.us%6];if(id)mark(id).terms++}};
+  const endTerm=()=>{if(R.term){R.terms[R.term.team].push({slot:R.term.slot,score:R.sc[R.term.team],pts:R.sc[R.term.team]-R.term.from});R.term=null}};
+  const libCheck=()=>{for(const k of Object.keys(R.lib)){const s=+k;const p=posOf(s,R.r.us);if(p>=2&&p<=4){const back=R.lib[k];const l=R.slots.us[s];R.slots.us[s]=back;delete R.lib[k];mark(back).rots++;R.log.push({t:'lib',auto:true,txt:`Libero ${num(l)} out, ${num(back)} back in (front row)`});}}};
+  const rotate=t=>{R.r[t]++;if(t==='us'){onCourt().forEach(id=>mark(id).rots++);libCheck()}};
+  if(!set.started) return R;
+  set.lineup.forEach(id=>{if(id){const m=mark(id);m.started=true;m.rots=1}});
+  startTerm(set.first);
+  for(const e of set.ev){
+    if(e.t==='pt'){
+      const w=e.w, serving=R.serve, ri=R.r.us%6, rs=R.rot[ri];
+      R.rallies++;onCourt().forEach(id=>{const m=mark(id);m.rallies++;m.pm+=w==='us'?1:-1;if(w==='us')m.won++});
+      if(w==='us')rs.w++;else rs.l++;
+      if(serving==='us'){R.tm.srv++;rs.sw+=w==='us'?1:0;rs.sl+=w==='us'?0:1;const sid=R.slots.us[ri];if(sid){const m=mark(sid);m.srv++;if(w==='us')m.srvW++}if(w==='us')R.tm.srvW++}
+      else{R.tm.rcv++;R.tm.oSrv++;if(w==='us'){R.tm.rcvW++;rs.rw++}else{R.tm.oSrvW++;rs.rl++}}
+      const c=R.tm.cur;if(c.w===w)c.n++;else{c.w=w;c.n=1}R.tm.best[w]=Math.max(R.tm.best[w],c.n);
+      R.sc[w]++;R.run[w].push({n:R.sc[w],served:w===serving});
+      if(w!==serving){endTerm();R.serve=w;rotate(w);startTerm(w);R.log.push({t:'pt',w,txt:`${w==='us'?'We':'They'} side out · ${R.sc.us}-${R.sc.them}`});}
+      else R.log.push({t:'pt',w,txt:`${w==='us'?'We':'They'} score on serve · ${R.sc.us}-${R.sc.them}`});
+    }else if(e.t==='rot'){
+      const t=e.team||'us';const same=R.term&&R.term.team===t;if(same)endTerm();rotate(t);if(same)startTerm(t);R.log.push({t:'rot',txt:'Rotated'});
+    }else if(e.t==='sub'){
+      const team=e.team,out=R.slots[team][e.slot];
+      if(team==='us'){
+        if(e.lib){
+          if(e.in===set.libero&&out!==set.libero){R.lib[e.slot]=out;R.slots.us[e.slot]=e.in;mark(e.in).rots++;R.log.push({t:'lib',txt:`Libero ${num(e.in)} in for ${num(out)}`});}
+          else if(out===set.libero&&R.lib[e.slot]){const back=R.lib[e.slot];R.slots.us[e.slot]=back;delete R.lib[e.slot];mark(back).rots++;R.log.push({t:'lib',txt:`Libero out, ${num(back)} back in`});}
+          continue;
+        }
+        if(R.lib[e.slot]) delete R.lib[e.slot];
+        R.slots.us[e.slot]=e.in;R.subs.us++;
+        const mo=mark(out);mo.left=true;mo.outs++;const mi=mark(e.in);mi.ins++;mi.rots++;
+        R.subLog.us.push({slot:e.slot,out,in:e.in,score:scoreStr('us')});
+        R.log.push({t:'sub',txt:`Sub: ${num(e.in)} in for ${num(out)} · ${R.sc.us}-${R.sc.them}`});
+      }else{
+        R.slots.them[e.slot]=e.in;R.subs.them++;
+        R.subLog.them.push({slot:e.slot,out,in:e.in,score:scoreStr('them')});
+        R.log.push({t:'sub',txt:`They sub #${e.in} for #${out||'?'}`});
+      }
+    }else if(e.t==='to'){
+      R.tos[e.team].push(scoreStr(e.team));R.log.push({t:'to',txt:`Timeout ${e.team==='us'?S.team.name:'them'} · ${R.sc.us}-${R.sc.them}`});
+    }
+  }
+  if(set.ended) endTerm();
+  for(const id of onCourt()) mark(id).on=true;
+  for(const id in R.pt){const m=R.pt[id];m.full=set.ended&&m.started&&!m.left;m.played=m.rallies>0||m.started||m.ins>0||m.on}
+  return R;
+}
+function target(g,i){const st=S.settings;const n=g.sets.length;return (n>=3&&n%2===1&&i===n-1)?st.decider:st.pts}
+function setWon(R,t){const a=R.sc.us,b=R.sc.them;if(Math.max(a,b)>=t&&Math.abs(a-b)>=2)return a>b?'us':'them';return null}
+function gameRecord(g){let w=0,l=0;g.sets.forEach(s=>{if(s.ended){const R=replay(s);if(R.sc.us>R.sc.them)w++;else if(R.sc.them>R.sc.us)l++;}});
+  const need=Math.floor(g.sets.length/2)+1;const over=g.sets.length>1&&(w>=need||l>=need);return {w,l,over}}
+// a set that won't be played: the match is decided and the rules only play the last set when needed
+const notNeeded=(g,i)=>{const s=g.sets[i];if(s.started||S.settings.playAll)return false;return gameRecord(g).over}
+
+/* ================= render ================= */
+const LOGO='<img src="icon-512.png" alt="">';
+function render(){
+  if(DR.raf){cancelAnimationFrame(DR.raf);DR.raf=0}
+  const t=S.ui.tab;
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
+  $('#gearBtn').classList.toggle('on',t==='settings');
+  const g=G();const gb=$('#gdBtn');
+  if((t==='game'||t==='sheet')&&S.players.length){gb.hidden=false;gb.innerHTML=g?`vs ${esc(g.opp)} <small>${esc(fmtDate(g.date))}</small> ▾`:'Game days ▾'}else gb.hidden=true;
+  document.querySelector('.top').hidden=(t==='board');
+  const m=$('#main');
+  const rb=S.team.cloud&&['game','sheet','roster'].includes(t)?`<div class="rolebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 19c.7-3.2 3.1-5 6-5s5.3 1.8 6 5"/><path d="M16 4.5a3 3 0 0 1 0 6M18 14c1.7.6 2.8 2.2 3.2 4.5"/></svg><span><b>${esc(S.team.name)}</b> is shared · you're ${roleOf(S.team)==='owner'?'the owner':roleOf(S.team)==='coach'?'a coach':roleOf(S.team)==='scorekeeper'?'the scorekeeper':'a viewer'}</span>${cloudState==='error'?'<span class="pill part" style="margin-left:auto">Not saved</span>':''}</div>`:'';
+  m.innerHTML=rb+(t==='game'?viewGame():t==='sheet'?viewSheet():t==='board'?viewBoard():t==='drills'?viewDrills():t==='settings'?viewSettings():viewRoster());
+  m.style.padding=t==='board'?'0':'';
+  if(t==='drills')afterDrills();
+}
+
+function emptyRoster(){return `<div class="card empty">${LOGO}<h2>Start with your roster</h2><p>Add your players with their numbers and positions. Then you can plan lineups for every set and track rotations, subs, playing time and stats.</p>
+  ${canEdit()?`<div class="row" style="justify-content:center;gap:10px;flex-wrap:wrap"><button class="btn pri" data-act="tab" data-tab="roster">Add players</button><button class="btn ghost" data-act="sample">Try a sample team</button></div>`:'<p class="muted">A coach needs to add the players first.</p>'}</div>`}
+function noGame(){return `<div class="card empty">${LOGO}<h2>No game day yet</h2><p>Make a game day for a match or scrimmage. Each one has its own sets, lineups, scorecard, playing time and stats.</p>${canEdit()?'<button class="btn pri" data-act="newGame">New game day</button>':'<p class="muted">A coach sets up game days.</p>'}</div>`}
+
+function setChips(g,cur,extra){
+  return `<div class="chips">${extra?`<button class="chip ${cur==='plan'?'on':''}" data-act="view" data-v="plan">All sets</button><button class="chip alt ${cur==='time'?'on':''}" data-act="view" data-v="time">Playing time</button><button class="chip alt ${cur==='stats'?'on':''}" data-act="view" data-v="stats">Stats</button>`:''}${g.sets.map((s,i)=>{
+    const R=s.started?replay(s):null;const st=s.ended?` ${R.sc.us}-${R.sc.them}`:'';
+    return `<button class="chip ${cur===i?'on':''}" data-act="pickSet" data-i="${i}">${s.started&&!s.ended?'<span class="dot"></span>':''}Set ${i+1}${st}</button>`}).join('')}
+    ${g.sets.length<5&&canEdit()?`<button class="chip" data-act="addSet" aria-label="Add a set">+</button>`:''}
+</div>`;
+}
+
+function viewGame(){
+  if(!S.players.length) return emptyRoster();
+  const g=G(); if(!g) return noGame();
+  const v=S.ui.view;
+  if(v==='plan') return setChips(g,'plan',true)+viewPlan(g);
+  if(v==='time') return setChips(g,'time',true)+viewTime(g);
+  if(v==='stats') return setChips(g,'stats',true)+viewStats(g);
+  const i=Math.min(S.ui.set,g.sets.length-1);const s=g.sets[i];
+  return setChips(g,i,true)+(s.started?viewLive(g,s,i):viewEdit(g,s,i));
+}
+
+function court(slots,r,o){
+  o=o||{};const order=[4,3,2,5,6,1];
+  return `<div class="court ${o.mini?'mini':''}"><div class="net"></div><div class="atk"></div><div class="cgrid">${order.map(p=>{
+    const s=slotAt(p,r);const id=slots[s];const pl=id?P(id):null;
+    const act=o.act?`data-act="${o.act}" data-slot="${s}"`:'';
+    const tag=o.act?'button':'div';
+    if(!pl) return `<${tag} class="spot empty-s" ${act}><span class="pos">${p}</span>${o.mini?'—':'+ Player'}</${tag}>`;
+    const isL=o.libero&&id===o.libero;const m=o.R&&o.R.pt[id];
+    const tm=m?(S.settings.measure==='rotations'?m.rots+' rot':m.rallies+' pts'):'';
+    return `<${tag} class="spot ${p===1&&o.serving?'srv':''} ${isL?'lib':''}" ${act}><span class="pos">${p}</span><span class="slot">${ROMAN[s]}</span><span class="jn">${esc(pl.num)}</span><span class="nm">${esc(short(pl))}</span><span class="rl">${isL?'Libero':esc(POSNAME[pl.pos]||'')}</span>${m?`<span class="tm">${tm}</span>`:''}${p===1&&o.serving?BALL:''}</${tag}>`}).join('')}</div></div>`;
+}
+
+function viewPlan(g){const rec=gameRecord(g);
+  return `${rec.over?`<div class="banner ${rec.w>rec.l?'':'info'}">${rec.w>rec.l?'Match won':'Match lost'} ${rec.w}–${rec.l}${S.settings.playAll&&g.sets.some(s=>!s.ended)?'. Your rules play every set, so keep going.':''}</div>`:''}<p class="muted" style="margin:0 0 10px">${canEdit()?'Your starting lineup for each set. Tap a set to change it or start it.':'The starting lineup for each set. Tap a set to see it'+(canScore()?' or start it.':'.')}</p><div class="plan">${g.sets.map((s,i)=>{
+    const R=s.started?replay(s):null;const filled=s.lineup.filter(Boolean).length;
+    const st=s.ended?`<span class="pill done">Final ${R.sc.us}-${R.sc.them}</span>`:notNeeded(g,i)?'<span class="pill">Not needed</span>':s.started?`<span class="pill live">Live ${R.sc.us}-${R.sc.them}</span>`:filled===6?'<span class="pill ok">Ready</span>':`<span class="pill">${filled}/6 set</span>`;
+    const lib=s.libero?P(s.libero):null;
+    return `<div class="card"><div class="row" style="margin-bottom:8px"><h3 style="margin:0">Set ${i+1}</h3><span class="muted" style="font-size:12px">to ${target(g,i)}</span><span style="margin-left:auto">${st}</span></div>
+      <button data-act="pickSet" data-i="${i}" style="display:block;width:100%;${notNeeded(g,i)?'opacity:.45':''}">${court(s.lineup,0,{mini:true})}</button>
+      <div class="row" style="margin-top:8px;font-size:13px"><span class="muted">${lib?'Libero #'+esc(lib.num)+' '+esc(short(lib)):'No libero'} · ${s.first==='us'?'We serve':'They serve'}</span></div></div>`}).join('')}</div>`;
+}
+
+function viewEdit(g,s,i){
+  const filled=s.lineup.filter(Boolean).length;const r=S.ui.preview||0;
+  const others=g.sets.map((x,j)=>j).filter(j=>j!==i&&g.sets[j].lineup.some(Boolean));
+  return `<div class="layout two"><div>
+    ${court(s.lineup,r,{act:canEdit()?'pickSpot':'',serving:s.first==='us',libero:s.libero})}
+    <div class="row" style="justify-content:center;margin-top:10px;gap:8px">
+      <button class="btn sm ghost" data-act="preview">↻ Preview rotation ${r%6+1}</button>
+      ${r?`<button class="btn sm ghost" data-act="previewReset">Back to start</button>`:''}
+    </div></div>
+    <div class="card">
+      <h3>Set ${i+1} lineup</h3>
+      <p class="muted" style="margin:0 0 12px;font-size:14px">${canEdit()?'':'The coach sets the lineup. '}Tap a spot on the court to put a player there. Position 1 serves first.${r?' <b>Previewing rotation '+(r%6+1)+'</b>; tap a spot to edit the start.':''}</p>
+      <div class="field"><span class="lbl">Libero</span><select data-act="setLibero" data-change="1" ${canEdit()?'':'disabled'}><option value="">None</option>${S.players.slice().sort(byNum).map(p=>`<option value="${p.id}" ${s.libero===p.id?'selected':''}>#${esc(p.num)} ${esc(p.name)}${p.pos==='L'?' (L)':''}</option>`).join('')}</select></div>
+      <div class="field"><span class="lbl">First serve</span><div class="seg"><button class="${s.first==='us'?'on':''}" data-act="first" data-w="us">We serve</button><button class="${s.first==='them'?'on':''}" data-act="first" data-w="them">They serve</button></div></div>
+      ${others.length&&canEdit()?`<div class="row wrap" style="margin-bottom:12px"><span class="lbl" style="margin-right:4px">Copy from</span>${others.map(j=>`<button class="btn sm" data-act="copySet" data-from="${j}">Set ${j+1}</button>`).join('')}</div>`:''}
+      ${canScore()?`<button class="btn pri wide" data-act="startSet" ${filled<6?'disabled':''}>${filled<6?`Pick ${6-filled} more player${6-filled>1?'s':''}`:`Start Set ${i+1}`}</button>`:''}
+      ${filled&&canEdit()?`<button class="btn ghost wide" style="margin-top:8px" data-act="clearLineup">Clear lineup</button>`:''}
+    </div></div>`;
+}
+
+function viewLive(g,s,i){
+  const R=replay(s);const tg=target(g,i);const won=!s.ended&&setWon(R,tg);
+  const onIds=R.slots.us.filter(Boolean);
+  const bench=S.players.filter(p=>!onIds.includes(p.id)).sort(byNum);
+  const lim=S.settings.subs, tol=S.settings.tos;
+  return `${won?`<div class="banner">${won==='us'?'We':'They'} reached ${tg}. <button class="btn sm dark" data-act="endSet">End set</button></div>`:''}
+  <div class="layout two"><div>
+    ${strip(R,g)}
+    ${court(R.slots.us,R.r.us,{act:s.ended||!canScore()?'':'tapPlayer',serving:R.serve==='us',libero:s.libero,R})}
+    ${s.ended||!canScore()?'':`<div class="ctl"><button class="btn us" data-act="pt" data-w="us">+1 ${esc(S.team.name)}</button><button class="btn them" data-act="pt" data-w="them">+1 ${esc(g.opp)}</button>
+      <button class="btn dark" data-act="rotate">↻ Rotate</button><button class="btn ghost" data-act="undo" ${s.ev.length?'':'disabled'}>Undo</button></div>`}
+    <div class="meta"><span class="pill ${R.subs.us>=lim?'part':''}">Subs ${R.subs.us} / ${lim>=99?'∞':lim}</span><span class="pill">Rotation ${R.r.us%6+1}</span><span class="pill ${R.tos.us.length>=tol?'part':''}">Timeouts ${R.tos.us.length} / ${tol}</span>${s.ended?'<span class="pill done">Final</span>':''}</div>
+  </div><div>
+    <div class="card"><div class="row"><h3 style="margin:0">Bench</h3><span class="muted" style="margin-left:auto;font-size:13px">${canScore()?'tap a player on court to sub':''}</span></div>
+      <div class="bench" style="margin-top:10px">${bench.map(p=>{const m=R.pt[p.id];return `<span class="bp"><span class="num">${esc(p.num)}</span>${esc(short(p))}${m&&m.rallies?` <span class="muted" style="font-size:12px">${m.rallies} pts</span>`:''}</span>`}).join('')||'<span class="muted">Everyone is on the court.</span>'}</div></div>
+    <div class="card"><h3>This set</h3>${timeTable([s],[i],true)}</div>
+    ${canScore()?`<div class="row" style="margin-top:12px;gap:8px">${s.ended?`<button class="btn ghost" data-act="reopen">Reopen set</button>`:`<button class="btn dark" data-act="endSet">End set</button><button class="btn ghost" data-act="timeout" data-team="us">Timeout</button>`}</div>`:''}
+  </div></div>`;
+}
+
+function strip(R,g){
+  const sv=(t,right)=>R.serve===t?`<div class="sv" ${right?'style="justify-content:flex-end"':''}>${BALLW} Serving</div>`:'<div class="sv" style="visibility:hidden">&nbsp;</div>';
+  return `<div class="strip" data-tour="strip"><div class="tbox us"><div style="min-width:0"><div class="tn">${esc(S.team.name)}</div>${sv('us')}</div><div class="sc">${R.sc.us}</div></div>
+    <div class="tbox them"><div class="sc">${R.sc.them}</div><div style="min-width:0;text-align:right"><div class="tn">${esc(g.opp)}</div>${sv('them',1)}</div></div></div>`;
+}
+
+function timeCell(m,R,isOn){
+  const rot=S.settings.measure==='rotations';
+  const pill=m.full?'<span class="pill ok">Full</span>':isOn&&!m.left?'<span class="pill live">On</span>':'<span class="pill part">Part</span>';
+  const detail=rot?`${m.rots} rot`:`${m.rallies}/${R.rallies}`;
+  return `<td class="c">${pill}<div class="sm" style="margin-top:2px;white-space:nowrap">${detail}</div></td>`;
+}
+function timeTable(sets,idx,compact){
+  const Rs=sets.map(s=>s.started?replay(s):null);const rot=S.settings.measure==='rotations';
+  let allR=0;Rs.forEach(R=>{if(R)allR+=R.rallies});
+  const rows=S.players.slice().sort(byNum).map(p=>{
+    let tot=0,rots=0,starts=0,full=0,ins=0,any=false;
+    const cells=Rs.map((R,k)=>{const m=R&&R.pt[p.id];if(!m||!m.played)return '<td class="c muted">—</td>';
+      any=true;tot+=m.rallies;rots+=m.rots;if(m.started)starts++;if(m.full)full++;ins+=m.ins;
+      return timeCell(m,R,!sets[k].ended&&m.on)}).join('');
+    if(compact&&!any)return '';
+    return `<tr><td><span class="num" style="min-width:30px;height:30px;font-size:16px">${esc(p.num)}</span></td><td style="font-weight:600">${esc(p.name)}</td>${cells}${compact?'':`<td class="c"><b>${starts}</b></td><td class="c"><b>${full}</b></td><td class="c"><b>${rot?rots:tot}</b>${!rot&&allR?`<div class="sm">${pct(tot,allR)}</div>`:''}</td><td class="c">${ins}</td>`}</tr>`}).join('');
+  return `<div class="scroll"><table class="tbl"><thead><tr><th>#</th><th>Player</th>${idx.map(i=>`<th class="c">${compact?'Time':'Set '+(i+1)}</th>`).join('')}${compact?'':`<th class="c">Starts</th><th class="c">Full sets</th><th class="c">${rot?'Rotations':'Points played'}</th><th class="c">Subbed in</th>`}</tr></thead><tbody>${rows||`<tr><td colspan="9" class="muted">No one has played yet.</td></tr>`}</tbody></table></div>`;
+}
+
+function viewTime(g){
+  const rec=gameRecord(g);
+  return `<div class="card"><div class="row wrap"><h3 style="margin:0">Playing time · vs ${esc(g.opp)}</h3><span class="pill" style="margin-left:auto">Sets ${rec.w}-${rec.l}</span></div>
+  <p class="muted" style="font-size:13px;margin:6px 0 10px"><b>Full</b> means they started the set and were never subbed out. <b>Part</b> shows ${S.settings.measure==='rotations'?'how many rotations they were on the court for':'how many points they were on the court for, out of the points played in that set'}. Libero swaps don't count as subs.</p>
+  ${timeTable(g.sets,g.sets.map((s,i)=>i),false)}</div>`;
+}
+
+/* ================= stats ================= */
+function gatherStats(g,which){
+  const idx=g.sets.map((s,i)=>i).filter(i=>g.sets[i].started&&(which==='all'||+which===i));
+  const T={pts:0,opp:0,srv:0,srvW:0,rcv:0,rcvW:0,oSrv:0,oSrvW:0,best:0,obest:0,subs:0,tos:0,rallies:0,sets:idx.length};
+  const rot=Array.from({length:6},()=>({w:0,l:0,rw:0,rl:0,sw:0,sl:0}));const pl={};
+  idx.forEach(i=>{const R=replay(g.sets[i]);T.pts+=R.sc.us;T.opp+=R.sc.them;T.srv+=R.tm.srv;T.srvW+=R.tm.srvW;T.rcv+=R.tm.rcv;T.rcvW+=R.tm.rcvW;T.oSrv+=R.tm.oSrv;T.oSrvW+=R.tm.oSrvW;
+    T.best=Math.max(T.best,R.tm.best.us);T.obest=Math.max(T.obest,R.tm.best.them);T.subs+=R.subs.us;T.tos+=R.tos.us.length;T.rallies+=R.rallies;
+    R.rot.forEach((x,k)=>{for(const f in x)rot[k][f]+=x[f]});
+    for(const id in R.pt){const m=R.pt[id];const a=pl[id]||(pl[id]={srv:0,srvW:0,terms:0,pm:0,rallies:0,won:0});a.srv+=m.srv;a.srvW+=m.srvW;a.terms+=m.terms;a.pm+=m.pm;a.rallies+=m.rallies;a.won+=m.won}});
+  return {T,rot,pl,idx};
+}
+function viewStats(g){
+  const which=S.ui.stat==null?'all':S.ui.stat;const {T,rot,pl,idx}=gatherStats(g,which);
+  const chips=`<div class="seg" style="margin-bottom:12px"><button class="${which==='all'?'on':''}" data-act="statSet" data-v="all">All sets</button>${g.sets.map((s,i)=>`<button class="${String(which)===String(i)?'on':''}" data-act="statSet" data-v="${i}" ${s.started?'':'disabled'}>Set ${i+1}</button>`).join('')}</div>`;
+  if(!idx.length||!T.rallies) return chips+`<div class="card empty"><h2>No rallies yet</h2><p>Stats come from the scorecard. Every rally you score on the Lineup or Scorecard tab adds to them.</p></div>`;
+  const pmc=v=>`<span class="pm ${v>0?'up':v<0?'dn':''}">${v>0?'+':''}${v}</span>`;
+  const tiles=`<div class="tiles">
+    <div class="tile"><b>${T.pts}–${T.opp}</b><span>Points</span><em>${T.rallies} rallies</em></div>
+    <div class="tile"><b>${pct(T.rcvW,T.rcv)}</b><span>Side-out %</span><em>${T.rcvW} of ${T.rcv} when they served</em></div>
+    <div class="tile"><b>${pct(T.srvW,T.srv)}</b><span>Points on our serve</span><em>${T.srvW} of ${T.srv} serves</em></div>
+    <div class="tile"><b>${pct(T.srv-T.srvW,T.srv)}</b><span>Their side-out %</span><em>${T.srv-T.srvW} of ${T.srv} when we served</em></div>
+    <div class="tile"><b>${T.best}</b><span>Longest run</span><em>Theirs: ${T.obest}</em></div>
+    <div class="tile"><b>${T.subs}</b><span>Subs used</span><em>${T.sets} set${T.sets>1?'s':''}</em></div>
+    <div class="tile"><b>${T.tos}</b><span>Timeouts used</span></div>
+    <div class="tile"><b>${pmc(T.pts-T.opp)}</b><span>Point difference</span></div></div>`;
+  const rotRows=rot.map((x,k)=>{const n=x.w+x.l;if(!n)return `<tr><td><b>Rot ${k+1}</b></td><td colspan="4" class="muted">Didn't play here</td></tr>`;
+    return `<tr><td><b>Rot ${k+1}</b><div class="sm">${n} rallies</div></td><td class="c">${x.w}–${x.l}</td><td class="c">${pmc(x.w-x.l)}</td><td class="c">${pct(x.rw,x.rw+x.rl)}<div class="sm">${x.rw}/${x.rw+x.rl}</div></td><td class="c">${pct(x.sw,x.sw+x.sl)}<div class="sm">${x.sw}/${x.sw+x.sl}</div></td></tr>`}).join('');
+  const ps=S.players.filter(p=>pl[p.id]&&(pl[p.id].rallies||pl[p.id].srv)).sort(byNum);
+  const pRows=ps.map(p=>{const a=pl[p.id];return `<tr><td><span class="num" style="min-width:30px;height:30px;font-size:16px">${esc(p.num)}</span></td><td style="font-weight:600">${esc(p.name)}</td>
+    <td class="c">${a.srv}<div class="sm">${a.terms} turn${a.terms===1?'':'s'}</div></td><td class="c">${a.srvW}</td><td class="c">${pct(a.srvW,a.srv)}</td><td class="c">${pmc(a.pm)}</td><td class="c">${a.won}/${a.rallies}<div class="sm">${pct(a.won,a.rallies)}</div></td></tr>`}).join('');
+  return chips+`<div class="layout two"><div class="card"><h3>Team</h3>${tiles}</div>
+  <div class="card"><h3>By rotation</h3><p class="muted" style="font-size:13px;margin:0 0 6px">Rotation 1 is your starting lineup. Find the rotations that leak points.</p>
+    <div class="scroll"><table class="tbl"><thead><tr><th></th><th class="c">Won–lost</th><th class="c">+/-</th><th class="c">Side-out</th><th class="c">On serve</th></tr></thead><tbody>${rotRows}</tbody></table></div></div></div>
+  <div class="card" style="margin-top:12px"><h3>Players</h3><p class="muted" style="font-size:13px;margin:0 0 6px"><b>Serves</b> are rallies with her serving. <b>+/-</b> is points won minus points lost while she was on the court.</p>
+    <div class="scroll"><table class="tbl"><thead><tr><th>#</th><th>Player</th><th class="c">Serves</th><th class="c">Points on serve</th><th class="c">Serve win %</th><th class="c">+/-</th><th class="c">Rallies won</th></tr></thead><tbody>${pRows}</tbody></table></div></div>`;
+}
+
+/* ================= scorecard ================= */
+function viewSheet(){
+  if(!S.players.length) return `<div class="row" style="margin-bottom:10px"><h2 style="margin:0">Scorecard</h2><button class="helpbtn" data-act="help" aria-label="How scorekeeping works">?</button><span class="muted" style="font-size:13px">How it works</span></div>`+emptyRoster();
+  const g=G(); if(!g) return noGame();
+  const i=Math.min(S.ui.set,g.sets.length-1);const s=g.sets[i];
+  let h=`<div class="row" style="margin-bottom:6px"><h2 style="margin:0">Scorecard</h2><button class="helpbtn" data-act="help" aria-label="How scorekeeping works">?</button><span class="muted" style="font-size:13px">How it works</span></div>`+setChips(g,i,false);
+  if(!s.started){
+    const ready=s.lineup.filter(Boolean).length===6;
+    return h+`<div class="card"><h3>Set ${i+1} · before the first serve</h3>
+      <p class="muted" style="font-size:14px;margin:0 0 12px">Write in their starting numbers, I to VI (server first), like the top of a paper scoresheet. You can skip this.</p>
+      <div class="oppin" data-tour="opp">${s.opp.map((n,k)=>`<label>${ROMAN[k]}<input inputmode="numeric" maxlength="3" value="${esc(n)}" data-opp="${k}" ${canScore()?'':'disabled'}></label>`).join('')}</div>
+      <div class="field" style="margin-top:14px" data-tour="first"><span class="lbl">First serve</span><div class="seg"><button class="${s.first==='us'?'on':''}" data-act="first" data-w="us">${esc(S.team.name)}</button><button class="${s.first==='them'?'on':''}" data-act="first" data-w="them">${esc(g.opp)}</button></div></div>
+      ${!canScore()?'<p class="muted" style="margin:0">Waiting for the scorekeeper to start the set.</p>':ready?`<button class="btn pri wide" data-act="startSet" data-tour="start">Start Set ${i+1}</button>`:canEdit()?`<button class="btn dark wide" data-act="goLineup">Set our lineup first</button>`:'<p class="muted" style="margin:0">Waiting for a coach to set the lineup.</p>'}
+    </div>`;
+  }
+  const R=replay(s);const tg=target(g,i);const won=!s.ended&&setWon(R,tg);
+  h+=won?`<div class="banner" data-tour="banner">${won==='us'?'We':'They'} reached ${tg}. <button class="btn sm dark" data-act="endSet">End set</button></div>`:'';
+  h+=`<div class="layout two"><div>${strip(R,g)}
+    ${s.ended||!canScore()?'':`<div class="ctl" style="max-width:none;margin:0 0 12px"><button class="btn us" data-act="pt" data-w="us" data-tour="pt-us">Point ${esc(S.team.name)}</button><button class="btn them" data-act="pt" data-w="them" data-tour="pt-them">Point ${esc(g.opp)}</button>
+    <button class="btn" data-act="timeout" data-team="us" data-tour="to-us">Timeout us</button><button class="btn" data-act="timeout" data-team="them" data-tour="to-them">Timeout them</button>
+    <button class="btn" data-act="oppSub" data-tour="opp-sub">Sub them</button><button class="btn ghost" data-act="undo" data-tour="undo" ${s.ev.length?'':'disabled'}>Undo</button></div>`}
+    ${sheetTeam(R,s,'us',S.team.name,g,i)}<div style="height:12px"></div>${sheetTeam(R,s,'them',g.opp,g,i)}</div>
+    <div class="card" data-tour="log"><div class="row"><h3 style="margin:0">Rally log</h3>${s.ended?'<span class="pill done" style="margin-left:auto">Final</span>':''}</div>
+    <div class="sclog" style="margin-top:8px">${R.log.slice().reverse().map(l=>`<div>${esc(l.txt)}</div>`).join('')||'<span class="muted">First serve is next.</span>'}</div>
+    ${canScore()?`<div class="row" style="margin-top:12px;gap:8px">${s.ended?'<button class="btn ghost" data-act="reopen">Reopen set</button>':'<button class="btn dark" data-act="endSet" data-tour="endset">End set</button>'}</div>`:''}</div></div>`;
+  return h;
+}
+function sheetTeam(R,s,t,name,g,i){
+  const isUs=t==='us';
+  const start=isUs?s.lineup.map(id=>P(id)?P(id).num:''):s.opp;
+  const curSlot=R.serve===t&&!s.ended?R.r[t]%6:-1;
+  const subs=k=>R.subLog[t].filter(x=>x.slot===k).map(x=>`<span class="sb">${esc(isUs?(P(x.in)||{}).num:x.in)} <i>${esc(x.score)}</i></span>`).join('')||'&nbsp;';
+  const terms=k=>{let out=R.terms[t].filter(x=>x.slot===k).map(x=>`<span class="tb">${x.score}</span>`).join('');
+    if(R.term&&R.term.team===t&&R.term.slot===k&&!s.ended)out+=`<span class="tb open">${R.sc[t]}</span>`;return out||'&nbsp;'};
+  const tg=target(g,i);const top=Math.max(tg>15?30:15,Math.ceil((R.sc[t]+1)/15)*15);
+  const scored=new Set(R.run[t].map(x=>x.n));
+  const runs=Array.from({length:top},(_,k)=>k+1).map(n=>`<span class="${scored.has(n)?'x':''} ${n===R.sc[t]&&s.ended?'last':''}">${n}</span>`).join('');
+  return `<div class="ss"><div class="ssh"><span class="tag" style="background:var(--${t})">${isUs?'A':'B'}</span><span class="tn">${esc(name)}</span>
+    <span class="big">${R.sc[t]}</span></div>
+    <table class="sg"><tr><td class="rh">Lineup</td>${ROMAN.map(x=>`<th>${x}</th>`).join('')}</tr>
+    <tr data-tour="${t}-start"><td class="rh">Start</td>${start.map((n,k)=>`<td><span class="st ${k===curSlot?'cur':''}">${esc(n||'·')}</span></td>`).join('')}</tr>
+    <tr data-tour="${t}-subs"><td class="rh">Subs</td>${ROMAN.map((x,k)=>`<td>${subs(k)}</td>`).join('')}</tr>
+    <tr data-tour="${t}-service"><td class="rh">Service</td>${ROMAN.map((x,k)=>`<td>${terms(k)}</td>`).join('')}</tr></table>
+    <div class="runs" data-tour="${t}-runs">${runs}</div>
+    <div class="ssf" data-tour="${t}-tos"><span>Timeouts ${Array.from({length:Math.max(S.settings.tos,R.tos[t].length)},(_,k)=>`<span class="tob">${R.tos[t][k]||'&nbsp;'}</span>`).join('')}</span><span>Subs <b>${R.subs[t]}</b></span></div></div>`;
+}
+
+/* ================= scoreboard ================= */
+function viewBoard(){
+  const b=S.board;const L=b.swap?'a':'h',Rr=b.swap?'h':'a';
+  const half=k=>{const nm=k==='h'?b.home:b.away,pts=b[k],sets=b[k+'s'];
+    return `<div class="half ${k}" data-act="bpt" data-k="${k}">${b.serve===k?`<span class="srv">${BALLW}</span>`:''}<div class="nmb">${esc(nm)}</div><div class="pts">${pts}</div>
+    <div class="sets">${[0,1,2].map(n=>`<i class="${n<sets?'f':''}"></i>`).join('')}</div>
+    <button class="minus" data-act="bminus" data-k="${k}" aria-label="Take a point away">−</button><button class="edit" data-act="bname" data-k="${k}">Rename</button></div>`};
+  return `<div class="sbwrap"><div class="sbt">${half(L)}${half(Rr)}</div>
+    <div class="sbbar"><button class="btn sm" data-act="bswap">⇄ Swap sides</button><button class="btn sm" data-act="bset">Next set</button><button class="btn sm" data-act="bundo">Undo</button><button class="btn sm" data-act="breset">Reset</button></div></div>`;
+}
+
+/* ================= roster ================= */
+// Every game day of the current team, added up per player.
+function seasonStats(){
+  const out={};const games=S.games.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  games.forEach(g=>g.sets.forEach(s=>{if(!s.started)return;const R=replay(s);
+    for(const id in R.pt){const m=R.pt[id];if(!m.played)continue;
+      const a=out[id]||(out[id]={games:0,_g:{},sets:0,starts:0,full:0,rallies:0,of:0,srv:0,srvW:0,pm:0,won:0,ins:0,rots:0,byGame:[]});
+      if(!a._g[g.id]){a._g[g.id]={g,sets:0,full:0,starts:0,rallies:0,of:0,srv:0,srvW:0,pm:0,won:0};a.byGame.push(a._g[g.id]);a.games++}
+      const bg=a._g[g.id];
+      for(const [k,v] of [['sets',1],['starts',m.started?1:0],['full',m.full?1:0],['rallies',m.rallies],['of',R.rallies],['srv',m.srv],['srvW',m.srvW],['pm',m.pm],['won',m.won]]){a[k]+=v;bg[k]+=v}
+      a.ins+=m.ins;a.rots+=m.rots}}));
+  return out}
+const pmTag=v=>`<span class="pm ${v>0?'up':v<0?'dn':''}">${v>0?'+':''}${v}</span>`;
+function viewRoster(){
+  if(S.ui.player&&P(S.ui.player))return viewPlayer(P(S.ui.player));
+  const ps=S.players.slice().sort(byNum);const st=seasonStats();const rv=S.ui.rview||'players';
+  const head=`<div class="row wrap" style="margin-bottom:10px;gap:8px"><h2 style="margin:0">${esc(S.team.name)}</h2>${canEdit()?'<button class="btn sm ghost" data-act="teamName">Rename</button>':''}
+    ${S.teams.length>1?`<button class="btn sm ghost" data-act="tab" data-tab="settings">Switch team</button>`:''}</div>
+    <div class="seg" style="margin-bottom:12px;max-width:420px"><button class="${rv==='players'?'on':''}" data-act="rview" data-v="players">Players</button><button class="${rv==='stats'?'on':''}" data-act="rview" data-v="stats">Team stats</button></div>`;
+  if(rv==='stats')return head+rosterStats(ps,st);
+  return head+`<div class="card" style="max-width:640px">
+    <p class="muted" style="margin:0 0 6px;font-size:14px">${ps.length} player${ps.length===1?'':'s'} · tap a player for her stats</p>
+    <div class="plist">${ps.map(p=>{const a=st[p.id];return `<button class="prow" data-act="openPlayer" data-id="${p.id}"><span class="num ${p.pos==='L'?'o':''}">${esc(p.num)}</span><span class="nm">${esc(p.name)}<div class="muted" style="font-size:12.5px;font-weight:500">${esc(POSNAME[p.pos]||p.pos||'')}${a?` · ${a.sets} set${a.sets===1?'':'s'} · ${a.rallies} pts played`:''}</div></span>${a?pmTag(a.pm):''}<span class="muted" style="font-size:20px">›</span></button>`}).join('')||'<p class="muted">No players yet.</p>'}</div>
+    ${canEdit()?`<button class="btn pri wide" style="margin-top:12px" data-act="editPlayer">+ Add player</button>
+    ${ps.length?'':'<button class="btn ghost wide" style="margin-top:8px" data-act="sample">Load a sample team</button>'}`:''}
+  </div>`;
+}
+const RCOLS=[['num','#'],['name','Player'],['games','Game days'],['sets','Sets'],['starts','Starts'],['full','Full sets'],['rallies','Points played'],['srv','Serves'],['srvW','Points on serve'],['srvP','Serve win %'],['pm','+/-'],['wonP','Rallies won']];
+function rosterStats(ps,st){
+  const val=(p,k)=>{const a=st[p.id]||{};if(k==='num')return +p.num||999;if(k==='name')return p.name;if(k==='srvP')return a.srv?a.srvW/a.srv:-1;if(k==='wonP')return a.rallies?a.won/a.rallies:-1;return a[k]||0};
+  const k=S.ui.rsort||'num';const asc=k==='num'||k==='name';
+  const rows=ps.slice().sort((x,y)=>{const a=val(x,k),b=val(y,k);return (typeof a==='string'?a.localeCompare(b):a-b)*(asc?1:-1)});
+  if(!Object.keys(st).length)return `<div class="card empty"><h2>No stats yet</h2><p>Stats come from the scorecard. Once you keep score in a game day, every player's numbers add up here.</p></div>`;
+  return `<div class="card"><p class="muted" style="font-size:13px;margin:0 0 6px">All ${S.games.length} game day${S.games.length===1?'':'s'} for ${esc(S.team.name)}. Tap a column to sort, or a player for her details.</p>
+  <div class="scroll"><table class="tbl"><thead><tr>${RCOLS.map(([c,t])=>`<th class="${c==='name'||c==='num'?'':'c'}"><button data-act="rsort" data-v="${c}" style="font:inherit;text-transform:inherit;letter-spacing:inherit;color:${k===c?'var(--orange2)':'inherit'}">${t}${k===c?(asc?' ▲':' ▼'):''}</button></th>`).join('')}</tr></thead><tbody>
+  ${rows.map(p=>{const a=st[p.id];if(!a)return `<tr data-act="openPlayer" data-id="${p.id}" style="cursor:pointer"><td><span class="num" style="min-width:30px;height:30px;font-size:16px">${esc(p.num)}</span></td><td style="font-weight:600">${esc(p.name)}</td><td colspan="10" class="muted">Hasn't played yet</td></tr>`;
+    return `<tr data-act="openPlayer" data-id="${p.id}" style="cursor:pointer"><td><span class="num" style="min-width:30px;height:30px;font-size:16px">${esc(p.num)}</span></td><td style="font-weight:600">${esc(p.name)}</td>
+    <td class="c">${a.games}</td><td class="c">${a.sets}</td><td class="c">${a.starts}</td><td class="c">${a.full}</td><td class="c">${a.rallies}<div class="sm">${pct(a.rallies,a.of)} of sets</div></td><td class="c">${a.srv}</td><td class="c">${a.srvW}</td><td class="c">${pct(a.srvW,a.srv)}</td><td class="c">${pmTag(a.pm)}</td><td class="c">${pct(a.won,a.rallies)}<div class="sm">${a.won}/${a.rallies}</div></td></tr>`}).join('')}
+  </tbody></table></div></div>`;
+}
+function viewPlayer(p){
+  const a=seasonStats()[p.id];
+  const tiles=a?`<div class="tiles">
+    <div class="tile"><b>${a.games}</b><span>Game days</span><em>${a.sets} set${a.sets===1?'':'s'} played</em></div>
+    <div class="tile"><b>${a.starts}</b><span>Starts</span><em>${a.full} full set${a.full===1?'':'s'}</em></div>
+    <div class="tile"><b>${a.rallies}</b><span>Points played</span><em>${pct(a.rallies,a.of)} of the points in her sets</em></div>
+    <div class="tile"><b>${pmTag(a.pm)}</b><span>Plus / minus</span><em>Won ${a.won} of ${a.rallies} rallies</em></div>
+    <div class="tile"><b>${a.srv}</b><span>Serves</span><em>${a.srv?'Rallies with her serving':'None yet'}</em></div>
+    <div class="tile"><b>${a.srvW}</b><span>Points on her serve</span><em>${pct(a.srvW,a.srv)} of her serves</em></div>
+    <div class="tile"><b>${a.ins}</b><span>Times subbed in</span></div>
+    <div class="tile"><b>${a.rots}</b><span>Rotations</span></div></div>`:`<p class="muted">${esc(short(p))} hasn't played in a scored set yet.</p>`;
+  const games=a?a.byGame.slice().reverse().map(x=>`<tr data-act="openGameFrom" data-id="${x.g.id}" style="cursor:pointer"><td><b>${esc(fmtDate(x.g.date))}</b><div class="sm">vs ${esc(x.g.opp)}</div></td><td class="c">${x.sets}<div class="sm">${x.full} full</div></td><td class="c">${x.rallies}<div class="sm">${pct(x.rallies,x.of)}</div></td><td class="c">${x.srvW}/${x.srv}</td><td class="c">${pmTag(x.pm)}</td></tr>`).join(''):'';
+  return `<div class="row" style="margin-bottom:10px"><button class="btn sm ghost" data-act="closePlayer">‹ Roster</button>${canEdit()?`<button class="btn sm ghost" style="margin-left:auto" data-act="editPlayer" data-id="${p.id}">Edit</button>`:''}</div>
+  <div class="card"><div class="row" style="gap:12px"><span class="num ${p.pos==='L'?'o':''}" style="min-width:56px;height:56px;font-size:30px;border-radius:14px">${esc(p.num)}</span><div><h2 style="margin:0">${esc(p.name)}</h2><span class="muted">${esc(POSNAME[p.pos]||'')} · ${esc(S.team.name)}</span></div></div></div>
+  <div class="card"><h3>Season</h3>${tiles}</div>
+  ${a?`<div class="card"><h3>Game days</h3><div class="scroll"><table class="tbl"><thead><tr><th>Date</th><th class="c">Sets</th><th class="c">Points played</th><th class="c">Serve pts</th><th class="c">+/-</th></tr></thead><tbody>${games}</tbody></table></div></div>`:''}`;
+}
+
+/* ================= settings ================= */
+function viewSettings(){
+  const st=S.settings;const L=LEVELS[st.level]||LEVELS.custom;
+  const dis=canEdit()?'':'disabled';
+  const numSel=(key,opts,lab)=>`<div class="field"><span class="lbl">${lab}</span><select data-act="setNum" data-key="${key}" data-change="1" ${dis}>${opts.map(([v,t])=>`<option value="${v}" ${st[key]===v?'selected':''}>${t}</option>`).join('')}</select></div>`;
+  let acct='';
+  if(!WA) acct=`<p class="muted" style="font-size:13px;margin:0">Saving to your account works on the Web Apps site. For now, everything stays on this device.</p>`;
+  else if(saveTo==='account'&&!ME) acct=`<p class="muted" style="margin:0 0 10px;font-size:14px">Sign in with your Web Apps account. Until you do, the notebook keeps saving on this device.</p>
+    <div class="field"><span class="lbl">Username</span><input id="siU" autocomplete="username" autocapitalize="off" spellcheck="false"></div>
+    <div class="field"><span class="lbl">Password</span><input id="siP" type="password" autocomplete="current-password"></div>
+    <div class="err" id="siErr"></div><button class="btn pri wide" data-act="signIn">Sign in</button>
+    <p class="muted" style="font-size:13px;margin:10px 0 0">No account yet? Make one on the <a href="../#account">Web Apps home page</a>.</p>`;
+  else if(saveTo==='account') acct=`<div class="acct"><span class="av" style="background:${WA.colorFor?WA.colorFor(ME.username):'#FF7A1A'};color:#fff;display:flex;align-items:center;justify-content:center;font:800 18px var(--head)">${esc((ME.name||ME.username).charAt(0).toUpperCase())}</span><div style="flex:1;min-width:0"><b>${esc(ME.name||ME.username)}</b><div class="muted" style="font-size:13px">@${esc(ME.username)} · ${syncState==='saving'?'Saving…':syncState==='error'?"Couldn't save":syncState==='offline'?'Offline':'Saved to your account'}</div></div><button class="btn sm ghost" data-act="signOut">Sign out</button></div>
+    <p class="muted" style="font-size:13px;margin:0">Your notebook follows you to any phone or iPad where you sign in.</p>`;
+  else acct=`<p class="muted" style="font-size:13px;margin:0">Everything stays on this ${/iPad|Tablet/.test(navigator.userAgent)?'iPad':'device'}. Switch to your account to use it on more than one device.</p>`;
+  return `<div class="card" style="margin-bottom:14px">${teamsCard()}</div><div class="layout two"><div class="card"><h3>Rules for ${esc(S.team.name)}</h3>
+    ${canEdit()?'':'<p class="muted" style="font-size:13px;margin:-2px 0 10px">Only coaches can change the rules.</p>'}<div class="field"><span class="lbl">Level</span><select data-act="setLevel" data-change="1" ${dis}>${Object.entries(LEVELS).map(([k,v])=>`<option value="${k}" ${st.level===k?'selected':''}>${v.name}</option>`).join('')}</select></div>
+    <p class="muted" style="font-size:13px;margin:-4px 0 14px">${esc(L.note)}</p>
+    <div class="grid2">
+      ${numSel('sets',[[1,'1 set'],[2,'2 sets'],[3,'Best of 3'],[5,'Best of 5']],'Sets per match')}
+      ${numSel('pts',[[15,'15'],[21,'21'],[25,'25']],'Other sets play to')}
+      ${numSel('decider',[[15,'15'],[21,'21'],[25,'25']],'Last set plays to')}
+      ${numSel('subs',[[6,'6'],[12,'12'],[15,'15'],[18,'18'],[99,'No limit']],'Subs per set')}
+      ${numSel('tos',[[1,'1'],[2,'2'],[3,'3']],'Timeouts per set')}
+    </div>
+    <div class="field" style="margin-top:2px"><span class="lbl">Last set</span><div class="seg"><button class="${st.playAll?'':'on'}" data-act="playAll" data-v="0">Only if it's tied</button><button class="${st.playAll?'on':''}" data-act="playAll" data-v="1">Always played</button></div></div>
+    <p class="muted" style="font-size:13px;margin:-4px 0 0">${st.sets<3?'The last set only matters in best of 3 or 5.':st.playAll?`Every set is played, even after the match is decided. The last set goes to ${st.decider}.`:`The last set is only played when the match is tied, and goes to ${st.decider}.`}</p></div>
+    <div><div class="card"><h3>Playing time</h3>
+      <div class="seg"><button class="${st.measure==='points'?'on':''}" data-act="measure" data-v="points">Points played</button><button class="${st.measure==='rotations'?'on':''}" data-act="measure" data-v="rotations">Rotations</button></div>
+      <p class="muted" style="font-size:13px;margin:10px 0 0">${st.measure==='points'?'Counts every rally a player is on the court for. It\'s the fairest measure, since sets run different lengths. Needs the score kept.':'Counts the rotations a player is on the court for. Works even when you only tap Rotate and don\'t keep score.'}</p></div>
+    <div class="card"><h3>Saving</h3>
+      <div class="seg" style="margin-bottom:12px"><button class="${saveTo==='device'?'on':''}" data-act="saveTo" data-v="device">This device</button><button class="${saveTo==='account'?'on':''}" data-act="saveTo" data-v="account" ${WA?'':'disabled'}>My account</button></div>
+      ${acct}</div></div></div>`;
+}
+
+function teamsCard(){
+  return `<div class="row" style="margin-bottom:6px"><h3 style="margin:0">Teams</h3><button class="btn sm pri" style="margin-left:auto" data-act="newTeam">+ New team</button></div>
+  <p class="muted" style="font-size:13px;margin:0 0 6px">Each team keeps its own roster, game days, stats and rules. Old teams stay here with all their history. Use ••• to share a team with other coaches, a scorekeeper or parents.</p>
+  ${S.teams.map(t=>{const on=t.id===S.teamId;let w=0,l=0;t.games.forEach(g=>{let a=0,b=0;g.sets.forEach(x=>{if(x.ended){const R=replay(x);if(R.sc.us>R.sc.them)a++;else if(R.sc.them>R.sc.us)b++}});if(a>b)w++;else if(b>a)l++});
+    return `<div class="prow" style="cursor:default"><span class="num ${on?'o':''}" style="min-width:40px">${esc(t.name.charAt(0).toUpperCase())}</span><div style="flex:1;min-width:0"><b>${esc(t.name)}</b>${t.cloud?` <span class="pill" style="background:#E9F1FF;color:#123E8C">Shared · ${ROLE_NAME[t.role]}</span>`:''}<div class="muted" style="font-size:13px">${t.players.length} player${t.players.length===1?'':'s'} · ${t.games.length} game day${t.games.length===1?'':'s'}${w+l?` · ${w}–${l}`:''} · ${esc((LEVELS[t.settings.level]||LEVELS.custom).name)}</div></div>
+    ${on?'<span class="pill ok">Current</span>':`<button class="btn sm dark" data-act="setTeam" data-id="${t.id}">Use</button>`}<button class="btn sm ghost" data-act="teamMenu" data-id="${t.id}" aria-label="More">•••</button></div>`}).join('')}`;
+}
+
+/* ================= drills ================= */
+const DV={half:{x:-2.2,y:4.6,w:13.4,h:16.6},full:{x:-2.2,y:-2.6,w:13.4,h:23.2}};
+const KINDS={p:{name:'Player',fill:'#0E1A3B',ink:'#fff'},o:{name:'Other side',fill:'#2F7BFF',ink:'#fff'},c:{name:'Coach',fill:'#fff',ink:'#0E1A3B'},t:{name:'Target',fill:'none',ink:'#1E9E6A'},k:{name:'Cone',fill:'#FFD23F',ink:'#0E1A3B'}};
+const HEIGHTS=[0,0.9,2.3];
+const FOCUS=['All','Ball control','Passing','Serving','Setting','Hitting','Defense','Blocking','Mine'];
+function mk(id,name,focus,desc,view,toks,frames){
+  const tokens=toks.map(([tid,kind,label])=>({id:tid,kind,label:label||tid}));
+  const out=[];let prev=null;
+  frames.forEach((f,i)=>{const pos={};tokens.forEach(t=>{pos[t.id]=(f[t.id]||(prev&&prev.pos[t.id])||[4.5,14]).slice()});
+    const fr={pos,ball:(f.ball||(prev&&prev.ball)||[4.5,13]).slice(),h:f.h==null?1:f.h,note:f.note||''};if(f.jump)fr.jump=1;out.push(fr);prev=fr});
+  return {id,name,focus,desc,view,tokens,frames:out,builtin:true};
+}
+const BUILTIN=[
+  mk('pepper','Partner pepper','Ball control','Two players keep one ball going: dig, set, hit, over and over. A great warm-up for touch and control.','half',
+    [['A','p'],['B','p']],[
+    {A:[4.5,11.2],B:[4.5,15.4],ball:[4.5,10.7],h:0,note:'A starts with the ball. Stand about 4 to 5 meters apart.'},
+    {ball:[4.5,14.9],h:1,note:'A hits a controlled down ball at B.'},
+    {ball:[4.5,11.7],h:2,B:[4.5,15.2],note:'B digs it high to A.'},
+    {ball:[4.5,14.8],h:2,note:'A sets it back to B.'},
+    {ball:[4.5,11.6],h:1,A:[4.5,11.4],note:'B hits back at A.'},
+    {ball:[4.5,14.7],h:2,note:'A digs to B, and the pattern keeps going.'}]),
+  mk('tpsh','Toss, pass, set, hit','Hitting','The coach tosses a free ball. Pass to target, the setter sets outside, and the hitter attacks. Rotate after each rep.','half',
+    [['C','c'],['P','p'],['S','p'],['H','p']],[
+    {C:[4.5,6.2],P:[4.5,15.8],S:[7.3,16.1],H:[0.8,12.8],ball:[4.5,5.7],h:0,note:'Start: passer in the middle back, setter right back, hitter outside off the net.'},
+    {ball:[4.5,15.3],h:2,S:[6.1,10.1],note:'Coach tosses a free ball over. The setter releases to the target.'},
+    {ball:[6.0,9.9],h:2,H:[1.5,12.4],note:'Pass high to the target. The hitter gets ready to approach.'},
+    {ball:[1.2,9.5],h:2,H:[1.5,10.0],note:'Set to the outside. The hitter takes her approach.'},
+    {ball:[7.3,5.4],h:1,note:'Swing! Attack crosscourt.'},
+    {P:[4.5,15.8],S:[7.3,16.1],H:[0.8,12.8],ball:[4.5,5.7],jump:1,note:'Everyone resets. Coach has the next ball.'}]),
+  mk('sr3','Three-person serve receive','Passing','A server across the net serves to three passers, who pass to a target. Passers call the ball loud and early.','full',
+    [['Sv','o','S'],['L','p'],['M','p'],['R','p'],['T','t']],[
+    {Sv:[6.3,-1.3],L:[1.8,15.2],M:[4.5,15.6],R:[7.2,15.2],T:[6.0,9.9],ball:[6.0,-1.0],h:0,note:'Three passers in a line, a server across the net and a target by the net.'},
+    {ball:[4.6,15.1],h:1,note:'Serve to the middle passer.'},
+    {ball:[6.0,10.0],h:2,note:'She passes to the target.'},
+    {ball:[6.0,-1.0],jump:1,note:'The server takes the next ball.'},
+    {ball:[2.0,14.9],h:1,L:[2.0,15.0],M:[4.2,15.4],note:'Serve to the left passer. She calls "Mine!" and the middle opens up.'},
+    {ball:[6.0,10.0],h:2,note:'Pass to the target, then reset.'}]),
+  mk('butterfly','Butterfly','Serving','Serve, pass and target, then everyone follows the ball to a new spot. Keeps a whole team moving with one ball per group.','full',
+    [['A','p'],['B','p'],['C','p']],[
+    {A:[4.5,-1.3],B:[4.5,15.8],C:[6.0,10.2],ball:[4.3,-0.9],h:0,note:'A serves, B passes, C is the target.'},
+    {ball:[4.5,15.3],h:1,note:'A serves to B.'},
+    {ball:[6.0,10.0],h:2,note:'B passes to C at the target.'},
+    {A:[10.3,8.4],B:[6.4,10.6],C:[10.3,9.8],ball:[10.1,9.8],h:0,note:'Follow your ball: A heads to the passing line, B becomes the target, C takes the ball to serve.'},
+    {A:[4.5,15.8],B:[6.0,10.2],C:[4.5,-1.3],ball:[4.3,-0.9],h:0,note:'Everyone has a new job. Go again.'}]),
+  mk('box','Dig off the box','Defense','The coach hits from a box at the net. Diggers stay low and dig high to the target, who gives the ball back.','half',
+    [['C','c'],['D1','p'],['D2','p'],['T','p']],[
+    {C:[2.0,10.6],D1:[3.0,15.8],D2:[7.0,15.8],T:[6.0,10.0],ball:[2.3,10.2],h:0,note:'Coach on a box at the left front. Two diggers back, a target at the net.'},
+    {ball:[3.1,15.3],h:1,D1:[3.1,15.6],note:'Coach hits at the first digger.'},
+    {ball:[5.9,10.4],h:2,note:'She digs it high to the target.'},
+    {ball:[2.4,10.3],h:1,note:'The target hands the ball back to the coach.'},
+    {ball:[6.9,15.3],h:1,D2:[6.8,15.6],note:'Coach hits at the second digger.'},
+    {ball:[5.9,10.4],h:2,note:'Dig to the target. Stay low and on balance.'}]),
+  mk('slide','Middle slide to block','Blocking','Their setter sets their outside. Our middle slides over to close the block with our right side.','half',
+    [['OS','o','S'],['OH','o','H'],['LB','p','4'],['MB','p','3'],['RB','p','2']],[
+    {OS:[5.6,8.2],OH:[8.3,6.4],LB:[1.6,9.6],MB:[4.5,9.6],RB:[7.6,9.6],ball:[5.6,7.8],h:0,note:'Blockers at base. Their setter has the ball.'},
+    {ball:[8.0,8.3],h:2,MB:[6.9,9.6],OH:[8.0,7.7],note:'They set outside. Our middle slides to close the block.'},
+    {ball:[7.2,6.2],h:1,note:'The hitter swings into a closed block. Stuff!'},
+    {MB:[4.5,9.6],OH:[8.3,6.4],ball:[5.6,7.8],jump:1,note:'Back to base and go again.'}])
+];
+let DR={mode:'list',id:null,t:0,playing:false,speed:1,loop:true,raf:0,last:0,ed:null,f:0,sel:null};
+let SHARED=[],MYSHARES={};   // drills others shared with me; how many people each of my drills is shared with
+const allDrills=()=>BUILTIN.concat(S.drills,SHARED);
+const isFav=id=>S.favDrills.includes(id);
+const ICON_STAR=on=>`<svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.2l-5.7 3.1 1.2-6.4-4.7-4.4 6.4-.8z" fill="${on?'#FFB020':'none'}" stroke="${on?'#E39A00':'#8A93AB'}" stroke-width="1.8" stroke-linejoin="round"/></svg>`;
+const ICON_PEOPLE=n=>`<svg viewBox="0 0 24 24" width="22" height="22" fill="${n?'#FF7A1A':'none'}" stroke="${n?'#E35F00':'#8A93AB'}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.4"/><path d="M2.8 20c.8-3.6 3.3-5.6 6.2-5.6s5.4 2 6.2 5.6z"/><circle cx="17" cy="9" r="2.6" ${n?'':'fill="none"'}/><path d="M16.6 14.2c2.5.2 4.2 2 4.7 5" fill="none"/></svg>`;
+const shareCount=d=>d.cloudId?(MYSHARES[d.cloudId]||0):0;
+let PREVIEW=null;
+const findDrill=id=>id==='__preview'?PREVIEW:allDrills().find(d=>d.id===id);
+
+function courtSVG(view){
+  const v=DV[view];
+  const lines=`<rect x="0" y="0" width="9" height="18" fill="#EDA25E"/><rect x="0" y="6" width="9" height="6" fill="#E3924C"/>
+    <g fill="none" stroke="#fff" stroke-width=".07"><rect x="0" y="0" width="9" height="18"/><line x1="0" y1="6" x2="9" y2="6"/><line x1="0" y1="12" x2="9" y2="12"/></g>
+    <line x1="-.7" y1="9" x2="9.7" y2="9" stroke="#0E1A3B" stroke-width=".2"/><line x1="-.7" y1="9" x2="9.7" y2="9" stroke="#fff" stroke-width=".05" stroke-dasharray=".12 .12"/>
+    <circle cx="-.7" cy="9" r=".16" fill="#0E1A3B"/><circle cx="9.7" cy="9" r=".16" fill="#0E1A3B"/>`;
+  return {vb:`${v.x} ${v.y} ${v.w} ${v.h}`,bg:`<rect x="${v.x}" y="${v.y}" width="${v.w}" height="${v.h}" fill="#2E4A8A"/>${lines}`,v};
+}
+function tokSVG(t,x,y,o){
+  const k=KINDS[t.kind]||KINDS.p;const lab=esc(String(t.label).slice(0,3));const fs=lab.length>2?.36:.46;
+  let body;
+  if(t.kind==='t') body=`<circle class="r" r=".55" fill="rgba(30,158,106,.18)" stroke="#1E9E6A" stroke-width=".1"/><circle r=".22" fill="#1E9E6A"/>`;
+  else if(t.kind==='k') body=`<path class="r" d="M0 -.48 L.45 .36 L-.45 .36 Z" fill="#FFD23F" stroke="#0E1A3B" stroke-width=".06"/>`;
+  else if(t.kind==='c') body=`<rect class="r" x="-.5" y="-.5" width="1" height="1" rx=".18" fill="#fff" stroke="#0E1A3B" stroke-width=".08"/><text y=".17" text-anchor="middle" font-size="${fs}" font-weight="800" fill="#0E1A3B" font-family="Barlow Condensed,Arial Narrow,sans-serif">${lab}</text>`;
+  else body=`<circle class="r" r=".5" fill="${k.fill}" stroke="#fff" stroke-width=".08"/><text y=".17" text-anchor="middle" font-size="${fs}" font-weight="800" fill="#fff" font-family="Barlow Condensed,Arial Narrow,sans-serif">${lab}</text>`;
+  return `<g class="tok ${o&&o.sel?'sel':''}" data-tok="${esc(t.id)}" transform="translate(${x.toFixed(3)} ${y.toFixed(3)})">${body}</g>`;
+}
+const BALLSVG=`<g id="dBall"><ellipse id="dShadow" rx=".26" ry=".13" fill="rgba(0,0,0,.3)"/><g id="dBallG"><circle r=".26" fill="#fff" stroke="#0E1A3B" stroke-width=".05"/><path d="M0 -.26a.26 .26 0 0 1 .22 .4" fill="none" stroke="#FF7A1A" stroke-width=".07"/><path d="M-.18 .16c.12 .06 .26 .05 .36 -.03M0 -.26c-.07 .09 -.09 .19 -.07 .29" fill="none" stroke="#0E1A3B" stroke-width=".035"/></g></g>`;
+function arrowDefs(){return `<defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#fff"/></marker><marker id="ahb" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#FFD23F"/></marker></defs>`}
+function segArrows(d,k){ // movement from frame k to k+1
+  const A=d.frames[k],B=d.frames[k+1];if(!A||!B)return '';let s='';
+  d.tokens.forEach(t=>{const a=A.pos[t.id],b=B.pos[t.id];if(!a||!b)return;const dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy);if(L<.35)return;
+    const sx=a[0]+dx/L*.55,sy=a[1]+dy/L*.55,ex=b[0]-dx/L*.6,ey=b[1]-dy/L*.6;
+    s+=`<line x1="${sx}" y1="${sy}" x2="${ex}" y2="${ey}" stroke="#fff" stroke-width=".07" stroke-dasharray=".22 .16" marker-end="url(#ah)" opacity=".85"/>`});
+  if(!B.jump){const a=A.ball,b=B.ball;const L=Math.hypot(b[0]-a[0],b[1]-a[1]);if(L>.3){const hh=HEIGHTS[B.h]||0;const mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2-hh*1.1;
+    s+=`<path d="M${a[0]} ${a[1]} Q${mx} ${my} ${b[0]} ${b[1]}" fill="none" stroke="#FFD23F" stroke-width=".08" ${B.h===0?'stroke-dasharray=".1 .12"':''} marker-end="url(#ahb)" opacity=".95"/>`}}
+  return s;
+}
+const ease=u=>u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2;
+function poseAt(d,t){
+  const n=d.frames.length;if(n<2){const f=d.frames[0];return {pos:f.pos,ball:f.ball,lift:0,hide:false,k:0}}
+  const k=Math.min(Math.floor(t),n-2),u=Math.max(0,Math.min(1,t-k));const A=d.frames[k],B=d.frames[k+1];const e=ease(u);const pos={};
+  d.tokens.forEach(tk=>{const a=A.pos[tk.id]||[0,0],b=B.pos[tk.id]||a;pos[tk.id]=[a[0]+(b[0]-a[0])*e,a[1]+(b[1]-a[1])*e]});
+  if(B.jump) return {pos,ball:u<.98?A.ball:B.ball,lift:0,hide:u>.05&&u<.98,k};
+  const bu=B.h===0?e:u;const ball=[A.ball[0]+(B.ball[0]-A.ball[0])*bu,A.ball[1]+(B.ball[1]-A.ball[1])*bu];
+  return {pos,ball,lift:(HEIGHTS[B.h]||0)*Math.sin(Math.PI*u),hide:false,k};
+}
+function drillSVG(d,o){
+  o=o||{};const c=courtSVG(d.view);const f=o.frame!=null?d.frames[o.frame]:d.frames[0];
+  let ghosts='',arrows='';
+  if(o.edit&&o.frame>0){const pv=d.frames[o.frame-1];ghosts=d.tokens.map(t=>{const p=pv.pos[t.id];return p?`<circle cx="${p[0]}" cy="${p[1]}" r=".45" fill="none" stroke="#fff" stroke-width=".05" stroke-dasharray=".1 .1" opacity=".7"/>`:''}).join('')+`<circle cx="${pv.ball[0]}" cy="${pv.ball[1]}" r=".2" fill="none" stroke="#FFD23F" stroke-width=".05" stroke-dasharray=".08 .08"/>`;arrows=segArrows(d,o.frame-1)}
+  if(o.thumb) arrows=segArrows(d,0);
+  const toks=d.tokens.map(t=>{const p=f.pos[t.id]||[4.5,14];return tokSVG(t,p[0],p[1],{sel:o.sel===t.id})}).join('');
+  return `<svg viewBox="${c.vb}" xmlns="http://www.w3.org/2000/svg" ${o.id?`id="${o.id}"`:''}>${arrowDefs()}${c.bg}<g id="dGhost">${ghosts}</g><g id="dArrows">${arrows}</g><g id="dToks">${toks}</g>
+    <g class="tok ${o.sel==='ball'?'sel':''}" data-tok="ball" transform="translate(${f.ball[0]} ${f.ball[1]})">${o.edit?'<circle class="r" r=".42" fill="rgba(255,210,63,.25)"/>':''}${BALLSVG.replace(/id="[^"]+"/g,'')}</g></svg>`;
+}
+
+function viewDrills(){
+  if(DR.mode==='view'){const d=findDrill(DR.id);if(d)return viewDrill(d);DR.mode='list'}
+  if(DR.mode==='edit'&&DR.ed)return viewEditor();
+  DR.mode='list';
+  const f=S.ui.dfocus||'All';
+  const list=allDrills().filter(d=>f==='All'||(f==='Favorites'?isFav(d.id):f==='Shared with me'?d.received:f==='Mine'?(!d.builtin&&!d.received):d.focus===f));
+  const cats=['All','Favorites'].concat(SHARED.length?['Shared with me']:[],S.drills.length?['Mine']:[],FOCUS.filter(x=>x!=='All'&&x!=='Mine'));
+  return `<div class="row wrap" style="margin-bottom:8px"><h2 style="margin:0">Drills</h2><button class="btn pri sm" style="margin-left:auto" data-act="newDrill">+ Build a drill</button></div>
+  <div class="chips">${cats.map(x=>`<button class="chip ${f===x?'on':''}" data-act="dfocus" data-v="${esc(x)}">${x==='Favorites'?'★ ':''}${esc(x)}${x==='Shared with me'?` <span class="pill" style="padding:1px 7px">${SHARED.length}</span>`:''}</button>`).join('')}</div>
+  <div class="dlist">${list.map(d=>{const n=shareCount(d);return `<div class="dcard ${n?'shared':''}" role="button" tabindex="0" data-act="openDrill" data-id="${esc(d.id)}"><div class="thumb">${drillSVG(d,{thumb:1})}</div><div class="dt">
+    <div class="row" style="gap:6px;flex-wrap:wrap"><span class="pill">${esc(d.focus)}</span>${d.received?'<span class="pill sw">Shared with me</span>':d.builtin?'':'<span class="pill live">Yours</span>'}</div>
+    <b style="margin-top:6px">${esc(d.name)}</b><p>${esc(d.desc||'')}</p>
+    <div class="row" style="margin-top:6px"><span class="muted" style="font-size:12px">${d.received?'From '+esc(d.from.name||d.from.username):(n=>`${n} player${n===1?'':'s'}`)(d.tokens.filter(t=>t.kind==='p').length)+` · ${d.frames.length-1} step${d.frames.length===2?'':'s'}`}${n?` · <span style="color:var(--orange2);font-weight:700">Shared with ${n}</span>`:''}</span>
+    <span style="margin-left:auto;display:flex;gap:2px">${!d.builtin&&!d.received?`<button class="ibtn" data-act="shareDrill" data-id="${esc(d.id)}" aria-label="Share this drill">${ICON_PEOPLE(n)}</button>`:''}<button class="ibtn" data-act="fav" data-id="${esc(d.id)}" aria-label="${isFav(d.id)?'Remove from favorites':'Add to favorites'}">${ICON_STAR(isFav(d.id))}</button></span></div></div></div>`}).join('')||`<p class="muted">${f==='Favorites'?'Tap the ☆ on any drill to add it to your favorites.':f==='Shared with me'?'Drills other coaches share with you show up here.':'No drills here yet.'}</p>`}</div>`;
+}
+function viewDrill(d){
+  const n=shareCount(d);
+  return `<div class="row" style="margin-bottom:10px"><button class="btn sm ghost" data-act="drillBack">‹ Drills</button><span class="pill" style="margin-left:auto">${esc(d.focus)}</span>${d.received?'<span class="pill sw">Shared with me</span>':''}
+    ${!d.builtin&&!d.received?`<button class="ibtn" data-act="shareDrill" data-id="${esc(d.id)}" aria-label="Share this drill">${ICON_PEOPLE(n)}</button>`:''}<button class="ibtn" data-act="fav" data-id="${esc(d.id)}" aria-label="Favorite">${ICON_STAR(isFav(d.id))}</button></div>
+  <h2 style="margin:0 0 4px">${esc(d.name)}</h2><p class="muted" style="margin:0 0 12px">${esc(d.desc||'')}${d.received?`<br><span style="font-size:13px">Shared by ${esc(d.from.name||d.from.username)} (@${esc(d.from.username)})</span>`:n?`<br><span style="font-size:13px;color:var(--orange2);font-weight:600">Shared with ${n} ${n===1?'person':'people'}</span>`:''}</p>
+  <div class="layout two"><div><div class="dfield">${drillSVG(d,{id:'dSvg'})}</div>
+    <div class="dnote"><span class="sn" id="dStep">START</span><span id="dNote">${esc(d.frames[0].note||'Starting spots.')}</span></div>
+    <div class="dctl"><button class="btn ghost" data-act="dPrev" aria-label="Back a step">⏮</button><button class="btn pri play" data-act="dPlay" id="dPlayBtn">▶ Play</button><button class="btn ghost" data-act="dNext" aria-label="Next step">⏭</button>
+      <button class="btn ghost sm" data-act="dSpeed" id="dSpeedBtn">${DR.speed}x</button></div>
+    <div class="legend"><span><i style="background:#0E1A3B"></i>Our players</span><span><i style="background:#2F7BFF"></i>Other side</span><span><i style="background:#fff;border:1.5px solid #0E1A3B;border-radius:3px"></i>Coach</span><span><i style="background:#FFD23F"></i>Ball path</span></div></div>
+  <div class="card"><h3>Steps</h3><p class="muted" style="margin:0 0 6px">${esc(d.frames[0].note||'Starting spots.')}</p><ol style="margin:0;padding-left:22px;line-height:1.5">${d.frames.slice(1).map((f,i)=>`<li>${esc(f.note||'Step '+(i+1))}</li>`).join('')}</ol>
+    <div class="row" style="margin-top:14px;gap:8px;flex-wrap:wrap">${d.received?`<button class="btn dark" data-act="copyDrill" data-id="${esc(d.id)}">Copy and change it</button><button class="btn ghost" data-act="dropShared" data-id="${esc(d.id)}">Remove from my list</button>`:d.builtin?`<button class="btn dark" data-act="copyDrill" data-id="${esc(d.id)}">Copy and change it</button>`:`<button class="btn" data-act="shareDrill" data-id="${esc(d.id)}">${n?'Shared with '+n+' · change':'Share with others'}</button>`+`<button class="btn dark" data-act="editDrill" data-id="${esc(d.id)}">Edit drill</button><button class="btn bad" data-act="delDrill" data-id="${esc(d.id)}">Delete</button>`}</div></div></div>`;
+}
+function viewEditor(){
+  const d=DR.ed,f=DR.f,fr=d.frames[f];const sel=DR.sel&&DR.sel!=='ball'?d.tokens.find(t=>t.id===DR.sel):null;
+  return `<div class="row" style="margin-bottom:10px"><button class="btn sm ghost" data-act="edCancel">Cancel</button><b style="flex:1;text-align:center">${d.id&&S.drills.some(x=>x.id===d.id)?'Edit drill':'New drill'}</b><button class="btn sm pri" data-act="edSave">Save</button></div>
+  <div class="layout two"><div>
+    <div class="steps">${d.frames.map((x,i)=>`<button class="chip ${i===f?'on':''}" data-act="edFrame" data-i="${i}">${i?'Step '+i:'Start'}</button>`).join('')}<button class="chip alt" data-act="edAddStep">+ Step</button></div>
+    <div class="dfield" id="edField">${drillSVG(d,{id:'edSvg',edit:1,frame:f,sel:DR.sel})}</div>
+    <p class="muted" style="font-size:13px;text-align:center;margin:8px 0 0">${f===0?'Drag players and the ball to where they start.':'Drag players and the ball to where they end up in this step. Dashed circles show where they were.'}</p>
+    <div class="dctl"><button class="btn ghost sm" data-act="edPreview" ${d.frames.length<2?'disabled':''}>▶ Preview</button>${f>0?'<button class="btn bad sm" data-act="edDelStep">Delete step</button>':''}</div>
+  </div><div>
+    <div class="card"><h3>${f?'Step '+f:'Start'}</h3>
+      <div class="field"><span class="lbl">What happens</span><input id="edNote" value="${esc(fr.note||'')}" placeholder="${f?'Coach tosses to the passer':'Starting spots'}" maxlength="120"></div>
+      ${f?`<div class="field"><span class="lbl">Ball travels <span style="text-transform:none;letter-spacing:0">· Hit = serve or attack, High = pass, set or toss</span></span><div class="seg"><button class="${fr.jump?'on':''}" data-act="edH" data-v="j">New ball</button><button class="${!fr.jump&&fr.h===0?'on':''}" data-act="edH" data-v="0">Carried</button><button class="${!fr.jump&&fr.h===1?'on':''}" data-act="edH" data-v="1">Hit</button><button class="${!fr.jump&&fr.h===2?'on':''}" data-act="edH" data-v="2">High</button></div></div>`:''}
+      <span class="lbl">Add to the court</span>
+      <div class="tools" style="margin-top:6px">${['p','o','c','t','k'].map(k=>`<button class="btn sm" data-act="edAdd" data-k="${k}">+ ${KINDS[k].name}</button>`).join('')}</div>
+      ${sel?`<div style="margin-top:14px;border-top:1px solid var(--soft);padding-top:12px"><div class="row" style="gap:8px"><div class="field" style="flex:1;margin:0"><span class="lbl">Label</span><input id="edLabel" data-id="${esc(sel.id)}" value="${esc(sel.label)}" maxlength="3"></div><button class="btn bad sm" style="align-self:flex-end" data-act="edDelTok">Remove</button></div></div>`:''}
+    </div>
+    <div class="card"><h3>About this drill</h3>
+      <div class="field"><span class="lbl">Name</span><input id="edName" value="${esc(d.name)}" maxlength="40"></div>
+      <div class="field"><span class="lbl">Focus</span><select id="edFocus">${FOCUS.filter(x=>x!=='All'&&x!=='Mine').map(x=>`<option ${d.focus===x?'selected':''}>${x}</option>`).join('')}</select></div>
+      <div class="field"><span class="lbl">How it works</span><textarea id="edDesc" maxlength="300">${esc(d.desc||'')}</textarea></div>
+      <div class="field"><span class="lbl">Court</span><div class="seg"><button class="${d.view==='half'?'on':''}" data-act="edView" data-v="half">Our half</button><button class="${d.view==='full'?'on':''}" data-act="edView" data-v="full">Full court</button></div></div>
+    </div></div></div>`;
+}
+function afterDrills(){
+  if(DR.mode==='view'){DR.t=0;DR.playing=false;drawPose()}
+  if(DR.mode==='edit')bindEditor();
+}
+function drawPose(){
+  const d=findDrill(DR.id);const svg=$('#dSvg');if(!d||!svg)return;
+  const p=poseAt(d,DR.t);
+  svg.querySelectorAll('#dToks .tok').forEach(g=>{const q=p.pos[g.dataset.tok];if(q)g.setAttribute('transform',`translate(${q[0].toFixed(3)} ${q[1].toFixed(3)})`)});
+  const bg=svg.querySelector('[data-tok="ball"]');bg.setAttribute('transform',`translate(${p.ball[0].toFixed(3)} ${p.ball[1].toFixed(3)})`);bg.style.opacity=p.hide?0:1;
+  const inner=bg.children[0];if(inner){const sh=inner.children[0],bl=inner.children[1];const s=1+p.lift*.18;bl.setAttribute('transform',`translate(0 ${(-p.lift).toFixed(3)}) scale(${s.toFixed(3)})`);sh.setAttribute('opacity',String(Math.max(.25,1-p.lift*.25)))}
+  const n=d.frames.length;const atFrame=Math.abs(DR.t-Math.round(DR.t))<.001;const k=atFrame?Math.round(DR.t):Math.floor(DR.t)+1;
+  const show=Math.min(k,n-1);
+  const arrowSeg=atFrame?(show<n-1?show:-1):Math.floor(DR.t);
+  const ar=svg.querySelector('#dArrows');const key=String(arrowSeg);if(ar.dataset.k!==key){ar.dataset.k=key;ar.innerHTML=arrowSeg>=0?segArrows(d,arrowSeg):''}
+  $('#dStep').textContent=show?'STEP '+show+'/'+(n-1):'START';$('#dNote').textContent=d.frames[show].note||(show?'Step '+show:'Starting spots.');
+  $('#dPlayBtn').textContent=DR.playing?'❚❚ Pause':(DR.t>=n-1?'↻ Replay':'▶ Play');
+}
+const STEP_MS=1300,HOLD_MS=550;
+function tick(ts){
+  const d=findDrill(DR.id);if(!d||!DR.playing||!$('#dSvg')){DR.raf=0;return}
+  const dt=Math.min(64,ts-(DR.last||ts));DR.last=ts;const n=d.frames.length;
+  DR.hold=(DR.hold||0);
+  if(DR.hold>0){DR.hold-=dt*DR.speed}
+  else{const prev=Math.floor(DR.t);DR.t+=dt*DR.speed/STEP_MS;if(Math.floor(DR.t)>prev){DR.t=Math.floor(DR.t);DR.hold=HOLD_MS}}
+  if(DR.t>=n-1){DR.t=n-1;drawPose();if(DR.loop){DR.hold=HOLD_MS*2.5;DR.t=n-1;DR.wrap=true}else{DR.playing=false;drawPose();DR.raf=0;return}}
+  if(DR.wrap&&DR.hold<=0){DR.wrap=false;DR.t=0;DR.hold=HOLD_MS}
+  drawPose();DR.raf=requestAnimationFrame(tick);
+}
+function playDrill(){const d=findDrill(DR.id);if(!d)return;if(DR.t>=d.frames.length-1)DR.t=0;DR.playing=true;DR.last=0;DR.hold=DR.t===0?HOLD_MS*.6:0;DR.wrap=false;if(!DR.raf)DR.raf=requestAnimationFrame(tick);drawPose()}
+function stopDrill(){DR.playing=false;if(DR.raf){cancelAnimationFrame(DR.raf);DR.raf=0}}
+
+function bindEditor(){
+  const svg=$('#edSvg');if(!svg)return;const d=DR.ed;const v=DV[d.view];
+  const pt=e=>{const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;const q=p.matrixTransform(svg.getScreenCTM().inverse());return [Math.max(v.x+.4,Math.min(v.x+v.w-.4,q.x)),Math.max(v.y+.4,Math.min(v.y+v.h-.4,q.y))]};
+  let drag=null;
+  svg.addEventListener('pointerdown',e=>{const g=e.target.closest('[data-tok]');if(!g)return;e.preventDefault();svg.setPointerCapture(e.pointerId);drag={id:g.dataset.tok,g,x0:e.clientX,y0:e.clientY,moved:false}});
+  svg.addEventListener('pointermove',e=>{if(!drag)return;if(Math.hypot(e.clientX-drag.x0,e.clientY-drag.y0)>4)drag.moved=true;if(!drag.moved)return;const q=pt(e);
+    drag.g.setAttribute('transform',`translate(${q[0].toFixed(3)} ${q[1].toFixed(3)})`);drag.q=q});
+  const end=e=>{if(!drag)return;keepEd();const fr=d.frames[DR.f];const r=(x)=>Math.round(x*20)/20;
+    if(drag.moved&&drag.q){const q=[r(drag.q[0]),r(drag.q[1])];if(drag.id==='ball')fr.ball=q;else fr.pos[drag.id]=q;DR.sel=drag.id}
+    else DR.sel=DR.sel===drag.id?null:drag.id;
+    drag=null;render()};
+  svg.addEventListener('pointerup',end);svg.addEventListener('pointercancel',end);
+}
+function keepEd(){const d=DR.ed;if(!d)return;const v=id=>{const el=$('#'+id);return el?el.value:null};
+  const n=v('edNote');if(n!=null)d.frames[DR.f].note=n.trim();const nm=v('edName');if(nm!=null)d.name=nm.trim()||'My drill';
+  const fc=v('edFocus');if(fc)d.focus=fc;const ds=v('edDesc');if(ds!=null)d.desc=ds.trim();
+  const le=$('#edLabel');if(le){const t=d.tokens.find(x=>x.id===le.dataset.id);if(t&&le.value.trim())t.label=le.value.trim()}}
+
+/* ================= sheet + toast ================= */
+function sheet(html){closeSheet();const d=document.createElement('div');d.className='scrim';d.id='scrim';d.innerHTML=`<div class="sheet" role="dialog"><div class="grab"></div>${html}</div>`;d.addEventListener('click',e=>{if(e.target===d)closeSheet()});document.body.appendChild(d);const f=d.querySelector('input[autofocus]');if(f)setTimeout(()=>f.focus(),60)}
+function closeSheet(){const d=$('#scrim');if(d)d.remove()}
+let tt;function toast(t){let d=$('.toast');if(!d){d=document.createElement('div');d.className='toast';document.body.appendChild(d)}d.textContent=t;clearTimeout(tt);tt=setTimeout(()=>d.remove(),2200)}
+
+function curSet(){const g=G();return g?g.sets[Math.min(S.ui.set,g.sets.length-1)]:null}
+function commit(){save();render()}
+function stat(n){try{window.WAStats&&WAStats.screen&&WAStats.screen(n)}catch(e){}}
+const clone=o=>JSON.parse(JSON.stringify(o));
+
+async function openDrillShare(dr){
+  sheet(`<h2>Share "${esc(dr.name)}"</h2><p class="muted">Loading…</p>`);
+  let ppl=[];if(dr.cloudId){try{ppl=await CLOUD.drillPeople(dr.cloudId)}catch(e){}}
+  sheet(`<h2>Share "${esc(dr.name)}"</h2>
+    <p class="muted" style="margin-top:0;font-size:14px">People you share with see it under <b>Shared with me</b>. They can favorite it or copy it to make their own version. When you change your drill, they see the change.</p>
+    ${ppl.length?`<span class="lbl">Shared with</span>${ppl.map(m=>`<div class="opt"><span class="num" style="min-width:36px;height:36px;font-size:16px">${esc((m.display_name||m.username||'?').charAt(0).toUpperCase())}</span><div style="flex:1;min-width:0">${esc(m.display_name||m.username)}<div class="muted" style="font-size:12.5px;font-weight:500">@${esc(m.username)}</div></div><button class="btn sm ghost" data-act="removeDrillPerson" data-id="${esc(dr.id)}" data-user="${m.user_id}" aria-label="Stop sharing with ${esc(m.username)}">✕</button></div>`).join('')}`:''}
+    <div class="field" style="margin-top:14px"><span class="lbl">Add someone by their Web Apps username</span><input id="dsU" autocapitalize="off" spellcheck="false" placeholder="username"></div>
+    <div class="err" id="dsErr"></div><button class="btn pri wide" data-act="addDrillPerson" data-id="${esc(dr.id)}">Share</button>`);
+}
+async function openShare(t){
+  sheet(`<h2>Share ${esc(t.name)}</h2><p class="muted">Loading…</p>`);
+  let ms=[];try{ms=await CLOUD.members(t.id)}catch(e){sheet(`<h2>Share ${esc(t.name)}</h2><p class="err">${esc(e.message)}</p>`);return}
+  const r=roleOf(t);const canRemove=m=>m.role!=='owner'&&(m.user_id===ME.id||r==='owner'||(r==='coach'&&['scorekeeper','viewer'].includes(m.role)));
+  const roles=r==='owner'?['coach','scorekeeper','viewer']:['scorekeeper','viewer'];
+  sheet(`<h2>${esc(t.name)}</h2>
+    ${ms.map(m=>`<div class="opt"><span class="num ${m.role==='owner'?'o':''}" style="min-width:36px;height:36px;font-size:16px">${esc((m.display_name||m.username||'?').charAt(0).toUpperCase())}</span><div style="flex:1;min-width:0">${esc(m.display_name||m.username)}${m.user_id===ME.id?' <span class="muted">(you)</span>':''}<div class="muted" style="font-size:12.5px;font-weight:500">@${esc(m.username)}</div></div><span class="pill">${ROLE_NAME[m.role]}</span>${canShare(t)&&canRemove(m)&&m.user_id!==ME.id?`<button class="btn sm ghost" data-act="removeMember" data-id="${t.id}" data-user="${m.user_id}" aria-label="Remove">✕</button>`:''}</div>`).join('')}
+    ${canShare(t)?`<h3 style="margin-top:16px">Add someone</h3>
+    <div class="field"><span class="lbl">Their Web Apps username</span><input id="shU" autocapitalize="off" spellcheck="false" placeholder="username"></div>
+    <div class="field"><span class="lbl">They can</span><div class="seg" id="shRole">${roles.map((x,i)=>`<button data-v="${x}" class="${i===(roles.length===3?1:0)?'on':''}">${ROLE_NAME[x]}</button>`).join('')}</div></div>
+    <p class="muted" style="font-size:13px;margin:-4px 0 10px" id="shHelp"></p>
+    <div class="err" id="shErr"></div><button class="btn pri wide" data-act="addMember" data-id="${t.id}">Add</button>`:''}`);
+  const help={coach:'Coaches change the roster, lineups, game days and rules, keep score, and add scorekeepers and viewers.',scorekeeper:'Scorekeepers start and end sets, and record points, timeouts and subs. They can\'t change the roster or lineups.',viewer:'Viewers follow the live score, playing time and stats. They can\'t change anything.'};
+  const upd=()=>{const o=$('#shRole .on');if(o&&$('#shHelp'))$('#shHelp').textContent=help[o.dataset.v]};upd();
+  document.querySelectorAll('#shRole button').forEach(b=>b.onclick=e=>{e.preventDefault();document.querySelectorAll('#shRole button').forEach(x=>x.classList.remove('on'));b.classList.add('on');upd()});
+}
+
+/* ================= scorekeeping walkthrough =================
+   Runs on a practice match: the real notebook is set aside and nothing is saved until the walkthrough ends. */
+let DEMO=null;
+const ev=(o)=>{const s=curSet();s.ev.push(Object.assign({at:Date.now()},o))};
+const sc=()=>{const R=replay(curSet());return R};
+const TOUR=[
+  {t:'How to keep score',x:`We'll walk through a practice match against the Eagles, step by step. Nothing here is saved, and your own team isn't touched. Tap <b>Next</b> to begin.`},
+  {sel:'opp',t:'Their starting lineup',x:'Before the first serve, write in the other team\'s six starting numbers, I to VI. Number I is their first server. This is optional, but it fills in their side of the scorecard.',
+    do(){const s=curSet();s.opp=['4','8','10','13','15','21'];render()}},
+  {sel:'first',t:'Who serves first',x:'Pick the team that won the coin toss to serve. We\'ll serve first.'},
+  {sel:'start',t:'Start the set',x:'Tap <b>Start Set</b> right before the first serve. Your lineup comes from the Lineup tab, where you set it before the match.'},
+  {sel:'strip',t:'The score',x:'The score is at the top. The little ball shows who\'s serving.',do(){A.startSet()}},
+  {sel:'pt-us',t:'We win a rally',x:'Tap <b>Point</b> for the team that wins each rally. We just won two in a row while serving, so we keep serving. Those are points on our serve.',do(){ev({t:'pt',w:'us'});ev({t:'pt',w:'us'});render()}},
+  {sel:'pt-them',t:'Side out',x:'Now the Eagles win a rally while we\'re serving. That\'s a <b>side out</b>: the serve goes to them, and they rotate one spot. The app rotates for you.',do(){ev({t:'pt',w:'them'});render()}},
+  {sel:'us-start',t:'Lineup row',x:'Your starting numbers in lineup order, I to VI. When you\'re serving, the underlined orange number is your server.'},
+  {sel:'us-service',t:'Service row',x:'When a serving turn ends, the box under that server shows your score at that moment. Ours shows 2: we scored 2 before losing the serve.'},
+  {sel:'them-service',t:'Their turn',x:'The Eagles just scored on their serve. The dashed box is the turn happening now. It counts up as they score and turns solid when they lose the serve.',do(){ev({t:'pt',w:'them'});render()}},
+  {sel:'us-runs',t:'Running score',x:'We won the next rally, so the serve is back with us. Each point you score is slashed off, just like on paper. At the end of the set, the final score gets circled.',do(){ev({t:'pt',w:'us'});render()}},
+  {sel:'opp-sub',t:'Their subs',x:'When the Eagles sub, tap <b>Sub them</b>, pick the lineup slot, and type the number coming in. We just recorded #22 coming in for #10.',do(){ev({t:'sub',team:'them',slot:2,in:'22'});render()}},
+  {sel:'them-subs',t:'Subs row',x:'The number coming in, with the score when they came in (that team\'s score first).'},
+  {tab:'game',sel:'court',t:'Our subs',x:'Your own subs happen on the <b>Lineup</b> tab: tap the player coming out, then the player going in. We just subbed #16 Harper in for #9 Lily.',
+    do(){S.ui.tab='game';S.ui.view='set';const s=curSet();const R=replay(s);const lily=S.players.find(p=>p.num==='9');const harper=S.players.find(p=>p.num==='16');const slot=R.slots.us.indexOf(lily.id);if(slot>=0)ev({t:'sub',team:'us',slot,in:harper.id});render()}},
+  {tab:'game',sel:'meta',t:'Sub count',x:'This counts your subs against the limit for your level (18 a set for middle school). Libero swaps don\'t count. Swap the libero in by tapping a back-row player. She comes out on her own when she rotates to the front row.'},
+  {tab:'sheet',sel:'to-them',t:'Timeouts',x:'Tap <b>Timeout us</b> or <b>Timeout them</b>. The score at that moment goes in that team\'s timeout box.',do(){S.ui.tab='sheet';ev({t:'to',team:'them'});render()}},
+  {sel:'them-tos',t:'Timeout boxes',x:'Their timeout is recorded with their score first. Two boxes means two timeouts a set.'},
+  {sel:'undo',t:'Undo',x:'Made a mistake? <b>Undo</b> takes back the last thing you recorded: a point, sub or timeout. Tap it as many times as you need.'},
+  {sel:'log',t:'Rally log',x:'Everything you recorded, newest first. It\'s handy for checking against the official book.'},
+  {sel:'banner',t:'End of the set',x:'Let\'s skip ahead. When a team reaches 25 and leads by 2, the app asks if you want to end the set.',
+    do(){const s=curSet();let R=replay(s);while(R.sc.us<25||R.sc.us-R.sc.them<2){ev({t:'pt',w:R.sc.us-R.sc.them<4?'us':(Math.random()<.45?'them':'us')});R=replay(s)}render()}},
+  {sel:'endset',t:'End set',x:'<b>End set</b> saves the set and records playing time for every player. If you need to fix something later, you can reopen it.'},
+  {t:'That\'s it!',x:'Everything you score also feeds <b>Playing time</b> and <b>Stats</b> on the Lineup tab, and each player\'s page on the Roster. Tap <b>Done</b> to go back to your notebook.'}
+];
+let TI=0;
+function startTour(){
+  closeSheet();if(DEMO)return;stopDrill();
+  DEMO={S,tab:S.ui.tab};
+  S=norm(null);A.sample();const g=S.games[0];g.opp='Eagles';S.ui.tab='sheet';S.ui.set=0;S.settings.decider=15;
+  const t=$('.toast');if(t)t.remove();render();TI=0;
+  const box=document.createElement('div');box.id='tour';box.innerHTML='<div class="tourdim"></div><div class="tourhole"></div><div class="tourcard"></div>';document.body.appendChild(box);
+  box.addEventListener('click',e=>{const b=e.target.closest('[data-tour-act]');if(!b)return;const a=b.dataset.tourAct;if(a==='next')tourGo(TI+1);else if(a==='back')tourBack();else endTour()});
+  tourGo(0);stat('scorekeeping-tour');
+}
+function tourBack(){ // replay from the start up to the previous step, so the practice match matches what's shown
+  const to=Math.max(0,TI-1);S=norm(null);A.sample();S.games[0].opp='Eagles';S.ui.tab='sheet';S.ui.set=0;S.settings.decider=15;
+  const t=$('.toast');if(t)t.remove();render();for(let k=0;k<=to;k++){const st=TOUR[k];if(st.do)st.do()}TI=to;showStep()}
+function tourGo(n){if(n>=TOUR.length){endTour();return}TI=n;const st=TOUR[n];if(st.do)st.do();const t=$('.toast');if(t)t.remove();showStep()}
+function showStep(){
+  const st=TOUR[TI];if(st.tab&&S.ui.tab!==st.tab){S.ui.tab=st.tab;render()}
+  const el=st.sel?document.querySelector(`[data-tour="${st.sel}"]`)||(st.sel==='court'?document.querySelector('#main .court'):st.sel==='meta'?document.querySelector('#main .meta'):null):null;
+  const card=$('#tour .tourcard'),hole=$('#tour .tourhole');
+  card.innerHTML=`<div class="tn">${TI?'STEP '+TI+' OF '+(TOUR.length-1):'SCOREKEEPING'}</div><h3>${st.t}</h3><p>${st.x}</p><div class="row"><div class="dots">${TOUR.map((x,i)=>`<i class="${i<=TI?'on':''}"></i>`).join('')}</div>
+    ${TI?'<button class="btn sm ghost" data-tour-act="back">Back</button>':'<button class="btn sm ghost" data-tour-act="end">Not now</button>'}<button class="btn sm pri" data-tour-act="next">${TI===TOUR.length-1?'Done':TI?'Next':'Start'}</button></div>
+    ${TI&&TI<TOUR.length-1?'<button data-tour-act="end" style="position:absolute;top:10px;right:12px;color:var(--muted);font-weight:700">✕</button>':''}`;
+  const place=()=>{const vw=innerWidth,vh=innerHeight;const ch=card.offsetHeight,cw=card.offsetWidth;
+    if(!el){hole.style.cssText='left:50%;top:50%;width:0;height:0';card.style.left=((vw-cw)/2)+'px';card.style.top=((vh-ch)/2)+'px';return}
+    const r=el.getBoundingClientRect();const pad=6;hole.style.cssText=`left:${r.left-pad}px;top:${r.top-pad}px;width:${r.width+pad*2}px;height:${r.height+pad*2}px`;
+    let top=r.bottom+14;if(top+ch>vh-12)top=r.top-ch-14;if(top<12)top=Math.max(12,vh-ch-12);
+    card.style.top=top+'px';card.style.left=Math.max(12,Math.min(vw-cw-12,r.left+r.width/2-cw/2))+'px'};
+  if(el){const r=el.getBoundingClientRect();const ch=card.offsetHeight||220;if(r.top<70||r.bottom>innerHeight-ch-90){scrollTo({top:scrollY+r.top-90,behavior:'instant'})}}
+  place();setTimeout(place,60);
+}
+addEventListener('resize',()=>{if(DEMO)showStep()});
+function endTour(){const b=$('#tour');if(b)b.remove();if(!DEMO)return;S=DEMO.S;S.ui.tab='sheet';DEMO=null;render();scrollTo(0,0)}
+function quickGuide(){sheet(`<h2>Scorekeeping basics</h2><ol class="qg">
+  <li><b>Before the match:</b> set your lineup for each set on the Lineup tab. On the Scorecard, add the other team's starting numbers if you have them, and pick who serves first.</li>
+  <li><b>Start the set</b> right before the first serve.</li>
+  <li><b>Every rally:</b> tap Point for the team that won it. If the receiving team wins, that's a side out, and the app rotates them for you.</li>
+  <li><b>Service boxes</b> show a team's score each time it loses the serve. A dashed box is the current turn.</li>
+  <li><b>Running score:</b> each point is slashed off. The final score is circled.</li>
+  <li><b>Subs:</b> tap Sub them for the other team. For your team, tap a player on the Lineup tab. The score at each sub is written down for you.</li>
+  <li><b>Libero:</b> swaps don't count as subs. She comes out on her own when she rotates to the front row.</li>
+  <li><b>Timeouts</b> record the score at that moment.</li>
+  <li><b>Undo</b> takes back the last thing you recorded.</li>
+  <li><b>End set</b> when the app tells you a team has won it. Playing time and stats fill in from what you scored.</li></ol>
+  <button class="btn pri wide" data-act="tour">Walk me through it</button>`)}
+document.addEventListener('keydown',e=>{if(!DEMO)return;if(e.key==='Escape')endTour();if(e.key==='ArrowRight')tourGo(TI+1);if(e.key==='ArrowLeft'&&TI)tourBack()});
+
+/* ================= actions ================= */
+const A={
+  fav(d){const i=S.favDrills.indexOf(d.id);if(i>=0){S.favDrills.splice(i,1);toast('Removed from favorites')}else{S.favDrills.push(d.id);toast('Added to favorites')}commit()},
+  async shareDrill(d){const dr=findDrill(d.id);if(!dr||dr.builtin||dr.received)return;
+    if(!CLOUD.ok()){sheet(`<h2>Share ${esc(dr.name)}</h2><p>Sharing drills needs your Web Apps account. In Settings, under <b>Saving</b>, switch to <b>My account</b> and sign in.</p><button class="btn pri wide" data-act="closeSheetAct">OK</button>`);return}
+    openDrillShare(dr)},
+  async addDrillPerson(d){const dr=findDrill(d.id);const u=$('#dsU').value.trim();const er=$('#dsErr');if(!u){er.textContent='Enter their username.';return}er.textContent='Sharing…';
+    try{if(!dr.cloudId){dr.cloudId=crypto.randomUUID?crypto.randomUUID():'00000000-0000-4000-8000-'+Date.now().toString(16).padStart(12,'0').slice(-12);save()}
+      await CLOUD.publishDrill(dr);const m=await CLOUD.shareDrill(dr.cloudId,u);await refreshDrills();toast(`Shared with ${m.display_name||m.username}`);render();openDrillShare(dr)}catch(e){er.textContent=e.message||"Couldn't share it."}},
+  async removeDrillPerson(d){const dr=findDrill(d.id);try{await CLOUD.unshareDrill(dr.cloudId,d.user);await refreshDrills();render();openDrillShare(dr)}catch(e){toast(e.message)}},
+  async dropShared(d){const dr=findDrill(d.id);try{await CLOUD.unshareDrill(dr.cloudId,ME.id);S.favDrills=S.favDrills.filter(x=>x!==d.id);await refreshDrills();DR.mode='list';commit();toast('Removed from your list')}catch(e){toast(e.message)}},
+  tab(d){if(d.tab==='roster'&&S.ui.tab==='roster')S.ui.player=null;if(d.tab==='drills')refreshDrills().then(ch=>{if(ch&&S.ui.tab==='drills'&&DR.mode==='list')render()});if(S.ui.tab==='drills'&&d.tab!=='drills'){stopDrill();if(DR.mode==='view')DR.mode='list'}S.ui.tab=d.tab;stat(d.tab);commit();scrollTo(0,0)},
+  view(d){S.ui.view=d.v;commit()},
+  statSet(d){S.ui.stat=d.v;commit()},
+  pickSet(d){S.ui.set=+d.i;S.ui.preview=0;if(S.ui.tab==='game')S.ui.view='set';commit()},
+  addSet(){const g=G();if(g.sets.length<5){g.sets.push(newSet());S.ui.set=g.sets.length-1;if(S.ui.tab==='game')S.ui.view='set';commit()}},
+  goLineup(){S.ui.tab='game';S.ui.view='set';commit()},
+  games(){
+    const list=S.games.slice().sort((a,b)=>b.date.localeCompare(a.date));
+    sheet(`<h2>Game days</h2><p class="muted" style="margin:-4px 0 8px;font-size:13px">${esc(S.team.name)}</p>${list.map(g=>{const r=gameRecord(g);return `<button class="opt" data-act="openGame" data-id="${g.id}"><span class="num ${g.id===S.cur?'o':''}" style="font-size:13px;min-width:52px">${esc(fmtDate(g.date))}</span>vs ${esc(g.opp)}<span class="sub">${r.over?(r.w>r.l?'Won ':'Lost ')+r.w+'-'+r.l:r.w+r.l?'Sets '+r.w+'-'+r.l:g.sets.length+' sets'}</span></button>`}).join('')||'<p class="muted">None yet.</p>'}
+      ${canEdit()?`<button class="btn pri wide" style="margin-top:12px" data-act="newGame">+ New game day</button>`:''}
+      ${G()&&canEdit()?`<div class="row" style="margin-top:8px;gap:8px"><button class="btn ghost" style="flex:1" data-act="editGame">Edit this one</button><button class="btn bad" style="flex:1" data-act="delGame">Delete this one</button></div>`:''}`)},
+  openGame(d){S.cur=d.id;S.ui.set=0;S.ui.view='plan';closeSheet();commit()},
+  newGame(){const n=S.settings.sets;sheet(`<h2>New game day</h2><div class="field"><span class="lbl">Opponent</span><input id="fOpp" placeholder="Opponent or scrimmage" autofocus></div>
+    <div class="field"><span class="lbl">Date</span><input id="fDate" type="date" value="${today()}"></div>
+    <div class="field"><span class="lbl">Sets</span><div class="seg" id="fSets">${[1,2,3,5].map(k=>`<button class="${k===n?'on':''}" data-n="${k}">${k}</button>`).join('')}</div></div>
+    <button class="btn pri wide" data-act="saveGame">Create</button>`);
+    document.querySelectorAll('#fSets button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#fSets button').forEach(x=>x.classList.remove('on'));b.classList.add('on')})},
+  saveGame(){const opp=$('#fOpp').value.trim()||'Scrimmage';const n=+(($('#fSets .on')||{}).dataset||{n:3}).n||3;
+    const g={id:uid(),date:$('#fDate').value||today(),opp,sets:Array.from({length:n},newSet)};S.games.push(g);S.cur=g.id;S.ui.set=0;S.ui.view='plan';S.ui.tab=S.ui.tab==='sheet'?'sheet':'game';closeSheet();commit()},
+  editGame(){const g=G();sheet(`<h2>Edit game day</h2><div class="field"><span class="lbl">Opponent</span><input id="fOpp" value="${esc(g.opp)}"></div><div class="field"><span class="lbl">Date</span><input id="fDate" type="date" value="${esc(g.date)}"></div><button class="btn pri wide" data-act="saveEditGame">Save</button>`)},
+  saveEditGame(){const g=G();g.opp=$('#fOpp').value.trim()||g.opp;g.date=$('#fDate').value||g.date;closeSheet();commit()},
+  delGame(){sheet(`<h2>Delete this game day?</h2><p class="muted">Its lineups, scorecard, playing time and stats will be gone.</p><button class="btn bad wide" data-act="delGameYes">Delete</button>`)},
+  delGameYes(){S.games=S.games.filter(g=>g.id!==S.cur);S.cur=S.games.length?S.games[S.games.length-1].id:null;closeSheet();commit()},
+  pickSpot(d){
+    const s=curSet();const slot=+d.slot;const cur=s.lineup[slot];
+    const used=new Set(s.lineup.filter(Boolean));
+    const ps=S.players.slice().sort(byNum);
+    sheet(`<h2>Position ${posOf(slot,S.ui.preview||0)} <span class="muted" style="font-size:16px">· slot ${ROMAN[slot]}</span></h2>
+      ${ps.map(p=>{const where=used.has(p.id)&&p.id!==cur?'in lineup':'';return `<button class="opt" data-act="setSpot" data-slot="${slot}" data-id="${p.id}"><span class="num ${p.id===cur?'o':''}">${esc(p.num)}</span>${esc(p.name)}<span class="sub">${where?'swap · ':''}${esc(POSNAME[p.pos]||'')}</span></button>`}).join('')}
+      ${cur?`<button class="btn ghost wide" style="margin-top:10px" data-act="setSpot" data-slot="${slot}" data-id="">Leave empty</button>`:''}`)},
+  setSpot(d){const s=curSet();const slot=+d.slot;const id=d.id||null;
+    if(id){const j=s.lineup.indexOf(id);if(j>=0&&j!==slot)s.lineup[j]=s.lineup[slot];}
+    s.lineup[slot]=id;if(id&&s.libero===id)s.libero=null;closeSheet();commit()},
+  setLibero(d,el){const s=curSet();s.libero=el.value||null;if(s.libero){const j=s.lineup.indexOf(s.libero);if(j>=0)s.lineup[j]=null}commit()},
+  first(d){curSet().first=d.w;commit()},
+  copySet(d){const g=G();const f=g.sets[+d.from];const s=curSet();s.lineup=f.lineup.slice();s.libero=f.libero;toast('Copied Set '+(+d.from+1));commit()},
+  clearLineup(){const s=curSet();s.lineup=[null,null,null,null,null,null];commit()},
+  preview(){S.ui.preview=((S.ui.preview||0)+1)%6;commit()},
+  previewReset(){S.ui.preview=0;commit()},
+  startSet(){const s=curSet();if(s.lineup.filter(Boolean).length<6)return;s.started=true;s.ended=false;s.ev=[];s.startedAt=Date.now();S.ui.preview=0;S.ui.view='set';stat('set-start');commit()},
+  pt(d){const s=curSet();if(!s.started||s.ended)return;s.ev.push({t:'pt',w:d.w,at:Date.now()});commit()},
+  rotate(){const s=curSet();s.ev.push({t:'rot',team:'us',at:Date.now()});commit()},
+  undo(){const s=curSet();if(s.ev.length){s.ev.pop();toast('Undone');commit()}},
+  timeout(d){const s=curSet();const R=replay(s);if(R.tos[d.team].length>=S.settings.tos)toast('That\'s more timeouts than the rules allow. Recorded anyway.');else toast('Timeout');s.ev.push({t:'to',team:d.team,at:Date.now()});commit()},
+  endSet(){const s=curSet();const R=replay(s);sheet(`<h2>End this set?</h2><p style="font:800 34px var(--head);margin:4px 0 14px">${R.sc.us} – ${R.sc.them}</p><p class="muted" style="margin-top:0">Playing time is recorded for everyone who played. You can reopen it later.</p><button class="btn dark wide" data-act="endSetYes">End set</button>`)},
+  endSetYes(){const g=G();const s=curSet();s.ended=true;s.endedAt=Date.now();closeSheet();
+    const i=g.sets.indexOf(s);const rec=gameRecord(g);
+    if(rec.over&&!S.settings.playAll&&g.sets.slice(i+1).every(x=>!x.started)){S.ui.view='plan';toast(`Match ${rec.w>rec.l?'won':'lost'} ${rec.w}–${rec.l}. No more sets needed.`)}
+    else if(i<g.sets.length-1&&!g.sets[i+1].started){S.ui.set=i+1;toast('Set '+(i+1)+' saved. On to Set '+(i+2)+'.')}commit()},
+  reopen(){curSet().ended=false;commit()},
+  tapPlayer(d){
+    const s=curSet();const R=replay(s);const slot=+d.slot;const id=R.slots.us[slot];const p=P(id);if(!p)return;
+    const m=R.pt[id]||{rallies:0,rots:0};const pos=posOf(slot,R.r.us);
+    const onIds=R.slots.us.filter(Boolean);
+    const bench=S.players.filter(x=>!onIds.includes(x.id)&&x.id!==s.libero).sort(byNum);
+    const isLib=id===s.libero;const libOn=onIds.includes(s.libero);
+    const canLib=s.libero&&!isLib&&!libOn&&[1,5,6].includes(pos);
+    const lim=S.settings.subs;
+    sheet(`<div class="row"><span class="num o" style="min-width:48px;height:48px;font-size:26px">${esc(p.num)}</span><div><h2 style="margin:0">${esc(p.name)}</h2><span class="muted">Position ${pos}${isLib?' · Libero':' · '+esc(POSNAME[p.pos]||'')}</span></div></div>
+      <div class="stat"><div><b>${m.rallies}</b><span>Points played</span></div><div><b>${m.rots}</b><span>Rotations</span></div><div><b>${R.subs.us}/${lim>=99?'∞':lim}</b><span>Team subs</span></div></div>
+      ${isLib&&R.lib[slot]?`<button class="btn wide" data-act="doSub" data-slot="${slot}" data-in="${R.lib[slot]}" data-lib="1">Libero out · ${esc(num(R.lib[slot]))} back in</button>`:''}
+      ${canLib?`<button class="btn wide" style="margin-bottom:8px;background:#E9F1FF;color:var(--blue)" data-act="doSub" data-slot="${slot}" data-in="${s.libero}" data-lib="1">Libero in · ${esc(num(s.libero))}</button>`:''}
+      ${isLib?'':`<h3 style="margin-top:12px">Sub in for ${esc(short(p))}${R.subs.us>=lim?' <span class="pill part">over limit</span>':''}</h3>
+      ${bench.map(b=>{const bm=R.pt[b.id];return `<button class="opt" data-act="doSub" data-slot="${slot}" data-in="${b.id}"><span class="num">${esc(b.num)}</span>${esc(b.name)}<span class="sub">${bm&&bm.rallies?bm.rallies+' pts · ':''}${esc(POSNAME[b.pos]||'')}</span></button>`}).join('')||'<p class="muted">No one on the bench.</p>'}`}`)},
+  doSub(d){const s=curSet();s.ev.push({t:'sub',team:'us',slot:+d.slot,in:d.in,lib:!!d.lib,at:Date.now()});closeSheet();toast(d.lib?'Libero swap':'Sub made');commit()},
+  oppSub(){const s=curSet();const R=replay(s);sheet(`<h2>They make a sub</h2><p class="muted" style="margin-top:0">Pick the lineup slot, then the number coming in.</p>
+    <div class="oppin" id="oppSlots">${R.slots.them.map((n,k)=>`<label><span>${ROMAN[k]}</span><button class="btn sm ${k===0?'dark':''}" data-k="${k}" style="width:100%">${esc(n||'·')}</button></label>`).join('')}</div>
+    <div class="field" style="margin-top:12px"><span class="lbl">Number coming in</span><input id="oppIn" inputmode="numeric" maxlength="3" autofocus></div><button class="btn pri wide" data-act="oppSubSave">Record sub</button>`);
+    window.__oppSlot=0;document.querySelectorAll('#oppSlots button').forEach(b=>b.onclick=e=>{e.stopPropagation();document.querySelectorAll('#oppSlots button').forEach(x=>x.classList.remove('dark'));b.classList.add('dark');window.__oppSlot=+b.dataset.k})},
+  oppSubSave(){const v=$('#oppIn').value.trim();if(!v)return;const s=curSet();s.ev.push({t:'sub',team:'them',slot:window.__oppSlot||0,in:v,at:Date.now()});closeSheet();commit()},
+  // scoreboard
+  bpt(d){const b=S.board;b.hist.push([b.h,b.a,b.serve]);if(b.hist.length>200)b.hist.shift();b[d.k]++;b.serve=d.k;commit()},
+  bminus(d){const b=S.board;if(b[d.k]>0){b.hist.push([b.h,b.a,b.serve]);b[d.k]--}commit()},
+  bundo(){const b=S.board;const x=b.hist.pop();if(x){b.h=x[0];b.a=x[1];b.serve=x[2]}commit()},
+  bswap(){S.board.swap=!S.board.swap;commit()},
+  bset(){const b=S.board;if(b.h!==b.a){if(b.h>b.a)b.hs=Math.min(3,b.hs+1);else b.as=Math.min(3,b.as+1)}b.h=0;b.a=0;b.hist=[];b.swap=!b.swap;toast('New set');commit()},
+  breset(){sheet(`<h2>Reset the scoreboard?</h2><p class="muted">Points and sets go back to zero.</p><button class="btn bad wide" data-act="bresetYes">Reset</button>`)},
+  bresetYes(){Object.assign(S.board,{h:0,a:0,hs:0,as:0,hist:[],serve:'h'});closeSheet();commit()},
+  bname(d){const k=d.k;sheet(`<h2>Team name</h2><div class="field"><input id="fBn" value="${esc(k==='h'?S.board.home:S.board.away)}" maxlength="18" autofocus></div><button class="btn pri wide" data-act="bnameSave" data-k="${k}">Save</button>`)},
+  bnameSave(d){const v=$('#fBn').value.trim();if(v){if(d.k==='h')S.board.home=v;else S.board.away=v}closeSheet();commit()},
+  // roster
+  teamName(){sheet(`<h2>Team name</h2><div class="field"><input id="fTn" value="${esc(S.team.name)}" maxlength="24" autofocus></div><button class="btn pri wide" data-act="teamSave">Save</button>`)},
+  teamSave(){const v=$('#fTn').value.trim();if(v)S.team.name=v;closeSheet();commit()},
+  editPlayer(d){const p=d.id?P(d.id):{name:'',num:'',pos:'OH'};
+    sheet(`<h2>${d.id?'Edit player':'Add player'}</h2>
+    <div class="row" style="gap:10px"><div class="field" style="width:90px"><span class="lbl">Number</span><input id="fNum" inputmode="numeric" maxlength="3" value="${esc(p.num)}" ${d.id?'':'autofocus'}></div>
+    <div class="field" style="flex:1"><span class="lbl">Name</span><input id="fName" value="${esc(p.name)}" maxlength="30"></div></div>
+    <div class="field"><span class="lbl">Position</span><select id="fPos">${POSITIONS.map(x=>`<option value="${x}" ${p.pos===x?'selected':''}>${POSNAME[x]} (${x})</option>`).join('')}</select></div>
+    <button class="btn pri wide" data-act="savePlayer" data-id="${d.id||''}">Save</button>
+    ${d.id?`<button class="btn bad wide" style="margin-top:8px" data-act="delPlayer" data-id="${d.id}">Remove from roster</button>`:`<button class="btn ghost wide" style="margin-top:8px" data-act="savePlayer" data-more="1">Save and add another</button>`}`)},
+  savePlayer(d){const name=$('#fName').value.trim();const n=$('#fNum').value.trim();if(!name){$('#fName').focus();return}
+    if(S.players.some(p=>p.num===n&&n&&p.id!==d.id)){toast('#'+n+' is already taken');return}
+    if(d.id){const p=P(d.id);p.name=name;p.num=n;p.pos=$('#fPos').value}else S.players.push({id:uid(),name,num:n,pos:$('#fPos').value});
+    save();render();if(d.more){A.editPlayer({})}else closeSheet()},
+  delPlayer(d){S.players=S.players.filter(p=>p.id!==d.id);S.ui.player=null;closeSheet();commit()},
+  openPlayer(d){S.ui.player=d.id;commit();scrollTo(0,0)},
+  closePlayer(){S.ui.player=null;commit()},
+  rview(d){S.ui.rview=d.v;commit()},
+  rsort(d){S.ui.rsort=d.v;commit()},
+  openGameFrom(d){S.cur=d.id;S.ui.tab='game';S.ui.view='time';S.ui.player=null;commit();scrollTo(0,0)},
+  playAll(d){S.settings.playAll=d.v==='1';commit()},
+  setTeam(d){S.teamId=d.id;S.ui.teamPref=d.id;S.ui.view='plan';S.ui.set=0;S.ui.player=null;closeSheet();toast('Now coaching '+S.team.name);commit()},
+  newTeam(){sheet(`<h2>New team</h2><div class="field"><span class="lbl">Team name</span><input id="fNt" placeholder="18U Hawks, Fall 2027" maxlength="24" autofocus></div>
+    ${S.players.length?`<label class="row" style="gap:10px;margin:0 0 14px;font-weight:600"><input type="checkbox" id="fNtCopy" style="width:22px;height:22px"> Start with ${esc(S.team.name)}'s players</label>`:''}
+    <p class="muted" style="font-size:13px;margin:0 0 12px">It starts with ${esc(S.team.name)}'s rules. ${esc(S.team.name)} keeps all its game days and stats.</p>
+    <button class="btn pri wide" data-act="saveTeam">Create and switch to it</button>`)},
+  saveTeam(){const name=$('#fNt').value.trim()||'New team';const t=blankTeam(name);t.settings=Object.assign({},S.settings);
+    const cp=$('#fNtCopy');if(cp&&cp.checked)t.players=S.players.map(p=>Object.assign({},p,{id:uid()}));
+    S.teams.push(t);S.teamId=t.id;S.ui.teamPref=t.id;S.ui.view='plan';S.ui.set=0;S.ui.player=null;closeSheet();toast('Now coaching '+t.name);commit()},
+  teamMenu(d){const t=S.teams.find(x=>x.id===d.id);const r=roleOf(t);sheet(`<h2>${esc(t.name)}</h2>${t.cloud?`<p class="muted" style="margin:-4px 0 8px">Shared · you're ${ROLE_NAME[r].toLowerCase()==='owner'?'the owner':'a '+ROLE_NAME[r].toLowerCase()}</p>`:''}
+    ${canShare(t)?`<button class="opt" data-act="shareTeam" data-id="${t.id}">${t.cloud?'Sharing and people':'Share this team'}</button>`:t.cloud?`<button class="opt" data-act="shareTeam" data-id="${t.id}">People on this team</button>`:''}
+    ${canEdit(t)?`<button class="opt" data-act="renameTeam" data-id="${t.id}">Rename</button>`:''}
+    ${t.cloud&&r!=='owner'?`<button class="opt" style="color:var(--bad)" data-act="leaveTeam" data-id="${t.id}">Leave this team</button>`:''}
+    ${r==='owner'&&S.teams.length>1?`<button class="opt" style="color:var(--bad)" data-act="delTeam" data-id="${t.id}">Delete team and its history${t.cloud?' for everyone':''}</button>`:''}
+    ${r==='owner'&&S.teams.length<2?'<p class="muted" style="font-size:13px">This is your only team, so it can\'t be deleted.</p>':''}`)},
+  async shareTeam(d){let t=S.teams.find(x=>x.id===d.id);
+    if(!t.cloud){
+      if(!CLOUD.ok()){sheet(`<h2>Share ${esc(t.name)}</h2><p>Sharing needs your Web Apps account. In <b>Saving</b>, switch to <b>My account</b> and sign in, then come back here.</p><button class="btn pri wide" data-act="closeSheetAct">OK</button>`);return}
+      sheet(`<h2>Share ${esc(t.name)}?</h2><p class="muted">The team moves to shared storage so the people you add see the same roster, game days and live score. You stay the owner, and you can remove people any time.</p><div class="err" id="shErr"></div><button class="btn pri wide" data-act="shareGo" data-id="${t.id}">Share this team</button>`);return}
+    openShare(t)},
+  async shareGo(d){const t=S.teams.find(x=>x.id===d.id);const er=$('#shErr');er.textContent='Setting up…';
+    try{await makeShared(t);render();openShare(t)}catch(e){er.textContent=e.message||"Couldn't share the team."}},
+  async addMember(d){const t=S.teams.find(x=>x.id===d.id);const u=$('#shU').value.trim();const role=($('#shRole .on')||{}).dataset;const er=$('#shErr');
+    if(!u){er.textContent='Enter their username.';return}er.textContent='Adding…';
+    try{const m=await CLOUD.share(t.id,u,role.v);toast(`${m.display_name||m.username} is now ${role.v==='coach'?'a coach':role.v==='viewer'?'a viewer':'the scorekeeper'}`);openShare(t)}catch(e){er.textContent=e.message}},
+  async removeMember(d){const t=S.teams.find(x=>x.id===d.id);try{await CLOUD.unshare(t.id,d.user);openShare(t)}catch(e){toast(e.message)}},
+  async leaveTeam(d){const t=S.teams.find(x=>x.id===d.id);sheet(`<h2>Leave ${esc(t.name)}?</h2><p class="muted">You won't see it anymore. A coach or the owner can add you back.</p><button class="btn bad wide" data-act="leaveYes" data-id="${t.id}">Leave</button>`)},
+  async leaveYes(d){try{await CLOUD.unshare(d.id,ME.id);closeSheet();await loadCloud();render();toast('You left the team.')}catch(e){toast(e.message)}},
+  closeSheetAct(){closeSheet()},
+  help(){sheet(`<h2>How scorekeeping works</h2><p class="muted" style="margin-top:0">Learn to keep the score with the app, using a practice match that isn't saved.</p>
+    <button class="opt" data-act="tour"><span class="num o">▶</span><div style="flex:1"><b>Walk me through it</b><div class="muted" style="font-size:13px;font-weight:500">A step-by-step tour of every scorekeeping feature, about 2 minutes</div></div></button>
+    <button class="opt" data-act="qguide"><span class="num">≡</span><div style="flex:1"><b>Quick guide</b><div class="muted" style="font-size:13px;font-weight:500">The basics on one screen</div></div></button>`)},
+  tour(){startTour()},
+  qguide(){quickGuide()},
+  renameTeam(d){const t=S.teams.find(x=>x.id===d.id);sheet(`<h2>Team name</h2><div class="field"><input id="fTn2" value="${esc(t.name)}" maxlength="24" autofocus></div><button class="btn pri wide" data-act="renameTeamSave" data-id="${t.id}">Save</button>`)},
+  renameTeamSave(d){const v=$('#fTn2').value.trim();const t=S.teams.find(x=>x.id===d.id);if(v&&t)t.name=v;closeSheet();commit()},
+  delTeam(d){const t=S.teams.find(x=>x.id===d.id);sheet(`<h2>Delete ${esc(t.name)}?</h2><p class="muted">Its roster, ${t.games.length} game day${t.games.length===1?'':'s'} and all its stats will be gone for good.</p><button class="btn bad wide" data-act="delTeamYes" data-id="${t.id}">Delete</button>`)},
+  async delTeamYes(d){if(S.teams.length<2)return;const t=S.teams.find(x=>x.id===d.id);if(t&&t.cloud){try{await CLOUD.del(t.id)}catch(e){toast(e.message);return}}
+    S.teams=S.teams.filter(t=>t.id!==d.id);if(S.teamId===d.id)S.teamId=S.teams[0].id;closeSheet();commit()},
+  // settings
+  setLevel(d,el){const L=LEVELS[el.value];S.settings.level=el.value;if(L&&L.sets){['sets','pts','decider','subs','tos'].forEach(k=>S.settings[k]=L[k])}commit()},
+  setNum(d,el){S.settings[d.key]=+el.value;const L=LEVELS[S.settings.level];if(L&&L.sets&&L[d.key]!==+el.value)S.settings.level='custom';commit()},
+  measure(d){S.settings.measure=d.v;commit()},
+  async saveTo(d){if(d.v===saveTo)return;if(saveTo==='account'&&saveTimer)await pushState();saveTo=d.v;try{localStorage.setItem(MODE_KEY,saveTo)}catch(e){}
+    if(saveTo==='device'){S=norm(lsGet(DEVICE_KEY));if(CH){try{WA.client.removeChannel(CH)}catch(e){}CH=null}toast('Now saving on this device');render()}
+    else if(ME){await startAccount()}else render()},
+  async signIn(){const u=$('#siU').value.trim(),p=$('#siP').value;const er=$('#siErr');if(!u||!p){er.textContent='Enter your username and password.';return}
+    er.textContent='Signing in…';try{await WA.signIn(u,p)}catch(e){er.textContent=e.message||"Couldn't sign in.";$('#siP').value=''}},
+  async signOut(){if(saveTimer)await pushState();if(saving)await saving.catch(()=>{});await WA.signOut()},
+  sample(){
+    const names=[['Ava Thompson',2,'S'],['Maya Patel',5,'OH'],['Chloe Ramirez',7,'MH'],['Lily Chen',9,'OPP'],['Sophia Brooks',11,'OH'],['Grace Kim',12,'MH'],['Emma Lewis',3,'L'],['Zoe Carter',14,'DS'],['Harper Wells',16,'OH'],['Nora Diaz',18,'MH']];
+    S.team.name=S.team.name==='Our Team'?'Lady Hawks':S.team.name;
+    names.forEach(([n,num,pos])=>{if(!S.players.some(p=>p.num===String(num)))S.players.push({id:uid(),name:n,num:String(num),pos})});
+    if(!S.games.length){const by=n=>S.players.find(p=>p.num===String(n)).id;const g={id:uid(),date:today(),opp:'Eagles',sets:Array.from({length:Math.max(3,S.settings.sets)},newSet)};
+      g.sets[0].lineup=[by(2),by(5),by(7),by(9),by(11),by(12)];g.sets[0].libero=by(3);
+      g.sets[1].lineup=[by(2),by(16),by(18),by(9),by(5),by(7)];g.sets[1].libero=by(3);g.sets[1].first='them';
+      g.sets[2].lineup=[by(2),by(11),by(12),by(9),by(16),by(18)];g.sets[2].libero=by(3);
+      S.games.push(g);S.cur=g.id}
+    S.ui.tab='game';S.ui.view='plan';toast('Sample team loaded');commit()},
+  // drills
+  dfocus(d){S.ui.dfocus=d.v;commit()},
+  openDrill(d){DR.mode='view';DR.id=d.id;DR.t=0;stopDrill();render();scrollTo(0,0);setTimeout(playDrill,350)},
+  drillBack(){stopDrill();DR.mode='list';render()},
+  dPlay(){const d=findDrill(DR.id);if(DR.playing){stopDrill();drawPose()}else playDrill()},
+  dNext(){const d=findDrill(DR.id);stopDrill();DR.t=Math.min(d.frames.length-1,Math.floor(DR.t+1e-6)+1);
+    // animate just this step
+    const from=DR.t-1;const t0=performance.now();const step=ts=>{const u=Math.min(1,(ts-t0)*DR.speed/STEP_MS);DR.t=from+u;drawPose();if(u<1&&!DR.playing)DR.raf=requestAnimationFrame(step);else DR.raf=0};DR.raf=requestAnimationFrame(step)},
+  dPrev(){stopDrill();DR.t=Math.max(0,Math.ceil(DR.t-1e-6)-1);drawPose()},
+  dSpeed(){DR.speed=DR.speed===1?.5:DR.speed===.5?2:1;$('#dSpeedBtn').textContent=DR.speed+'x'},
+  newDrill(){DR.ed={id:'my'+uid(),name:'My drill',focus:'Passing',desc:'',view:'half',tokens:[{id:'t1',kind:'p',label:'1'},{id:'t2',kind:'c',label:'C'}],frames:[{pos:{t1:[4.5,15.5],t2:[4.5,10.6]},ball:[4.8,10.4],h:0,note:''}]};DR.f=0;DR.sel=null;DR.mode='edit';render();scrollTo(0,0)},
+  copyDrill(d){stopDrill();const src=findDrill(d.id);const c=clone(src);c.id='my'+uid();delete c.builtin;delete c.cloudId;delete c.received;delete c.from;c.name=src.name+' (mine)';DR.ed=c;DR.f=0;DR.sel=null;DR.mode='edit';render();scrollTo(0,0)},
+  editDrill(d){stopDrill();DR.ed=clone(findDrill(d.id));DR.f=0;DR.sel=null;DR.mode='edit';render();scrollTo(0,0)},
+  delDrill(d){const dr=findDrill(d.id);sheet(`<h2>Delete this drill?</h2>${dr&&shareCount(dr)?`<p class="muted">It will also disappear for the ${shareCount(dr)} ${shareCount(dr)===1?'person':'people'} you shared it with.</p>`:''}<button class="btn bad wide" data-act="delDrillYes" data-id="${esc(d.id)}">Delete</button>`)},
+  async delDrillYes(d){const dr=S.drills.find(x=>x.id===d.id);if(dr&&dr.cloudId&&CLOUD.ok()){try{await CLOUD.delDrill(dr.cloudId)}catch(e){toast(e.message);return}delete MYSHARES[dr.cloudId]}
+    S.drills=S.drills.filter(x=>x.id!==d.id);S.favDrills=S.favDrills.filter(x=>x!==d.id);closeSheet();DR.mode='list';commit()},
+  edCancel(){DR.ed=null;DR.mode=DR.id&&findDrill(DR.id)?'view':'list';render()},
+  edSave(){keepEd();const d=DR.ed;if(!d.tokens.length){toast('Add at least one player first');return}
+    if(d.cloudId&&CLOUD.ok())CLOUD.publishDrill(d).then(()=>{if(shareCount(d))toast('Saved. Everyone you shared it with sees the change.')}).catch(()=>toast("Saved here, but couldn't update the shared copy."));const i=S.drills.findIndex(x=>x.id===d.id);if(i>=0)S.drills[i]=d;else S.drills.push(d);
+    DR.id=d.id;DR.ed=null;DR.mode='view';toast('Drill saved');commit();setTimeout(playDrill,350)},
+  edFrame(d){keepEd();DR.f=+d.i;render()},
+  edAddStep(){keepEd();const d=DR.ed;const c=clone(d.frames[DR.f]);c.note='';c.h=1;delete c.jump;d.frames.splice(DR.f+1,0,c);DR.f++;render()},
+  edDelStep(){const d=DR.ed;if(DR.f>0){d.frames.splice(DR.f,1);DR.f--;render()}},
+  edH(d){keepEd();const fr=DR.ed.frames[DR.f];if(d.v==='j'){fr.jump=1;fr.h=0}else{delete fr.jump;fr.h=+d.v}render()},
+  edAdd(d){keepEd();const e=DR.ed;const k=d.k;const n=e.tokens.filter(t=>t.kind===k).length+1;const id='t'+uid();
+    const label=k==='p'?String(e.tokens.filter(t=>t.kind==='p').length+1):k==='o'?'X':k==='c'?'C':k==='t'?'T':'';
+    const at=e.view==='half'?[4.5+((n%3)-1)*1.4,13.5+Math.floor(n/3)*.9]:[4.5+((n%3)-1)*1.4,13.5];
+    e.tokens.push({id,kind:k,label});e.frames.forEach(f=>f.pos[id]=at.slice());DR.sel=id;render()},
+  edDelTok(){const e=DR.ed;const id=DR.sel;e.tokens=e.tokens.filter(t=>t.id!==id);e.frames.forEach(f=>delete f.pos[id]);DR.sel=null;render()},
+  edView(d){keepEd();DR.ed.view=d.v;render()},
+  edPreview(){keepEd();const d=DR.ed;const tmp=clone(d);tmp.id='__preview';PREVIEW=tmp;sheet(`<h2>${esc(d.name)}</h2><div class="dfield">${drillSVG(tmp,{id:'dSvg'})}</div><div class="dnote"><span class="sn" id="dStep">START</span><span id="dNote"></span></div><div class="dctl"><button class="btn pri play" data-act="dPlay" id="dPlayBtn">▶ Play</button><button class="btn ghost sm" data-act="dSpeed" id="dSpeedBtn">${DR.speed}x</button></div>`);
+    const back=DR.id;DR.id='__preview';DR.t=0;DR.prevId=back;playDrill();
+    const sc=$('#scrim');const obs=new MutationObserver(()=>{if(!document.body.contains(sc)){stopDrill();DR.id=DR.prevId;obs.disconnect()}});obs.observe(document.body,{childList:true})}
+};
+
+const EDIT_ACTS=new Set(['addSet','newGame','saveGame','editGame','saveEditGame','delGame','delGameYes','pickSpot','setSpot','setLibero','copySet','clearLineup','teamName','teamSave','editPlayer','savePlayer','delPlayer','sample','setLevel','setNum','measure','playAll']);
+const SCORE_ACTS=new Set(['startSet','pt','rotate','undo','timeout','endSet','endSetYes','reopen','doSub','oppSub','oppSubSave','first','tapPlayer']);
+function allowed(act){if(EDIT_ACTS.has(act)&&!canEdit()){toast(`Only coaches can change that. You're ${roleOf(S.team)==='viewer'?'a viewer':'the scorekeeper'} on ${S.team.name}.`);return false}
+  if(SCORE_ACTS.has(act)&&!canScore()){toast(`You can watch ${S.team.name}, but not keep score.`);return false}return true}
+document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if(!el||el.dataset.change)return;if(el.closest('#edSvg'))return;const f=A[el.dataset.act];if(f){e.preventDefault();if(!allowed(el.dataset.act))return;f(el.dataset,el,e)}});
+document.addEventListener('change',e=>{const el=e.target;if(el.dataset.change&&A[el.dataset.act]){if(!allowed(el.dataset.act)){render();return}A[el.dataset.act](el.dataset,el,e)}
+  if(el.dataset.opp!=null){if(!canScore()){render();return}const s=curSet();s.opp[+el.dataset.opp]=el.value.trim();save()}
+  if(DR.mode==='edit'&&['edLabel'].includes(el.id)){keepEd();render()}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet();if(e.key==='Enter'&&e.target.tagName==='INPUT'){if(e.target.id==='siP'||e.target.id==='siU'){A.signIn();return}const b=document.querySelector('#scrim .btn.pri');if(b)b.click()}});
+
+render();
+if(WA){WA.ready.then(async()=>{let last=WA.me&&WA.me.id;await startAccount();
+  WA.onChange(async me=>{const id=me&&me.id;if(id===last)return;last=id;if(!me){ME=null;if(CH){try{WA.client.removeChannel(CH)}catch(e){}CH=null}if(saveTo==='account'){S=norm(lsGet(DEVICE_KEY))}render();return}await startAccount();if(saveTo==='account')toast('Signed in. Your notebook is saved to your account.')})}).catch(()=>{})}
+window.__vb={get S(){return S},replay,DR,get ME(){return ME}};
+})();
+</script>
+<script src="../shared/analytics.js" defer></script>
+</body>
+</html>
