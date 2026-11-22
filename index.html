@@ -49,6 +49,11 @@ window.APPS=[
    about:'A guide to the Formula 1 calendar: each circuit\'s layout with every corner, its history, how the lap races and some trivia. No account needed.',
    shots:[['screens/f1-1.jpg','Lap length, corners and race distance at a glance.'],['screens/f1-2.jpg','Every corner, numbered and named.'],['screens/f1-3.jpg','What each lap asks of the car.']],
    how:[['Pick a circuit','Choose any track on the calendar.'],['Explore it','Switch between History, Layout, Racing and Trivia.'],['Read the lap','Follow the corners on the map and see what makes the track hard.']]},
+  {id:'volleyball', name:'Volleyball Notebook', desc:'A coach\'s notebook: lineups for every set, rotations, subs, playing time, stats, a scorecard, a scoreboard and animated drills.', url:'./volleyball/', color:'#FF7A1A',
+   tagline:'Everything on your clipboard, and more.',
+   about:'A notebook for volleyball coaches. Keep your roster, plan the starting lineup for each set, then rotate, sub and keep score during the match. It tracks how much every player played, fills in a scorecard like the paper one, turns the score into stats, and has a big tap-to-score scoreboard for scrimmages on an iPad. The Drills tab shows animated drills, and you can build your own. Save it on your device or to your account.',
+   shots:[['screens/volleyball-1.jpg','Plan the starting lineup for every set.'],['screens/volleyball-2.jpg','Rotate, sub and keep score on the court view.'],['screens/volleyball-3.jpg','Animated drills, and a builder for your own.']],
+   how:[['Add your roster','Enter each player\'s name, number and position. Pick your rule level in Settings.'],['Plan your sets','Make a game day and set the lineup for each set.'],['Run the match','Tap +1 for each rally. Side-outs rotate for you, and tapping a player lets you sub.'],['Look back','See playing time and stats, or open Drills to plan practice.']]},
   {id:'watchmaker', name:'Watchmakers Bench', desc:'Build or service a mechanical chronograph step by step, with real tools, oils and timing.', url:'./watchmaker/', color:'#C9A25E',
    tagline:'A watchmaker\'s bench in your pocket.',
    about:'A virtual watchmaker\'s bench. Build a chronograph movement from a bare main plate, or strip a finished watch down, clean it and put it back together. Every step follows the real service procedure, from the tweezers and oils you pick up to the final timing. No account needed.',
@@ -458,6 +463,7 @@ const ICONS={
   games:`<svg viewBox="0 0 100 100"><rect width="100" height="100" fill="#6C4CE0"/><g transform="rotate(-12 45 48)"><rect x="20" y="23" width="50" height="50" rx="10" fill="#fff"/>
     <circle cx="32" cy="35" r="4.6" fill="#2A1B6B"/><circle cx="58" cy="35" r="4.6" fill="#2A1B6B"/><circle cx="45" cy="48" r="4.6" fill="#2A1B6B"/><circle cx="32" cy="61" r="4.6" fill="#2A1B6B"/><circle cx="58" cy="61" r="4.6" fill="#2A1B6B"/></g>
     <circle cx="77" cy="62" r="7.5" fill="#3FE0C5"/><path d="M70 83 C70 73 84 73 84 83 Z" fill="#3FE0C5"/><rect x="67" y="82" width="20" height="5" rx="2.5" fill="#3FE0C5"/></svg>`,
+  volleyball:`<svg viewBox="0 0 1024 1024"><image href="./volleyball/icon-512.png" width="1024" height="1024"/></svg>`,
   watchmaker:`<svg viewBox="0 0 1024 1024"><image href="./watchmaker/icon-512.png" width="1024" height="1024"/></svg>`,
   f1:`<svg viewBox="0 0 100 100"><defs><linearGradient id="gf" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF2A1F"/><stop offset="1" stop-color="#B30500"/></linearGradient><pattern id="chk" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="3" height="3" fill="#fff"/><rect x="3" y="3" width="3" height="3" fill="#fff"/></pattern></defs>
     <rect width="100" height="100" fill="url(#gf)"/>
