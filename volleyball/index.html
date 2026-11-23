@@ -274,6 +274,14 @@ h3{font:700 18px/1.1 var(--head);text-transform:uppercase;letter-spacing:.3px;ma
 .stat div{background:var(--soft);border-radius:12px;padding:8px;text-align:center}
 .stat b{display:block;font:800 24px/1 var(--head)}
 .stat span{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase}
+.dctl [aria-pressed="true"]{background:#FFF1E6;border-color:var(--orange);color:var(--orange2)}
+.dctl [aria-pressed="false"]{color:var(--muted)}
+.selbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.onlist{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.onchip{display:inline-flex;align-items:center;border:1.5px solid var(--line);border-radius:999px;background:#fff;overflow:hidden}
+.onchip button{padding:6px 4px 6px 12px;font-weight:600;font-size:13.5px}
+.onchip button.x{padding:6px 10px 6px 6px;color:var(--muted);font-size:13px}
+.onchip.on{border-color:#FFD23F;box-shadow:0 0 0 2px #FFE58A}
 .ibtn{width:38px;height:38px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center}
 .ibtn:active{background:var(--soft)}
 .pill.sw{background:#E9F1FF;color:#123E8C}
@@ -982,12 +990,16 @@ const DV={half:{x:-2.2,y:4.6,w:13.4,h:16.6},full:{x:-2.2,y:-2.6,w:13.4,h:23.2}};
 const KINDS={p:{name:'Player',fill:'#0E1A3B',ink:'#fff'},o:{name:'Other side',fill:'#2F7BFF',ink:'#fff'},c:{name:'Coach',fill:'#fff',ink:'#0E1A3B'},t:{name:'Target',fill:'none',ink:'#1E9E6A'},k:{name:'Cone',fill:'#FFD23F',ink:'#0E1A3B'}};
 const HEIGHTS=[0,0.9,2.3];
 const FOCUS=['All','Ball control','Passing','Serving','Setting','Hitting','Defense','Blocking','Mine'];
+// Each step stores every ball's spot and how it got there: h = 0 carried, 1 hit, 2 high; jump = a new ball appears.
+function ND(d){if(!d||d.balls)return d;d.balls=[{id:'b0'}];
+  d.frames.forEach(f=>{f.balls={b0:Object.assign({p:(f.ball||[4.5,13]).slice(),h:f.h==null?1:f.h},f.jump?{jump:1}:{})};delete f.ball;delete f.h;delete f.jump});
+  if(d.loop==null)d.loop=true;return d}
 function mk(id,name,focus,desc,view,toks,frames){
   const tokens=toks.map(([tid,kind,label])=>({id:tid,kind,label:label||tid}));
   const out=[];let prev=null;
   frames.forEach((f,i)=>{const pos={};tokens.forEach(t=>{pos[t.id]=(f[t.id]||(prev&&prev.pos[t.id])||[4.5,14]).slice()});
     const fr={pos,ball:(f.ball||(prev&&prev.ball)||[4.5,13]).slice(),h:f.h==null?1:f.h,note:f.note||''};if(f.jump)fr.jump=1;out.push(fr);prev=fr});
-  return {id,name,focus,desc,view,tokens,frames:out,builtin:true};
+  return ND({id,name,focus,desc,view,tokens,frames:out,builtin:true});
 }
 const BUILTIN=[
   mk('pepper','Partner pepper','Ball control','Two players keep one ball going: dig, set, hit, over and over. A great warm-up for touch and control.','half',
@@ -1038,13 +1050,13 @@ const BUILTIN=[
 ];
 let DR={mode:'list',id:null,t:0,playing:false,speed:1,loop:true,raf:0,last:0,ed:null,f:0,sel:null};
 let SHARED=[],MYSHARES={};   // drills others shared with me; how many people each of my drills is shared with
-const allDrills=()=>BUILTIN.concat(S.drills,SHARED);
+const allDrills=()=>BUILTIN.concat(S.drills,SHARED).map(ND);
 const isFav=id=>S.favDrills.includes(id);
 const ICON_STAR=on=>`<svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.2l-5.7 3.1 1.2-6.4-4.7-4.4 6.4-.8z" fill="${on?'#FFB020':'none'}" stroke="${on?'#E39A00':'#8A93AB'}" stroke-width="1.8" stroke-linejoin="round"/></svg>`;
 const ICON_PEOPLE=n=>`<svg viewBox="0 0 24 24" width="22" height="22" fill="${n?'#FF7A1A':'none'}" stroke="${n?'#E35F00':'#8A93AB'}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.4"/><path d="M2.8 20c.8-3.6 3.3-5.6 6.2-5.6s5.4 2 6.2 5.6z"/><circle cx="17" cy="9" r="2.6" ${n?'':'fill="none"'}/><path d="M16.6 14.2c2.5.2 4.2 2 4.7 5" fill="none"/></svg>`;
 const shareCount=d=>d.cloudId?(MYSHARES[d.cloudId]||0):0;
 let PREVIEW=null;
-const findDrill=id=>id==='__preview'?PREVIEW:allDrills().find(d=>d.id===id);
+const findDrill=id=>id==='__preview'?ND(PREVIEW):allDrills().find(d=>d.id===id);
 
 function courtSVG(view){
   const v=DV[view];
@@ -1065,32 +1077,40 @@ function tokSVG(t,x,y,o){
 }
 const BALLSVG=`<g id="dBall"><ellipse id="dShadow" rx=".26" ry=".13" fill="rgba(0,0,0,.3)"/><g id="dBallG"><circle r=".26" fill="#fff" stroke="#0E1A3B" stroke-width=".05"/><path d="M0 -.26a.26 .26 0 0 1 .22 .4" fill="none" stroke="#FF7A1A" stroke-width=".07"/><path d="M-.18 .16c.12 .06 .26 .05 .36 -.03M0 -.26c-.07 .09 -.09 .19 -.07 .29" fill="none" stroke="#0E1A3B" stroke-width=".035"/></g></g>`;
 function arrowDefs(){return `<defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#fff"/></marker><marker id="ahb" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#FFD23F"/></marker></defs>`}
-function segArrows(d,k){ // movement from frame k to k+1
-  const A=d.frames[k],B=d.frames[k+1];if(!A||!B)return '';let s='';
+// When a drill loops, add a last move that walks everyone back to the start (balls reappear there).
+function playFrames(d,loop){const fr=d.frames;if(!loop||fr.length<2)return fr;const f0=fr[0];
+  const back={pos:JSON.parse(JSON.stringify(f0.pos)),balls:{},note:'Back to the start.',back:1};
+  d.balls.forEach(b=>{const x=f0.balls[b.id];back.balls[b.id]={p:x?x.p.slice():[4.5,13],h:0,jump:1}});return fr.concat([back])}
+function segArrows(d,k,frames){ // movement from step k to k+1
+  frames=frames||d.frames;const A=frames[k],B=frames[k+1];if(!A||!B)return '';let s='';
   d.tokens.forEach(t=>{const a=A.pos[t.id],b=B.pos[t.id];if(!a||!b)return;const dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy);if(L<.35)return;
     const sx=a[0]+dx/L*.55,sy=a[1]+dy/L*.55,ex=b[0]-dx/L*.6,ey=b[1]-dy/L*.6;
     s+=`<line x1="${sx}" y1="${sy}" x2="${ex}" y2="${ey}" stroke="#fff" stroke-width=".07" stroke-dasharray=".22 .16" marker-end="url(#ah)" opacity=".85"/>`});
-  if(!B.jump){const a=A.ball,b=B.ball;const L=Math.hypot(b[0]-a[0],b[1]-a[1]);if(L>.3){const hh=HEIGHTS[B.h]||0;const mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2-hh*1.1;
-    s+=`<path d="M${a[0]} ${a[1]} Q${mx} ${my} ${b[0]} ${b[1]}" fill="none" stroke="#FFD23F" stroke-width=".08" ${B.h===0?'stroke-dasharray=".1 .12"':''} marker-end="url(#ahb)" opacity=".95"/>`}}
+  d.balls.forEach(bl=>{const a=A.balls[bl.id],b=B.balls[bl.id];if(!a||!b||b.jump)return;const L=Math.hypot(b.p[0]-a.p[0],b.p[1]-a.p[1]);if(L<=.3)return;
+    const hh=HEIGHTS[b.h]||0;const mx=(a.p[0]+b.p[0])/2,my=(a.p[1]+b.p[1])/2-hh*1.1;
+    s+=`<path d="M${a.p[0]} ${a.p[1]} Q${mx} ${my} ${b.p[0]} ${b.p[1]}" fill="none" stroke="#FFD23F" stroke-width=".08" ${b.h===0?'stroke-dasharray=".1 .12"':''} marker-end="url(#ahb)" opacity=".95"/>`});
   return s;
 }
 const ease=u=>u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2;
-function poseAt(d,t){
-  const n=d.frames.length;if(n<2){const f=d.frames[0];return {pos:f.pos,ball:f.ball,lift:0,hide:false,k:0}}
-  const k=Math.min(Math.floor(t),n-2),u=Math.max(0,Math.min(1,t-k));const A=d.frames[k],B=d.frames[k+1];const e=ease(u);const pos={};
+function poseAt(d,t,frames){
+  frames=frames||d.frames;const n=frames.length;const balls={};
+  if(n<2){const f=frames[0];d.balls.forEach(b=>{const x=f.balls[b.id];if(x)balls[b.id]={p:x.p,lift:0,hide:false}});return {pos:f.pos,balls}}
+  const k=Math.min(Math.floor(t),n-2),u=Math.max(0,Math.min(1,t-k));const A=frames[k],B=frames[k+1];const e=ease(u);const pos={};
   d.tokens.forEach(tk=>{const a=A.pos[tk.id]||[0,0],b=B.pos[tk.id]||a;pos[tk.id]=[a[0]+(b[0]-a[0])*e,a[1]+(b[1]-a[1])*e]});
-  if(B.jump) return {pos,ball:u<.98?A.ball:B.ball,lift:0,hide:u>.05&&u<.98,k};
-  const bu=B.h===0?e:u;const ball=[A.ball[0]+(B.ball[0]-A.ball[0])*bu,A.ball[1]+(B.ball[1]-A.ball[1])*bu];
-  return {pos,ball,lift:(HEIGHTS[B.h]||0)*Math.sin(Math.PI*u),hide:false,k};
+  d.balls.forEach(bl=>{const a=A.balls[bl.id],b=B.balls[bl.id];if(!a||!b)return;
+    if(b.jump){balls[bl.id]={p:u<.98?a.p:b.p,lift:0,hide:u>.05&&u<.98};return}
+    const bu=b.h===0?e:u;balls[bl.id]={p:[a.p[0]+(b.p[0]-a.p[0])*bu,a.p[1]+(b.p[1]-a.p[1])*bu],lift:(HEIGHTS[b.h]||0)*Math.sin(Math.PI*u),hide:false}});
+  return {pos,balls};
 }
+const ballSVG=(id,p,o)=>`<g class="tok ${o&&o.sel?'sel':''}" data-tok="ball:${esc(id)}" transform="translate(${p[0]} ${p[1]})">${o&&o.edit?'<circle class="r" r=".42" fill="rgba(255,210,63,.25)"/>':''}${BALLSVG.replace(/id="[^"]+"/g,'')}</g>`;
 function drillSVG(d,o){
   o=o||{};const c=courtSVG(d.view);const f=o.frame!=null?d.frames[o.frame]:d.frames[0];
   let ghosts='',arrows='';
-  if(o.edit&&o.frame>0){const pv=d.frames[o.frame-1];ghosts=d.tokens.map(t=>{const p=pv.pos[t.id];return p?`<circle cx="${p[0]}" cy="${p[1]}" r=".45" fill="none" stroke="#fff" stroke-width=".05" stroke-dasharray=".1 .1" opacity=".7"/>`:''}).join('')+`<circle cx="${pv.ball[0]}" cy="${pv.ball[1]}" r=".2" fill="none" stroke="#FFD23F" stroke-width=".05" stroke-dasharray=".08 .08"/>`;arrows=segArrows(d,o.frame-1)}
+  if(o.edit&&o.frame>0){const pv=d.frames[o.frame-1];ghosts=d.tokens.map(t=>{const p=pv.pos[t.id];return p?`<circle cx="${p[0]}" cy="${p[1]}" r=".45" fill="none" stroke="#fff" stroke-width=".05" stroke-dasharray=".1 .1" opacity=".7"/>`:''}).join('')+d.balls.map(b=>{const x=pv.balls[b.id];return x?`<circle cx="${x.p[0]}" cy="${x.p[1]}" r=".2" fill="none" stroke="#FFD23F" stroke-width=".05" stroke-dasharray=".08 .08"/>`:''}).join('');arrows=segArrows(d,o.frame-1)}
   if(o.thumb) arrows=segArrows(d,0);
   const toks=d.tokens.map(t=>{const p=f.pos[t.id]||[4.5,14];return tokSVG(t,p[0],p[1],{sel:o.sel===t.id})}).join('');
   return `<svg viewBox="${c.vb}" xmlns="http://www.w3.org/2000/svg" ${o.id?`id="${o.id}"`:''}>${arrowDefs()}${c.bg}<g id="dGhost">${ghosts}</g><g id="dArrows">${arrows}</g><g id="dToks">${toks}</g>
-    <g class="tok ${o.sel==='ball'?'sel':''}" data-tok="ball" transform="translate(${f.ball[0]} ${f.ball[1]})">${o.edit?'<circle class="r" r=".42" fill="rgba(255,210,63,.25)"/>':''}${BALLSVG.replace(/id="[^"]+"/g,'')}</g></svg>`;
+    <g id="dBalls">${d.balls.map(b=>{const x=f.balls[b.id];return x?ballSVG(b.id,x.p,{sel:o.sel==='ball:'+b.id,edit:o.edit}):''}).join('')}</g></svg>`;
 }
 
 function viewDrills(){
@@ -1116,32 +1136,47 @@ function viewDrill(d){
   <div class="layout two"><div><div class="dfield">${drillSVG(d,{id:'dSvg'})}</div>
     <div class="dnote"><span class="sn" id="dStep">START</span><span id="dNote">${esc(d.frames[0].note||'Starting spots.')}</span></div>
     <div class="dctl"><button class="btn ghost" data-act="dPrev" aria-label="Back a step">⏮</button><button class="btn pri play" data-act="dPlay" id="dPlayBtn">▶ Play</button><button class="btn ghost" data-act="dNext" aria-label="Next step">⏭</button>
-      <button class="btn ghost sm" data-act="dSpeed" id="dSpeedBtn">${DR.speed}x</button></div>
+      <button class="btn ghost sm" data-act="dSpeed" id="dSpeedBtn">${DR.speed}x</button><button class="btn ghost sm" data-act="dLoop" id="dLoopBtn" aria-pressed="${DR.loop}">↻ Loop</button></div>
     <div class="legend"><span><i style="background:#0E1A3B"></i>Our players</span><span><i style="background:#2F7BFF"></i>Other side</span><span><i style="background:#fff;border:1.5px solid #0E1A3B;border-radius:3px"></i>Coach</span><span><i style="background:#FFD23F"></i>Ball path</span></div></div>
   <div class="card"><h3>Steps</h3><p class="muted" style="margin:0 0 6px">${esc(d.frames[0].note||'Starting spots.')}</p><ol style="margin:0;padding-left:22px;line-height:1.5">${d.frames.slice(1).map((f,i)=>`<li>${esc(f.note||'Step '+(i+1))}</li>`).join('')}</ol>
     <div class="row" style="margin-top:14px;gap:8px;flex-wrap:wrap">${d.received?`<button class="btn dark" data-act="copyDrill" data-id="${esc(d.id)}">Copy and change it</button><button class="btn ghost" data-act="dropShared" data-id="${esc(d.id)}">Remove from my list</button>`:d.builtin?`<button class="btn dark" data-act="copyDrill" data-id="${esc(d.id)}">Copy and change it</button>`:`<button class="btn" data-act="shareDrill" data-id="${esc(d.id)}">${n?'Shared with '+n+' · change':'Share with others'}</button>`+`<button class="btn dark" data-act="editDrill" data-id="${esc(d.id)}">Edit drill</button><button class="btn bad" data-act="delDrill" data-id="${esc(d.id)}">Delete</button>`}</div></div></div>`;
 }
+function edName(d,id){if(id.startsWith('ball:')){const i=d.balls.findIndex(b=>'ball:'+b.id===id);return d.balls.length>1?'Ball '+(i+1):'Ball'}
+  const t=d.tokens.find(x=>x.id===id);return t?(KINDS[t.kind].name+(t.label?' '+t.label:'')):''}
+function flightSeg(fr,bid){const x=fr.balls[bid]||{};return `<div class="seg"><button class="${x.jump?'on':''}" data-act="edH" data-b="${esc(bid)}" data-v="j">New ball</button><button class="${!x.jump&&x.h===0?'on':''}" data-act="edH" data-b="${esc(bid)}" data-v="0">Carried</button><button class="${!x.jump&&x.h===1?'on':''}" data-act="edH" data-b="${esc(bid)}" data-v="1">Hit</button><button class="${!x.jump&&x.h===2?'on':''}" data-act="edH" data-b="${esc(bid)}" data-v="2">High</button></div>`}
 function viewEditor(){
-  const d=DR.ed,f=DR.f,fr=d.frames[f];const sel=DR.sel&&DR.sel!=='ball'?d.tokens.find(t=>t.id===DR.sel):null;
+  const d=ND(DR.ed),f=DR.f,fr=d.frames[f];const sid=DR.sel;
+  const selTok=sid&&!sid.startsWith('ball:')?d.tokens.find(t=>t.id===sid):null;const selBall=sid&&sid.startsWith('ball:')&&d.balls.some(b=>'ball:'+b.id===sid)?sid.slice(5):null;
+  const oneBall=d.balls.length===1?d.balls[0].id:null;
+  const selBar=selTok||selBall?`<div class="selbar"><span class="lbl" style="margin-right:2px">Selected</span><b>${esc(edName(d,sid))}</b>
+      ${selTok?`<input id="edLabel" data-id="${esc(selTok.id)}" value="${esc(selTok.label)}" maxlength="3" aria-label="Label" style="width:56px;min-height:36px;border:1.5px solid var(--line);border-radius:10px;text-align:center;font-weight:700">`:''}
+      <button class="btn bad sm" style="margin-left:auto" data-act="edDel" data-id="${esc(sid)}">Remove</button></div>
+      ${selBall&&f>0?`<div style="margin-top:8px"><span class="lbl">How this ball travels in step ${f}</span><div style="margin-top:6px">${flightSeg(fr,selBall)}</div></div>`:''}`:'';
+  const items=d.tokens.map(t=>({id:t.id,name:edName(d,t.id)})).concat(d.balls.map(b=>({id:'ball:'+b.id,name:edName(d,'ball:'+b.id)})));
   return `<div class="row" style="margin-bottom:10px"><button class="btn sm ghost" data-act="edCancel">Cancel</button><b style="flex:1;text-align:center">${d.id&&S.drills.some(x=>x.id===d.id)?'Edit drill':'New drill'}</b><button class="btn sm pri" data-act="edSave">Save</button></div>
   <div class="layout two"><div>
     <div class="steps">${d.frames.map((x,i)=>`<button class="chip ${i===f?'on':''}" data-act="edFrame" data-i="${i}">${i?'Step '+i:'Start'}</button>`).join('')}<button class="chip alt" data-act="edAddStep">+ Step</button></div>
     <div class="dfield" id="edField">${drillSVG(d,{id:'edSvg',edit:1,frame:f,sel:DR.sel})}</div>
-    <p class="muted" style="font-size:13px;text-align:center;margin:8px 0 0">${f===0?'Drag players and the ball to where they start.':'Drag players and the ball to where they end up in this step. Dashed circles show where they were.'}</p>
-    <div class="dctl"><button class="btn ghost sm" data-act="edPreview" ${d.frames.length<2?'disabled':''}>▶ Preview</button>${f>0?'<button class="btn bad sm" data-act="edDelStep">Delete step</button>':''}</div>
+    <p class="muted" style="font-size:13px;text-align:center;margin:8px 0 0">${f===0?'Drag players and balls to where they start. Tap one to select it.':'Drag players and balls to where they end up in this step. Dashed circles show where they were.'}</p>
+    ${selBar?`<div class="card" style="margin-top:10px;padding:10px 12px">${selBar}</div>`:''}
+    <div class="dctl"><button class="btn ghost sm" data-act="edPreview" ${d.frames.length<2?'disabled':''}>▶ Preview</button>${d.frames.length>1?`<button class="btn bad sm" data-act="edDelStep">Delete ${f?'step '+f:'start'}</button>`:''}</div>
   </div><div>
     <div class="card"><h3>${f?'Step '+f:'Start'}</h3>
       <div class="field"><span class="lbl">What happens</span><input id="edNote" value="${esc(fr.note||'')}" placeholder="${f?'Coach tosses to the passer':'Starting spots'}" maxlength="120"></div>
-      ${f?`<div class="field"><span class="lbl">Ball travels <span style="text-transform:none;letter-spacing:0">· Hit = serve or attack, High = pass, set or toss</span></span><div class="seg"><button class="${fr.jump?'on':''}" data-act="edH" data-v="j">New ball</button><button class="${!fr.jump&&fr.h===0?'on':''}" data-act="edH" data-v="0">Carried</button><button class="${!fr.jump&&fr.h===1?'on':''}" data-act="edH" data-v="1">Hit</button><button class="${!fr.jump&&fr.h===2?'on':''}" data-act="edH" data-v="2">High</button></div></div>`:''}
+      ${f&&oneBall?`<div class="field"><span class="lbl">Ball travels <span style="text-transform:none;letter-spacing:0">· Hit = serve or attack, High = pass, set or toss</span></span>${flightSeg(fr,oneBall)}</div>`:''}
+      ${f&&d.balls.length>1?'<p class="muted" style="font-size:13px;margin:-4px 0 12px">Tap a ball on the court to choose how it travels in this step.</p>':''}
       <span class="lbl">Add to the court</span>
-      <div class="tools" style="margin-top:6px">${['p','o','c','t','k'].map(k=>`<button class="btn sm" data-act="edAdd" data-k="${k}">+ ${KINDS[k].name}</button>`).join('')}</div>
-      ${sel?`<div style="margin-top:14px;border-top:1px solid var(--soft);padding-top:12px"><div class="row" style="gap:8px"><div class="field" style="flex:1;margin:0"><span class="lbl">Label</span><input id="edLabel" data-id="${esc(sel.id)}" value="${esc(sel.label)}" maxlength="3"></div><button class="btn bad sm" style="align-self:flex-end" data-act="edDelTok">Remove</button></div></div>`:''}
+      <div class="tools" style="margin-top:6px">${['p','o','c','t','k'].map(k=>`<button class="btn sm" data-act="edAdd" data-k="${k}">+ ${KINDS[k].name}</button>`).join('')}<button class="btn sm" data-act="edAdd" data-k="b">+ Ball</button></div>
+      <div style="margin-top:14px"><span class="lbl">On the court</span>
+        <div class="onlist">${items.map(x=>`<span class="onchip ${DR.sel===x.id?'on':''}"><button data-act="edSel" data-id="${esc(x.id)}">${esc(x.name)}</button><button class="x" data-act="edDel" data-id="${esc(x.id)}" aria-label="Remove ${esc(x.name)}">✕</button></span>`).join('')||'<span class="muted" style="font-size:13px">Nothing yet.</span>'}</div></div>
     </div>
     <div class="card"><h3>About this drill</h3>
       <div class="field"><span class="lbl">Name</span><input id="edName" value="${esc(d.name)}" maxlength="40"></div>
-      <div class="field"><span class="lbl">Focus</span><select id="edFocus">${FOCUS.filter(x=>x!=='All'&&x!=='Mine').map(x=>`<option ${d.focus===x?'selected':''}>${x}</option>`).join('')}</select></div>
+      <div class="field"><span class="lbl">Focus</span><select id="edFocus">${FOCUS.filter(x=>x!=='All'&&x!=='Mine'&&x!=='Favorites'&&x!=='Shared with me').map(x=>`<option ${d.focus===x?'selected':''}>${x}</option>`).join('')}</select></div>
       <div class="field"><span class="lbl">How it works</span><textarea id="edDesc" maxlength="300">${esc(d.desc||'')}</textarea></div>
       <div class="field"><span class="lbl">Court</span><div class="seg"><button class="${d.view==='half'?'on':''}" data-act="edView" data-v="half">Our half</button><button class="${d.view==='full'?'on':''}" data-act="edView" data-v="full">Full court</button></div></div>
+      <div class="field"><span class="lbl">When it ends</span><div class="seg"><button class="${d.loop!==false?'on':''}" data-act="edLoop" data-v="1">Loop it</button><button class="${d.loop===false?'on':''}" data-act="edLoop" data-v="0">Play once</button></div>
+        <p class="muted" style="font-size:13px;margin:6px 0 0">${d.loop!==false?'After the last step, everyone walks back to the start and it plays again.':'It stops after the last step.'}</p></div>
     </div></div></div>`;
 }
 function afterDrills(){
@@ -1150,41 +1185,40 @@ function afterDrills(){
 }
 function drawPose(){
   const d=findDrill(DR.id);const svg=$('#dSvg');if(!d||!svg)return;
-  const p=poseAt(d,DR.t);
+  const frames=playFrames(d,DR.loop);const p=poseAt(d,DR.t,frames);
   svg.querySelectorAll('#dToks .tok').forEach(g=>{const q=p.pos[g.dataset.tok];if(q)g.setAttribute('transform',`translate(${q[0].toFixed(3)} ${q[1].toFixed(3)})`)});
-  const bg=svg.querySelector('[data-tok="ball"]');bg.setAttribute('transform',`translate(${p.ball[0].toFixed(3)} ${p.ball[1].toFixed(3)})`);bg.style.opacity=p.hide?0:1;
-  const inner=bg.children[0];if(inner){const sh=inner.children[0],bl=inner.children[1];const s=1+p.lift*.18;bl.setAttribute('transform',`translate(0 ${(-p.lift).toFixed(3)}) scale(${s.toFixed(3)})`);sh.setAttribute('opacity',String(Math.max(.25,1-p.lift*.25)))}
-  const n=d.frames.length;const atFrame=Math.abs(DR.t-Math.round(DR.t))<.001;const k=atFrame?Math.round(DR.t):Math.floor(DR.t)+1;
-  const show=Math.min(k,n-1);
+  svg.querySelectorAll('#dBalls [data-tok]').forEach(bg=>{const q=p.balls[bg.dataset.tok.slice(5)];if(!q){bg.style.opacity=0;return}
+    bg.setAttribute('transform',`translate(${q.p[0].toFixed(3)} ${q.p[1].toFixed(3)})`);bg.style.opacity=q.hide?0:1;
+    const inner=bg.children[0];if(inner){const sh=inner.children[0],bl=inner.children[1];const sc=1+q.lift*.18;bl.setAttribute('transform',`translate(0 ${(-q.lift).toFixed(3)}) scale(${sc.toFixed(3)})`);sh.setAttribute('opacity',String(Math.max(.25,1-q.lift*.25)))}});
+  const n=frames.length,steps=d.frames.length-1;const atFrame=Math.abs(DR.t-Math.round(DR.t))<.001;const k=atFrame?Math.round(DR.t):Math.floor(DR.t)+1;
+  const show=Math.min(k,n-1);const fr=frames[show];
   const arrowSeg=atFrame?(show<n-1?show:-1):Math.floor(DR.t);
-  const ar=svg.querySelector('#dArrows');const key=String(arrowSeg);if(ar.dataset.k!==key){ar.dataset.k=key;ar.innerHTML=arrowSeg>=0?segArrows(d,arrowSeg):''}
-  $('#dStep').textContent=show?'STEP '+show+'/'+(n-1):'START';$('#dNote').textContent=d.frames[show].note||(show?'Step '+show:'Starting spots.');
+  const ar=svg.querySelector('#dArrows');const key=arrowSeg+'|'+DR.loop;if(ar.dataset.k!==key){ar.dataset.k=key;ar.innerHTML=arrowSeg>=0?segArrows(d,arrowSeg,frames):''}
+  $('#dStep').textContent=fr.back?'AGAIN':show?'STEP '+show+'/'+steps:'START';$('#dNote').textContent=fr.note||(show?'Step '+show:'Starting spots.');
   $('#dPlayBtn').textContent=DR.playing?'❚❚ Pause':(DR.t>=n-1?'↻ Replay':'▶ Play');
 }
 const STEP_MS=1300,HOLD_MS=550;
 function tick(ts){
   const d=findDrill(DR.id);if(!d||!DR.playing||!$('#dSvg')){DR.raf=0;return}
-  const dt=Math.min(64,ts-(DR.last||ts));DR.last=ts;const n=d.frames.length;
-  DR.hold=(DR.hold||0);
+  const dt=Math.min(64,ts-(DR.last||ts));DR.last=ts;const n=playFrames(d,DR.loop).length;
   if(DR.hold>0){DR.hold-=dt*DR.speed}
   else{const prev=Math.floor(DR.t);DR.t+=dt*DR.speed/STEP_MS;if(Math.floor(DR.t)>prev){DR.t=Math.floor(DR.t);DR.hold=HOLD_MS}}
-  if(DR.t>=n-1){DR.t=n-1;drawPose();if(DR.loop){DR.hold=HOLD_MS*2.5;DR.t=n-1;DR.wrap=true}else{DR.playing=false;drawPose();DR.raf=0;return}}
-  if(DR.wrap&&DR.hold<=0){DR.wrap=false;DR.t=0;DR.hold=HOLD_MS}
+  if(DR.t>=n-1){if(DR.loop&&n>1){DR.t=0;DR.hold=HOLD_MS;DR.laps=(DR.laps||0)+1}else{DR.t=n-1;DR.playing=false;drawPose();DR.raf=0;return}}
   drawPose();DR.raf=requestAnimationFrame(tick);
 }
-function playDrill(){const d=findDrill(DR.id);if(!d)return;if(DR.t>=d.frames.length-1)DR.t=0;DR.playing=true;DR.last=0;DR.hold=DR.t===0?HOLD_MS*.6:0;DR.wrap=false;if(!DR.raf)DR.raf=requestAnimationFrame(tick);drawPose()}
+function playDrill(){const d=findDrill(DR.id);if(!d)return;if(DR.t>=playFrames(d,DR.loop).length-1)DR.t=0;DR.playing=true;DR.last=0;DR.hold=DR.t===0?HOLD_MS*.6:0;if(!DR.raf)DR.raf=requestAnimationFrame(tick);drawPose()}
 function stopDrill(){DR.playing=false;if(DR.raf){cancelAnimationFrame(DR.raf);DR.raf=0}}
 
 function bindEditor(){
   const svg=$('#edSvg');if(!svg)return;const d=DR.ed;const v=DV[d.view];
   const pt=e=>{const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;const q=p.matrixTransform(svg.getScreenCTM().inverse());return [Math.max(v.x+.4,Math.min(v.x+v.w-.4,q.x)),Math.max(v.y+.4,Math.min(v.y+v.h-.4,q.y))]};
   let drag=null;
-  svg.addEventListener('pointerdown',e=>{const g=e.target.closest('[data-tok]');if(!g)return;e.preventDefault();svg.setPointerCapture(e.pointerId);drag={id:g.dataset.tok,g,x0:e.clientX,y0:e.clientY,moved:false}});
+  svg.addEventListener('pointerdown',e=>{const g=e.target.closest('[data-tok]');if(!g){if(DR.sel){keepEd();DR.sel=null;render()}return}e.preventDefault();svg.setPointerCapture(e.pointerId);drag={id:g.dataset.tok,g,x0:e.clientX,y0:e.clientY,moved:false}});
   svg.addEventListener('pointermove',e=>{if(!drag)return;if(Math.hypot(e.clientX-drag.x0,e.clientY-drag.y0)>4)drag.moved=true;if(!drag.moved)return;const q=pt(e);
     drag.g.setAttribute('transform',`translate(${q[0].toFixed(3)} ${q[1].toFixed(3)})`);drag.q=q});
   const end=e=>{if(!drag)return;keepEd();const fr=d.frames[DR.f];const r=(x)=>Math.round(x*20)/20;
-    if(drag.moved&&drag.q){const q=[r(drag.q[0]),r(drag.q[1])];if(drag.id==='ball')fr.ball=q;else fr.pos[drag.id]=q;DR.sel=drag.id}
-    else DR.sel=DR.sel===drag.id?null:drag.id;
+    if(drag.moved&&drag.q){const q=[r(drag.q[0]),r(drag.q[1])];if(drag.id.startsWith('ball:')){const b=drag.id.slice(5);fr.balls[b]=Object.assign(fr.balls[b]||{h:DR.f?1:0},{p:q})}else fr.pos[drag.id]=q;DR.sel=drag.id}
+    else DR.sel=drag.id;
     drag=null;render()};
   svg.addEventListener('pointerup',end);svg.addEventListener('pointercancel',end);
 }
@@ -1478,35 +1512,43 @@ const A={
     S.ui.tab='game';S.ui.view='plan';toast('Sample team loaded');commit()},
   // drills
   dfocus(d){S.ui.dfocus=d.v;commit()},
-  openDrill(d){DR.mode='view';DR.id=d.id;DR.t=0;stopDrill();render();scrollTo(0,0);setTimeout(playDrill,350)},
+  openDrill(d){DR.mode='view';DR.id=d.id;DR.loop=(findDrill(d.id)||{}).loop!==false;DR.t=0;stopDrill();render();scrollTo(0,0);setTimeout(playDrill,350)},
   drillBack(){stopDrill();DR.mode='list';render()},
   dPlay(){const d=findDrill(DR.id);if(DR.playing){stopDrill();drawPose()}else playDrill()},
-  dNext(){const d=findDrill(DR.id);stopDrill();DR.t=Math.min(d.frames.length-1,Math.floor(DR.t+1e-6)+1);
+  dLoop(){DR.loop=!DR.loop;const b=$('#dLoopBtn');if(b){b.setAttribute('aria-pressed',DR.loop)}const d=findDrill(DR.id);if(d&&DR.t>playFrames(d,DR.loop).length-1)DR.t=0;drawPose()},
+  dNext(){const d=findDrill(DR.id);stopDrill();const n=playFrames(d,DR.loop).length;if(Math.floor(DR.t+1e-6)>=n-1)DR.t=0;DR.t=Math.min(n-1,Math.floor(DR.t+1e-6)+1);
     // animate just this step
     const from=DR.t-1;const t0=performance.now();const step=ts=>{const u=Math.min(1,(ts-t0)*DR.speed/STEP_MS);DR.t=from+u;drawPose();if(u<1&&!DR.playing)DR.raf=requestAnimationFrame(step);else DR.raf=0};DR.raf=requestAnimationFrame(step)},
   dPrev(){stopDrill();DR.t=Math.max(0,Math.ceil(DR.t-1e-6)-1);drawPose()},
   dSpeed(){DR.speed=DR.speed===1?.5:DR.speed===.5?2:1;$('#dSpeedBtn').textContent=DR.speed+'x'},
-  newDrill(){DR.ed={id:'my'+uid(),name:'My drill',focus:'Passing',desc:'',view:'half',tokens:[{id:'t1',kind:'p',label:'1'},{id:'t2',kind:'c',label:'C'}],frames:[{pos:{t1:[4.5,15.5],t2:[4.5,10.6]},ball:[4.8,10.4],h:0,note:''}]};DR.f=0;DR.sel=null;DR.mode='edit';render();scrollTo(0,0)},
-  copyDrill(d){stopDrill();const src=findDrill(d.id);const c=clone(src);c.id='my'+uid();delete c.builtin;delete c.cloudId;delete c.received;delete c.from;c.name=src.name+' (mine)';DR.ed=c;DR.f=0;DR.sel=null;DR.mode='edit';render();scrollTo(0,0)},
-  editDrill(d){stopDrill();DR.ed=clone(findDrill(d.id));DR.f=0;DR.sel=null;DR.mode='edit';render();scrollTo(0,0)},
+  newDrill(){DR.ed={id:'my'+uid(),name:'My drill',focus:'Passing',desc:'',view:'half',loop:true,tokens:[{id:'t1',kind:'p',label:'1'},{id:'t2',kind:'c',label:'C'}],balls:[{id:'b0'}],frames:[{pos:{t1:[4.5,15.5],t2:[4.5,10.6]},balls:{b0:{p:[4.8,10.4],h:0}},note:''}]};DR.f=0;DR.sel=null;DR.mode='edit';render();scrollTo(0,0)},
+  copyDrill(d){stopDrill();const src=findDrill(d.id);const c=ND(clone(src));c.id='my'+uid();delete c.builtin;delete c.cloudId;delete c.received;delete c.from;c.name=src.name+' (mine)';DR.ed=c;DR.f=0;DR.sel=null;DR.mode='edit';render();scrollTo(0,0)},
+  editDrill(d){stopDrill();DR.ed=ND(clone(findDrill(d.id)));DR.f=0;DR.sel=null;DR.mode='edit';render();scrollTo(0,0)},
   delDrill(d){const dr=findDrill(d.id);sheet(`<h2>Delete this drill?</h2>${dr&&shareCount(dr)?`<p class="muted">It will also disappear for the ${shareCount(dr)} ${shareCount(dr)===1?'person':'people'} you shared it with.</p>`:''}<button class="btn bad wide" data-act="delDrillYes" data-id="${esc(d.id)}">Delete</button>`)},
   async delDrillYes(d){const dr=S.drills.find(x=>x.id===d.id);if(dr&&dr.cloudId&&CLOUD.ok()){try{await CLOUD.delDrill(dr.cloudId)}catch(e){toast(e.message);return}delete MYSHARES[dr.cloudId]}
     S.drills=S.drills.filter(x=>x.id!==d.id);S.favDrills=S.favDrills.filter(x=>x!==d.id);closeSheet();DR.mode='list';commit()},
   edCancel(){DR.ed=null;DR.mode=DR.id&&findDrill(DR.id)?'view':'list';render()},
-  edSave(){keepEd();const d=DR.ed;if(!d.tokens.length){toast('Add at least one player first');return}
+  edSave(){keepEd();const d=DR.ed;if(!d.tokens.length&&!d.balls.length){toast('Add at least one player or ball first');return}
     if(d.cloudId&&CLOUD.ok())CLOUD.publishDrill(d).then(()=>{if(shareCount(d))toast('Saved. Everyone you shared it with sees the change.')}).catch(()=>toast("Saved here, but couldn't update the shared copy."));const i=S.drills.findIndex(x=>x.id===d.id);if(i>=0)S.drills[i]=d;else S.drills.push(d);
-    DR.id=d.id;DR.ed=null;DR.mode='view';toast('Drill saved');commit();setTimeout(playDrill,350)},
+    DR.id=d.id;DR.ed=null;DR.mode='view';DR.loop=d.loop!==false;DR.t=0;toast('Drill saved');commit();setTimeout(playDrill,350)},
   edFrame(d){keepEd();DR.f=+d.i;render()},
-  edAddStep(){keepEd();const d=DR.ed;const c=clone(d.frames[DR.f]);c.note='';c.h=1;delete c.jump;d.frames.splice(DR.f+1,0,c);DR.f++;render()},
-  edDelStep(){const d=DR.ed;if(DR.f>0){d.frames.splice(DR.f,1);DR.f--;render()}},
-  edH(d){keepEd();const fr=DR.ed.frames[DR.f];if(d.v==='j'){fr.jump=1;fr.h=0}else{delete fr.jump;fr.h=+d.v}render()},
-  edAdd(d){keepEd();const e=DR.ed;const k=d.k;const n=e.tokens.filter(t=>t.kind===k).length+1;const id='t'+uid();
+  edAddStep(){keepEd();const d=DR.ed;const c=clone(d.frames[DR.f]);c.note='';delete c.back;Object.values(c.balls).forEach(x=>{x.h=1;delete x.jump});d.frames.splice(DR.f+1,0,c);DR.f++;render()},
+  edDelStep(){const d=DR.ed;if(d.frames.length<2)return;const was=DR.f;d.frames.splice(was,1);DR.f=Math.max(0,was-1);toast(was?'Step deleted':'Start deleted. Step 1 is now the start.');render()},
+  edH(d){keepEd();const fr=DR.ed.frames[DR.f];const x=fr.balls[d.b]||(fr.balls[d.b]={p:[4.5,13]});if(d.v==='j'){x.jump=1;x.h=0}else{delete x.jump;x.h=+d.v}render()},
+  edSel(d){keepEd();DR.sel=DR.sel===d.id?null:d.id;render()},
+  edDel(d){keepEd();const e=DR.ed;const id=d.id;
+    if(id.startsWith('ball:')){const b=id.slice(5);e.balls=e.balls.filter(x=>x.id!==b);e.frames.forEach(f=>delete f.balls[b])}
+    else{e.tokens=e.tokens.filter(t=>t.id!==id);e.frames.forEach(f=>delete f.pos[id])}
+    if(DR.sel===id)DR.sel=null;render()},
+  edLoop(d){keepEd();DR.ed.loop=d.v==='1';render()},
+  edAdd(d){keepEd();const e=DR.ed;const k=d.k;
+    if(k==='b'){const id='b'+uid();const n=e.balls.length;const at=[3.2+(n%4)*.9,12.6+Math.floor(n/4)*.8];e.balls.push({id});e.frames.forEach((f,i)=>f.balls[id]={p:at.slice(),h:i?0:0});DR.sel='ball:'+id;render();return}const n=e.tokens.filter(t=>t.kind===k).length+1;const id='t'+uid();
     const label=k==='p'?String(e.tokens.filter(t=>t.kind==='p').length+1):k==='o'?'X':k==='c'?'C':k==='t'?'T':'';
     const at=e.view==='half'?[4.5+((n%3)-1)*1.4,13.5+Math.floor(n/3)*.9]:[4.5+((n%3)-1)*1.4,13.5];
     e.tokens.push({id,kind:k,label});e.frames.forEach(f=>f.pos[id]=at.slice());DR.sel=id;render()},
-  edDelTok(){const e=DR.ed;const id=DR.sel;e.tokens=e.tokens.filter(t=>t.id!==id);e.frames.forEach(f=>delete f.pos[id]);DR.sel=null;render()},
+  edDelTok(){if(DR.sel)A.edDel({id:DR.sel})},
   edView(d){keepEd();DR.ed.view=d.v;render()},
-  edPreview(){keepEd();const d=DR.ed;const tmp=clone(d);tmp.id='__preview';PREVIEW=tmp;sheet(`<h2>${esc(d.name)}</h2><div class="dfield">${drillSVG(tmp,{id:'dSvg'})}</div><div class="dnote"><span class="sn" id="dStep">START</span><span id="dNote"></span></div><div class="dctl"><button class="btn pri play" data-act="dPlay" id="dPlayBtn">▶ Play</button><button class="btn ghost sm" data-act="dSpeed" id="dSpeedBtn">${DR.speed}x</button></div>`);
+  edPreview(){keepEd();const d=DR.ed;const tmp=clone(d);DR.loop=d.loop!==false;tmp.id='__preview';PREVIEW=tmp;sheet(`<h2>${esc(d.name)}</h2><div class="dfield">${drillSVG(tmp,{id:'dSvg'})}</div><div class="dnote"><span class="sn" id="dStep">START</span><span id="dNote"></span></div><div class="dctl"><button class="btn pri play" data-act="dPlay" id="dPlayBtn">▶ Play</button><button class="btn ghost sm" data-act="dSpeed" id="dSpeedBtn">${DR.speed}x</button><button class="btn ghost sm" data-act="dLoop" id="dLoopBtn" aria-pressed="${DR.loop}">↻ Loop</button></div>`);
     const back=DR.id;DR.id='__preview';DR.t=0;DR.prevId=back;playDrill();
     const sc=$('#scrim');const obs=new MutationObserver(()=>{if(!document.body.contains(sc)){stopDrill();DR.id=DR.prevId;obs.disconnect()}});obs.observe(document.body,{childList:true})}
 };
