@@ -208,11 +208,13 @@ const APPS = {   // colours from each app's tile on the home page
   remix:{name:'Remix', c:'#3FC4D8', act:null},
   gifbox:{name:'GIFbox', c:'#FF5FA2', act:null},
   watchmaker:{name:'Watchmakers Bench', c:'#C9A25E', act:'Jobs'},
+  fireplace:{name:'Pixel Fireplace', c:'#F0A040', act:'Fires'},
+  volleyball:{name:'Volleyball Notebook', c:'#FF7A1A', act:null},
   'f1-circuits':{name:'F1 Circuits', c:'#4ED08E', act:null}};
 const appName = a => (APPS[a] && APPS[a].name) || titleize(a);
 const GAME_NAMES = {'take-five':'Take Five', 'daily-quiz':'Daily quiz', chess:'Chess', 'connect-four':'Connect Four',
   'five-letters':'Five Letters', golf:'Golf', eights:'Crazy Eights', prism:'Prism', deal:'Deal', 'big-year':'Big Year',
-  build:'Build a movement', service:'Service a watch'};
+  build:'Build a movement', service:'Service a watch', fire:'Fires'};
 const gameName = g => GAME_NAMES[g] || titleize(g);
 function titleize(s){ return String(s || '').replace(/[-_]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); }
 const plural = (n, one, many) => num(n) + ' ' + (Math.round(n) === 1 ? one : (many || one + 's'));
@@ -324,11 +326,20 @@ function describe(e){
     case 'time': return `spent ${dur(e.secs)} in ${app}`;
     case 'signin': return `signed in on ${app}`;
     case 'signout': return `signed out on ${app}`;
-    case 'screen': return `went to ${esc(titleize(e.name))} in ${app}`;
-    case 'game_start': return `started ${esc(gameName(e.name))} in ${app}`;
-    case 'game_end': return `played ${esc(gameName(e.name))} for ${dur(e.secs)}`;
+    case 'screen': return e.app === 'fireplace' ? fireText(e.name, app) : `went to ${esc(titleize(e.name))} in ${app}`;
+    case 'game_start': return e.app === 'fireplace' && e.name === 'fire' ? `lit a fire in ${app}` : `started ${esc(gameName(e.name))} in ${app}`;
+    case 'game_end': return e.app === 'fireplace' && e.name === 'fire' ? `kept a fire going for ${dur(e.secs)}` : `played ${esc(gameName(e.name))} for ${dur(e.secs)}`;
     default: return esc(e.kind);
   }
+}
+// Pixel Fireplace reports marshmallows, themes and water as screens
+const MALLOW = {raw:'Still raw', light:'Lightly toasted', golden:'Golden brown', crispy:'A little crispy', burnt:'Burnt', flaming:'Eaten on fire', 'burned-up':'Burned up'};
+function fireText(n, app){
+  n = String(n || '');
+  if(n.startsWith('marshmallow:')){ const k = n.slice(12); return k === 'burned-up' ? `burned up a marshmallow in ${app}` : `ate a marshmallow (${esc((MALLOW[k] || titleize(k)).toLowerCase())}) in ${app}`; }
+  if(n.startsWith('theme:')) return `picked the ${esc(titleize(n.slice(6)))} fireplace`;
+  if(n === 'water') return `put out a fire in ${app}`;
+  return `went to ${esc(titleize(n))} in ${app}`;
 }
 const metaOf = e => [titleize(e.device), e.browser, place(e.tz)].filter(Boolean).join(', ');
 
@@ -568,6 +579,12 @@ function appSaved(k){
   if(k === 'brick-builds'){
     const rows = (G.brick || []).slice().sort((a, b) => String(b.updated).localeCompare(String(a.updated)));
     return `<div class="block"><h3>Last saved a build</h3>${rows.length ? '<ul class="feed plain">' + rows.map(r => `<li><span>${esc(whoName(r.u))}</span><span class="when">${esc(ago(r.updated))}</span></li>`).join('') + '</ul>' : '<div class="empty">No saves yet.</div>'}</div>`;
+  }
+  if(k === 'fireplace'){
+    const sc = D.ev.filter(e => e.app === 'fireplace' && e.kind === 'screen');
+    const ml = sc.filter(e => String(e.name).startsWith('marshmallow:')), th = sc.filter(e => String(e.name).startsWith('theme:'));
+    return `<div class="cols block"><div><h3>Marshmallows</h3>${barList(countBy(ml, e => MALLOW[e.name.slice(12)] || titleize(e.name.slice(12))), num, 'No marshmallows this period.')}</div>
+      <div><h3>Fireplaces picked</h3>${barList(countBy(th, e => titleize(e.name.slice(6))), num, 'No theme changes this period.')}</div></div>`;
   }
   if(k === 'gifbox'){
     const gb = G.gifbox || {};
