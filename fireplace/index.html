@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Pixel Fireplace</title>
 <meta name="description" content="A cozy pixel-art fireplace. Toss on logs, strike a match and toast marshmallows.">
 <meta name="apple-mobile-web-app-title" content="Fireplace">
@@ -19,7 +19,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
-  html,body{margin:0;height:100%;background:#000;overflow:hidden}
+  html,body{margin:0;height:100%;background:#000;overflow:hidden;touch-action:manipulation}
+  button{touch-action:manipulation}
   body{display:flex;align-items:center;justify-content:center;font-family:'Press Start 2P',monospace;user-select:none;-webkit-user-select:none;color:#ffcf7a}
   body.idle{cursor:none}
   canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block;flex:none}
@@ -865,6 +866,9 @@ cvs.addEventListener('dblclick', () => { if (!touchOn()) toggleFS(); });
 
 /* ================= touch controls ================= */
 const coarse = window.matchMedia ? matchMedia('(pointer: coarse)') : null;
+// a fireplace that fills the screen has nothing to zoom into: block iOS pinch and double-tap zoom
+['gesturestart', 'gesturechange'].forEach(ev => document.addEventListener(ev, e => e.preventDefault()));
+document.addEventListener('dblclick', e => { if (touchOn()) e.preventDefault(); });
 function touchOn(){ return S.touch === 'on' || (S.touch === 'auto' && !!(coarse && coarse.matches)); }
 function applyTouch(){
   const on = touchOn();
