@@ -147,6 +147,9 @@ try { Object.assign(S, JSON.parse(localStorage.getItem('pixelFireplace2') || '{}
 const saveS = () => { try { localStorage.setItem('pixelFireplace2', JSON.stringify(S)); } catch(e){} };
 const fuelPerLog = () => S.minutes === 'inf' ? Infinity : (+S.minutes || 5) * 60;
 
+// visit and play tracking for the site's Insights page (shared/analytics.js); does nothing if it isn't loaded
+const stat = (fn, ...a) => { try { if (window.WAStats) WAStats[fn](...a); } catch(e){} };
+
 /* ================= constants ================= */
 const H = 54;                 // canvas rows: big chunky pixels
 const B = H - 2;              // coal bed row: the embers sit on the bottom edge of the screen
@@ -476,7 +479,7 @@ function reassignSlots(){ logs.forEach((l,i) => { l.slot = i; l.L = SLOTS[i].L; 
 let logs = [], parts = [], match = null, papers = [], mallow = null;
 let now = 0, light = 0, flick = 1, flickT = 0, flickTarget = 1;
 let embers = 0, ash = 0, quench = 0, steamT = 0, smokeT = 0, waterAt = null;
-let fireAcc = 0, roarAcc = 0, timeScale = 1, wasLit = false, sumHeat = 0;
+let fireAcc = 0, roarAcc = 0, timeScale = 1, wasLit = false, sumHeat = 0, fireOn = false;
 let keys = {};
 
 /* ================= audio ================= */
@@ -641,7 +644,7 @@ function syncSettings(){
 }
 function setSetting(k, v){
   S[k] = v; saveS(); syncSettings();
-  if (k === 'theme') buildTheme();
+  if (k === 'theme'){ buildTheme(); stat('screen', 'theme:' + v); }
   if (k === 'sound' || k === 'volume'){ audio(); applyVolume(); }
   if (k === 'minutes'){
     // switching to or from ENDLESS changes the logs already on the fire
@@ -737,6 +740,7 @@ function eatMallow(){
     c < .18 ? 'STILL RAW... SQUISHY' : c < .4 ? 'LIGHTLY TOASTED' : c < .68 ? 'PERFECT GOLDEN BROWN!' :
     c < .85 ? 'WELL DONE.  A LITTLE CRISPY' : 'BURNT TO A CRISP!';
   say(verdict, 5, true); sChomp();
+  stat('screen', 'marshmallow:' + (mallow.onFire ? 'flaming' : c < .18 ? 'raw' : c < .4 ? 'light' : c < .68 ? 'golden' : c < .85 ? 'crispy' : 'burnt'));
   mallow.eaten = true; mallow.retract = .001;
   return true;
 }
@@ -765,7 +769,7 @@ function extinguish(){
   for (const p of papers) if (!p.flying){ for (let i = 0; i < 4; i++) parts.push({k:'smoke', x:p.x+rand(0,5), y:p.y, vx:rand(-2,2), vy:rand(-8,-3), life:rand(.8,1.6), max:1.6, size:1}); }
   papers = papers.filter(p => p.flying);
   if (mallow && mallow.onFire && !mallow.gone){ mallow.onFire = false; mallow.cook = Math.min(mallow.cook, .99); }
-  if (hot){ sHiss(); steamT = 2.6; smokeT = 7; say('PSSSHHHHH...  THE FIRE IS OUT'); }
+  if (hot){ stat('screen', 'water'); sHiss(); steamT = 2.6; smokeT = 7; say('PSSSHHHHH...  THE FIRE IS OUT'); }
   else say(logs.length ? 'SPLASH!  THE LOGS ARE SOAKED' : 'SPLASH!');
 }
 function sweep(){
@@ -1093,6 +1097,8 @@ function update(dt){
   const nowLit = logs.some(l => l.lit);
   if (wasLit && !nowLit && quench <= 0) say('THE FIRE HAS BURNED DOWN TO EMBERS');
   wasLit = nowLit;
+  const burningNow = fireBurning();
+  if (burningNow !== fireOn){ fireOn = burningNow; fireOn ? stat('gameStart', 'fire') : stat('gameEnd'); }
   if (nowLit) embers = Math.min(1, embers + dt*.08); else embers = Math.max(0, embers - dt/45);
 
   // paper: land on the pile, catch, flare, char, float away as ash
@@ -1165,7 +1171,7 @@ function update(dt){
         if (Math.random() < 4*dt) sPop(.4);
         if (mallow.burnUp >= 1){
           mallow.gone = true; mallow.onFire = false; mallow.goneAt = now;
-          smokePuff(g.hx, g.hy - 2); sPuff(); say('IT BURNED UP');
+          smokePuff(g.hx, g.hy - 2); sPuff(); say('IT BURNED UP'); stat('screen', 'marshmallow:burned-up');
         }
       }
       if (mallow.gone && now - mallow.goneAt > 1.2) mallow.retract = .001;
@@ -1488,6 +1494,7 @@ function frame(ts){
 requestAnimationFrame(frame);
 })();
 </script>
+<script src="../shared/config.js"></script>
 <script src="../shared/analytics.js" defer></script>
 </body>
 </html>
