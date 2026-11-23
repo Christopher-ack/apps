@@ -1,0 +1,1493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pixel Fireplace</title>
+<meta name="description" content="A cozy pixel-art fireplace. Toss on logs, strike a match and toast marshmallows.">
+<meta name="apple-mobile-web-app-title" content="Fireplace">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#000000">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="apple-touch-icon" sizes="167x167" href="apple-touch-icon-167.png">
+<link rel="apple-touch-icon" sizes="152x152" href="apple-touch-icon-152.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  html,body{margin:0;height:100%;background:#000;overflow:hidden}
+  body{display:flex;align-items:center;justify-content:center;font-family:'Press Start 2P',monospace;user-select:none;-webkit-user-select:none;color:#ffcf7a}
+  body.idle{cursor:none}
+  canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block;flex:none}
+  #ui{position:fixed;left:0;top:0;padding:clamp(16px,3vw,48px);pointer-events:none;text-shadow:.12em .12em 0 #2a1206}
+  #msg{font-size:clamp(10px,1.5vw,24px);line-height:1.7;margin-top:1.1em;opacity:0;transition:opacity .5s;color:#ffe2a8;max-width:85vw}
+  #msg.show{opacity:1}
+  #line{font-size:clamp(26px,4.6vw,80px);white-space:nowrap;text-transform:uppercase;line-height:1.2}
+  #prompt{opacity:.55;margin-right:.35em}
+  .ghost{opacity:.22}
+  #cursor{animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  #line{transition:opacity .25s}
+  #line.hidden{opacity:0}
+  #line.ok{color:#fff6cc}
+  #line.bad{color:#ff6a4a;animation:shake .3s steps(4)}
+  @keyframes shake{25%{transform:translateX(-.15em)}75%{transform:translateX(.15em)}}
+
+  /* ---------- touch controls ---------- */
+  canvas{touch-action:none}
+  body.touch.touch-list #line{pointer-events:auto;cursor:pointer}
+  #bar{position:fixed;left:clamp(8px,2vw,24px);right:clamp(8px,2vw,24px);bottom:clamp(8px,2vh,22px);display:none;justify-content:space-between;z-index:4;transition:opacity .6s;pointer-events:none}
+  #bar .grp{display:flex;gap:clamp(4px,1.6vw,20px);padding:8px clamp(6px,1.2vw,14px);background:rgba(0,0,0,.6);pointer-events:auto}
+  body.touch.touch-bar:not(.holding) #bar{display:flex}
+  #bar.faded{opacity:0}
+  #bar.faded .grp{pointer-events:none}
+  @media (orientation:portrait){ #bar{justify-content:center} #bar .grp:first-child{padding-right:clamp(2px,.8vw,10px)} #bar .grp:last-child{padding-left:clamp(2px,.8vw,10px)} }
+  .tb{background:none;border:0;padding:4px 2px;display:flex;flex-direction:column;align-items:center;gap:7px;color:#ffcf7a;font:inherit;font-size:clamp(7px,1.1vw,11px);cursor:pointer;text-shadow:.15em .15em 0 #2a1206;-webkit-tap-highlight-color:transparent}
+  .tb canvas{width:clamp(34px,6vw,52px);height:clamp(34px,6vw,52px);image-rendering:pixelated}
+  .tb:active canvas{transform:translateY(2px)}
+  #held{position:fixed;right:clamp(8px,2vw,24px);bottom:clamp(8px,2vh,22px);display:none;flex-direction:column;align-items:center;gap:clamp(4px,1.2vh,12px);padding:10px clamp(6px,1.2vw,14px);background:rgba(0,0,0,.6);z-index:4}
+  body.touch.holding #held{display:flex}
+  .hbtn{touch-action:none}
+  .hbtn canvas{width:clamp(42px,7vw,60px);height:clamp(42px,7vw,60px)}
+  .hbtn.pressed canvas,.hbtn:active canvas{transform:translateY(2px);filter:brightness(1.25)}
+  @media (max-height:460px){ #held{flex-direction:row;flex-wrap:wrap;width:clamp(110px,18vw,150px);justify-content:center} }
+  #eatBtn{display:none !important}
+  body.mallow-held #eatBtn{display:flex !important}
+  #cmdList{position:fixed;left:clamp(16px,3vw,48px);top:calc(clamp(16px,3vw,48px) + clamp(26px,4.6vw,80px)*1.4);display:none;flex-direction:column;align-items:flex-start;z-index:6;background:rgba(0,0,0,.7);padding:.6em 1.2em .6em .6em}
+  #cmdList.open{display:flex}
+  @media (max-height:600px){ #cmdList.open{display:grid;grid-template-columns:auto auto;column-gap:2.2em} }
+  #cmdList button{background:none;border:0;font:inherit;font-size:clamp(13px,min(2.6vw,4.4vh),26px);line-height:1;padding:.42em .2em;color:#ffcf7a;text-shadow:.15em .15em 0 #2a1206;cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent}
+  #cmdList button:active{color:#fff3c4}
+
+  /* menu button: almost black, hard to see */
+  #menuBtn{position:fixed;top:clamp(10px,2vw,28px);right:clamp(10px,2vw,28px);width:44px;height:40px;padding:0;border:0;background:transparent;cursor:pointer;z-index:5;display:grid;align-content:center;justify-items:center;gap:6px}
+  #menuBtn i{display:block;width:28px;height:5px;background:#161616}
+  #menuBtn:hover i,#menuBtn:focus-visible i{background:#2c2c2c}
+  #menuBtn:focus{outline:none}
+
+  /* settings overlay */
+  #settings{position:fixed;inset:0;background:rgba(0,0,0,.84);z-index:10;display:none;overflow:auto;padding:clamp(24px,6vw,96px);box-sizing:border-box;text-shadow:.15em .15em 0 #2a1206}
+  #settings.open{display:block}
+  #settings h1{font-size:clamp(20px,3vw,44px);font-weight:normal;margin:0 0 1.1em;color:#ffb347}
+  .row{display:flex;flex-wrap:wrap;align-items:baseline;gap:.4em 1.6em;font-size:clamp(11px,1.45vw,22px);margin:0 0 1.5em}
+  .row .lbl{width:13em;color:#ffe2a8;flex:none}
+  .opt{background:none;border:0;padding:0;font:inherit;color:#7a5a34;cursor:pointer;text-shadow:inherit}
+  .opt:hover{color:#ffcf7a}
+  .opt.on{color:#fff3c4}
+  .opt.on::before{content:'> ';color:#ffb347}
+  .opt:focus{outline:none}
+  .opt:focus-visible{text-decoration:underline}
+  #cmds{font-size:clamp(9px,1.15vw,18px);line-height:2;color:#b89a6a;white-space:pre;margin-top:2em}
+  #cmds b{color:#ffcf7a;font-weight:normal}
+  #note{font-size:clamp(8px,1vw,15px);line-height:2;color:#8a7050;white-space:pre;margin-top:1.6em}
+  #closeBtn{position:fixed;top:clamp(14px,2.5vw,36px);right:clamp(16px,2.5vw,36px);font-size:clamp(14px,1.8vw,26px)}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<button id="menuBtn" type="button" aria-label="Settings"><i></i><i></i><i></i></button>
+
+<div id="settings" role="dialog" aria-label="Settings">
+  <button class="opt" id="closeBtn" type="button">X CLOSE</button>
+  <h1>SETTINGS</h1>
+  <div class="row" data-key="theme"><span class="lbl">THEME</span>
+    <button class="opt" data-val="black">BLACK</button><button class="opt" data-val="brick">BRICK</button><button class="opt" data-val="stone">STONE</button><button class="opt" data-val="christmas">CHRISTMAS</button></div>
+  <div class="row" data-key="minutes"><span class="lbl">MINUTES PER LOG</span>
+    <button class="opt" data-val="3">3</button><button class="opt" data-val="5">5</button><button class="opt" data-val="10">10</button><button class="opt" data-val="inf">ENDLESS</button></div>
+  <div class="row" data-key="sound"><span class="lbl">SOUND</span>
+    <button class="opt" data-val="on">ON</button><button class="opt" data-val="off">OFF</button></div>
+  <div class="row" data-key="volume"><span class="lbl">VOLUME</span>
+    <button class="opt" data-val="low">LOW</button><button class="opt" data-val="med">MEDIUM</button><button class="opt" data-val="high">HIGH</button></div>
+  <div class="row" data-key="hints"><span class="lbl">MESSAGES</span>
+    <button class="opt" data-val="on">ON</button><button class="opt" data-val="off">OFF</button></div>
+  <div class="row" data-key="prompt"><span class="lbl">PROMPT LINE</span>
+    <button class="opt" data-val="always">ALWAYS</button><button class="opt" data-val="typing">WHILE TYPING</button></div>
+  <div class="row" data-key="touch"><span class="lbl">TOUCH CONTROLS</span>
+    <button class="opt" data-val="auto">AUTO</button><button class="opt" data-val="on">ON</button><button class="opt" data-val="off">OFF</button></div>
+  <div class="row" data-key="touchStyle"><span class="lbl">TOUCH STYLE</span>
+    <button class="opt" data-val="bar">ICON BAR</button><button class="opt" data-val="list">COMMAND LIST</button></div>
+  <div class="row"><span class="lbl">SCREEN</span>
+    <button class="opt" id="fsBtn" type="button">FULL SCREEN</button></div>
+  <div id="cmds"><b>LOG</b>           TOSS ON A LOG (UP TO 4)
+<b>MATCH</b>         STRIKE A MATCH
+<b>PAPER</b>         CRUMPLE SOME PAPER ONTO THE FIRE
+<b>MARSHMALLOW</b>   TOAST A MARSHMALLOW ON A STICK
+<b>EAT</b>           EAT YOUR MARSHMALLOW
+<b>DROP</b>          PUT DOWN THE MATCH OR STICK
+<b>WATER</b>         PUT THE FIRE OUT
+<b>SWEEP</b>         CLEAR OUT THE ASHES
+<b>TIME</b>          HOW MUCH FIRE IS LEFT
+<b>THEME</b>         SWITCH FIREPLACE (BLACK, BRICK, STONE, CHRISTMAS)
+<b>MENU</b>          OPEN THIS SCREEN</div>
+  <div id="note">USE THE DOWN AND UP ARROW KEYS TO LOWER AND RAISE
+THE MATCH OR MARSHMALLOW.   PRESS ESC TO CLOSE THIS SCREEN.</div>
+</div>
+
+<div id="bar"></div>
+<div id="held"></div>
+<div id="cmdList"></div>
+<div id="ui">
+  <div id="line"><span id="prompt">&gt;</span><span id="typed"></span><span id="cursor">_</span></div>
+  <div id="msg"></div>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+/* ================= settings ================= */
+const DEFAULTS = { theme:'black', minutes:'5', sound:'on', volume:'med', hints:'off', prompt:'always', touch:'auto', touchStyle:'bar' };
+let S = Object.assign({}, DEFAULTS);
+try { Object.assign(S, JSON.parse(localStorage.getItem('pixelFireplace2') || '{}')); } catch(e){}
+const saveS = () => { try { localStorage.setItem('pixelFireplace2', JSON.stringify(S)); } catch(e){} };
+const fuelPerLog = () => S.minutes === 'inf' ? Infinity : (+S.minutes || 5) * 60;
+
+/* ================= constants ================= */
+const H = 54;                 // canvas rows: big chunky pixels
+const B = H - 2;              // coal bed row: the embers sit on the bottom edge of the screen
+const MAXLOGS = 4, MATCH_LIFE = 30, ML = 36;
+// a neat pile: long logs at the base, the top two at the original size, all centered
+const SLOTS = [ {L:30,dx:-15,y:B-4,z:1}, {L:28,dx:-13,y:B-7,z:0}, {L:24,dx:-12,y:B-10,z:2}, {L:22,dx:-9,y:B-8,z:3} ];
+const TEXW = 30;
+const FW = 58, FH = B + 2;
+const C = {
+  red:[192,82,31], orange:[240,160,64], gold:[242,184,70], yellow:[246,210,74], bright:[249,232,79],
+  dkember:[110,40,16]
+};
+const FIRECOL = v => v >= 15 ? C.bright : v >= 12 ? C.yellow : v >= 8 ? C.gold : v >= 4 ? C.orange : C.red;
+
+/* ================= canvas ================= */
+const cvs = document.getElementById('c'), ctx = cvs.getContext('2d');
+let W = 96, CX = 48, FX = 19, img, D, SCALE = 1, contained = false;
+// tall screens: keep the fire at the bottom, lifted above the icon bar when it's in use
+function placeCanvas(){
+  document.body.style.alignItems = contained ? 'flex-end' : 'center';
+  cvs.style.marginBottom = contained && document.body.classList.contains('touch-bar') ? 'clamp(70px,13vh,110px)' : '0';
+}
+let bgBase, bgLit, mask, bgAmb;
+const fbuf = new Uint8Array(FW * FH);
+
+function rngF(seed){ return function(){ seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const hex = h => [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)];
+const mix = (a,b,t) => [a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t, a[2]+(b[2]-a[2])*t];
+const clamp = (v,a,b) => v<a?a:v>b?b:v;
+const rand = (a,b) => a + Math.random()*(b-a);
+const hash = (a,b) => { const s = Math.sin(a*127.1 + b*311.7) * 43758.5453; return s - Math.floor(s); };
+
+function px(x, y, c, a = 1){
+  x = Math.round(x); y = Math.round(y);
+  if (x < 0 || y < 0 || x >= W || y >= H) return;
+  const o = (y*W + x) * 4;
+  if (a >= 1){ D[o] = c[0]; D[o+1] = c[1]; D[o+2] = c[2]; }
+  else { D[o] += (c[0]-D[o])*a; D[o+1] += (c[1]-D[o+1])*a; D[o+2] += (c[2]-D[o+2])*a; }
+}
+const inMask = (x,y) => { x = Math.round(x); y = Math.round(y); return x>=0 && y>=0 && x<W && y<H && mask[y*W+x] === 1; };
+
+/* ================= themes ================= */
+// Every theme shares one layout: a mantel near the top, a lintel over a rectangular
+// firebox, angled side walls and a dark firebrick back wall. Lighting is dithered.
+let themeLights = [], themeFlames = [];
+const BAYER = [0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5].map(v => (v + .5)/16);
+const OT = 19;                      // top row of the firebox opening
+function buildTheme(){
+  const n = W*H;
+  bgBase = new Float32Array(n*3); bgLit = new Float32Array(n); mask = new Uint8Array(n); bgAmb = new Float32Array(n);
+  themeLights = []; themeFlames = [];
+  let boost = 0;          // extra brightness for the mantel and decorations so they read in a dim room
+  if (S.theme === 'black'){ mask.fill(1); return; }
+  const T = S.theme, R = rngF(T === 'stone' ? 23 : T === 'christmas' ? 31 : 11);
+  const XMAS = T === 'christmas';
+  const OL = CX - 24, OR = CX + 23;
+  const set = (x, y, c) => { if (x < 0 || y < 0 || x >= W || y >= H) return; const i = y*W + x; bgBase[i*3] = c[0]; bgBase[i*3+1] = c[1]; bgBase[i*3+2] = c[2]; bgAmb[i] = boost; };
+  const get = (x, y) => { const i = y*W + x; return [bgBase[i*3], bgBase[i*3+1], bgBase[i*3+2]]; };
+  const dark = (x, y, f) => { if (x < 0 || y < 0 || x >= W || y >= H) return; const b = bgAmb[y*W + x]; set(x, y, get(x, y).map(v => v*f)); bgAmb[y*W + x] = b; };
+  const h2 = (a, b) => hash(a*1.37 + 7, b*2.11 + 3);
+
+  // the top edge of the opening: an arch for stone, square for the others
+  const topAt = T === 'stone'
+    ? x => { const u = (x + .5 - CX)/24.5; return Math.round(OT - 8*(1 - u*u)); }
+    : () => OT;
+
+  if (T === 'stone'){
+    /* ---- fieldstone everywhere ---- */
+    const cols = ['#7a756d','#6c675f','#857f74','#726a60','#7f786b'].map(hex);
+    const seeds = [];
+    for (let y = -6; y < H + 8; y += 6) for (let x = -8; x < W + 9; x += 8) seeds.push([x + R()*5, y + R()*3.5, cols[(R()*cols.length)|0]]);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++){
+      let d1 = 1e9, d2 = 1e9, best = null;
+      for (const sd of seeds){ const d = Math.hypot(x - sd[0], (y - sd[1])*1.3); if (d < d1){ d2 = d1; d1 = d; best = sd; } else if (d < d2) d2 = d; }
+      let c;
+      if (d2 - d1 < 1.15) c = [52,48,44];
+      else {
+        c = best[2];
+        if (d2 - d1 < 2.3) c = (x - best[0]) + (y - best[1])*1.3 < 0 ? mix(c, [255,255,255], .12) : mix(c, [0,0,0], .2);
+      }
+      set(x, y, c);
+    }
+    /* ---- arch ring of wedge stones with a keystone, and stone jambs ---- */
+    const ring = [176,166,148];
+    for (let x = OL - 3; x <= OR + 3; x++){
+      const t = topAt(clamp(x, OL, OR));
+      for (let d = 1; d <= 4; d++){
+        const y = t - d;
+        let c = d === 4 ? [52,48,44] : d === 3 ? mix(ring, [255,255,255], .14) : d === 1 ? mix(ring, [0,0,0], .16) : ring;
+        if (d < 4 && (x - CX + 64) % 4 === 0) c = [70,64,58];
+        set(x, y, c);
+      }
+    }
+    for (let y = topAt(CX) - 5; y < topAt(CX); y++) for (let x = CX - 2; x <= CX + 1; x++)
+      set(x, y, y === topAt(CX) - 5 ? [204,194,174] : (x === CX + 1 ? [150,140,124] : [188,178,160]));
+    for (let y = topAt(CX) - 6; y < topAt(CX); y++){ set(CX - 3, y, [52,48,44]); set(CX + 2, y, [52,48,44]); }
+    for (let x = CX - 3; x <= CX + 2; x++) set(x, topAt(CX) - 6, [52,48,44]);
+    for (let y = OT; y < H; y++) for (const x of [OL - 3, OL - 2, OL - 1, OR + 1, OR + 2, OR + 3]){
+      const edge = x === OL - 3 || x === OR + 3, seam = (y - OT) % 6 === 5;
+      set(x, y, edge || seam ? [60,55,50] : ((x === OL - 2 || x === OR + 2) ? mix(ring, [255,255,255], .06) : ring));
+    }
+  } else {
+    /* ---- painted wall around a framed brick fireplace ---- */
+    const wall = XMAS ? [72,38,44] : [54,60,72];
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) set(x, y, (x % 6 === 0) ? wall.map(v => v*.9) : wall);
+    // brick inside the frame
+    const BL = CX - 34, BR = CX + 33;
+    const cols = (XMAS ? ['#8a2f25','#93372b','#7f2b22'] : ['#8e3b29','#97432f','#86372a']).map(hex);
+    const memo = {};
+    for (let y = 15; y < H; y++) for (let x = BL; x <= BR; x++){
+      const row = (y/3)|0, off = row % 2 ? 3 : 0;
+      if (y % 3 === 2 || (x + off) % 6 === 5){ set(x, y, [74,44,36]); continue; }
+      const key = row + ':' + ((x + off)/6|0);
+      if (!memo[key]) memo[key] = cols[(R()*cols.length)|0];
+      set(x, y, y % 3 === 0 ? mix(memo[key], [255,220,190], .07) : memo[key]);
+    }
+    // soldier-course lintel over the opening
+    for (let x = OL - 2; x <= OR + 2; x++){
+      set(x, OT - 4, [74,44,36]);
+      for (let y = OT - 3; y < OT; y++){
+        const m = (x - (OL - 2)) % 3 === 2;
+        set(x, y, m ? [74,44,36] : (y === OT - 3 ? [140,64,46] : (XMAS ? [122,40,32] : [124,50,36])));
+      }
+    }
+  }
+
+  /* ---- the firebox ---- */
+  for (let x = OL; x <= OR; x++){
+    const t = topAt(x);
+    for (let y = t; y < H; y++){
+      let c;
+      if (x === OL || x === OR) c = [16,10,8];
+      else if (x < CX - 16 || x > CX + 15){
+        const u = x < CX - 16 ? x - OL : OR - x;
+        c = (y + Math.floor(u/2)) % 3 === 0 ? [24,15,11] : [42,28,22];
+      } else {
+        const row = ((y - OT + 30)/3)|0, off = row % 2 ? 3 : 0;
+        c = ((y - OT + 30) % 3 === 2 || (x - CX + 16 + off) % 6 === 5) ? [17,10,8] : (row % 2 ? [34,21,16] : [31,19,14]);
+      }
+      if (y < t + 2) c = mix(c, [0,0,0], .65); else if (y < t + 4) c = mix(c, [0,0,0], .3);
+      set(x, y, c);
+      mask[y*W + x] = 1;
+    }
+  }
+
+  /* ---- mantelpiece: shelf + columns (brick and Christmas) ---- */
+  if (T !== 'stone'){
+    const MX0 = CX - 43, MX1 = CX + 42;
+    for (let x = CX - 34; x <= CX + 33; x++){ dark(x, 15, .55); dark(x, 16, .8); }
+    boost = XMAS ? .2 : .14;
+    const top = XMAS ? [160,92,62] : [176,122,72], face = XMAS ? [124,66,42] : [142,94,52],
+          grain = XMAS ? [108,56,36] : [124,80,44], mold = XMAS ? [88,46,30] : [100,62,34], hi = XMAS ? [150,86,58] : [168,114,66];
+    for (let x = MX0; x <= MX1; x++){
+      set(x, 11, top);
+      for (let y = 12; y <= 13; y++) set(x, y, h2(x, y) < .14 ? grain : face);
+    }
+    for (let x = MX0 + 2; x <= MX1 - 2; x++) set(x, 14, mold);
+    // fluted columns on either side, with a little capital under the shelf
+    for (const [c0, c1] of [[CX - 40, CX - 35], [CX + 34, CX + 39]]){
+      for (let x = c0 - 1; x <= c1 + 1; x++) set(x, 15, mold);
+      for (let y = 16; y < H; y++) for (let x = c0; x <= c1; x++){
+        let c = face;
+        if (x === c0) c = hi; else if (x === c1) c = mold;
+        else if (x === c0 + 2 || x === c1 - 2) c = face.map(v => v*.86);       // flutes
+        set(x, y, c);
+      }
+    }
+
+    {
+      // the bottom of a framed painting hanging above the mantel (the rest is off the top of the screen)
+      const boostWas = boost; boost = .1;
+      const PX0 = CX - 22, PX1 = CX + 21, PB = 6;            // frame's bottom edge row
+      for (let y = 0; y <= PB + 1; y++) for (let x = PX0; x <= PX1; x++){
+        const edge = x <= PX0 + 1 || x >= PX1 - 1 || y >= PB;
+        let c;
+        if (edge){
+          c = [150,112,52];                                  // gilded frame
+          if (x === PX0 || y === PB + 1) c = [104,74,32];
+          if (x === PX1) c = [96,68,30];
+          if (y === PB && x > PX0 && x < PX1) c = [186,146,72];
+        } else {
+          // a calm landscape: distant hills, a meadow, darker grass at the bottom
+          const hill = 1 + Math.round(Math.sin((x - PX0)*.25)*1.2);
+          c = y < hill ? [86,104,118] : y < 3 ? [74,96,70] : y < 5 ? [88,112,62] : [62,84,46];
+          if (y >= 3 && h2(x, y) < .12) c = c.map(v => v*1.12);
+        }
+        set(x, y, c);
+      }
+      for (let x = PX0 + 1; x <= PX1 + 1; x++) dark(x, PB + 2, .7);   // soft shadow under the frame
+      boost = boostWas;
+    }
+    if (XMAS){
+      /* ---- Christmas: a full garland and four big red stockings ---- */
+      const G_TIP = [96,170,96], G_HI = [70,142,74], G_MID = [44,110,54], G_LO = [30,82,40], G_DK = [20,60,30];
+      const light = (x, y) => themeLights.push({ x, y, ph: R()*6.28, sp: .6 + R()*1.4 });
+      const cone = (x, y) => {               // a little pinecone tucked into the garland
+        set(x, y, [132,86,48]); set(x + 1, y, [112,70,38]);
+        set(x, y + 1, [104,64,34]); set(x + 1, y + 1, [86,52,28]);
+        set(x, y + 2, [86,52,28]);
+      };
+      // garland along the shelf: three rows of needles with tufts on top
+      for (let x = MX0 - 1; x <= MX1 + 1; x++){
+        if (x % 3 !== 0) set(x, 8, x % 3 === 1 ? G_TIP : G_HI);
+        set(x, 9, (x % 4 === 2) ? G_HI : G_MID);
+        set(x, 10, (x % 3 === 0) ? G_DK : G_LO);
+      }
+      for (let x = MX0 + 2; x <= MX1 - 2; x += 4) light(x, (x % 8 < 4) ? 8 : 9);
+      for (const cx of [MX0 + 9, CX - 1, MX1 - 10]) cone(cx, 8);
+      // swags across the front: thick and fluffy, pinned with pinecones
+      const PIN = 17;
+      for (let x = MX0; x <= MX1; x++){
+        const t = ((x - MX0) % PIN)/PIN, gy = 14 + Math.round(2.6*Math.sin(Math.PI*t));
+        if (x % 3 !== 1 && gy - 2 > 13) set(x, gy - 2, G_TIP);
+        set(x, gy - 1, G_HI); set(x, gy, (x % 4 === 0) ? G_HI : G_MID); set(x, gy + 1, G_LO);
+        if (x % 3 === 0) set(x, gy + 2, G_DK);
+        if ((x - MX0) % PIN === 5 || (x - MX0) % PIN === 9 || (x - MX0) % PIN === 13) light(x, gy - (x % 2));
+      }
+      for (let px_ = MX0; px_ <= MX1 + 1; px_ += PIN) cone(px_ - 1, 13);
+
+      // big red stockings with a fluffy cuff, holly, and white heel and toe
+      const STOCK = [
+        'CCCCCCCC..',
+        'CCCCCCCC..',
+        'CCCCCCCC..',
+        '.SSSSSS...',
+        '.SSSSSS...',
+        '.SSSSSS...',
+        '.SSSSSS...',
+        '.SSSSSS...',
+        '.SSSSSS...',
+        '.SSSSSSS..',
+        '.HSSSSSSS.',
+        '.HHSSSSTTT',
+        '..HSSSSTTT',
+        '...SSSSTT.'
+      ];
+      const RED = [190,40,40], RED_HI = [222,68,62], RED_LO = [146,26,30], FUR = [255,252,246], FUR_SH = [226,220,210], PATCH = [248,244,236];
+      [[CX - 43, false], [CX - 32, false], [CX + 32, true], [CX + 21, true]].forEach(([sx, flip]) => {
+        const X = c => flip ? sx + 9 - c : sx + c;
+        set(X(3), 16, [208,176,92]);                                     // brass hook
+        STOCK.forEach((row, r) => {
+          const first = row.search(/[^.]/), last = row.length - 1 - [...row].reverse().join('').search(/[^.]/);
+          [...row].forEach((ch, c) => {
+            if (ch === '.') return;
+            let col;
+            if (ch === 'C') col = (r === 2 && c % 2) || (r === 0 && c % 4 === 1) ? FUR_SH : FUR;
+            else if (ch === 'H' || ch === 'T') col = (r === 13 || c === last) ? FUR_SH : PATCH;
+            else col = c === first ? RED_HI : c === last ? RED_LO : RED;
+            const xx = X(c), yy = 17 + r;
+            set(xx, yy, col);
+            if (xx >= 0 && xx < W && yy < H) mask[yy*W + xx] = 0;          // hangs in front of the firebox edge
+          });
+        });
+        // a sprig of holly on the cuff
+        set(X(1), 18, [46,120,56]); set(X(2), 17, [60,140,66]); set(X(2), 18, [210,40,40]); set(X(3), 18, [180,30,30]);
+      });
+    }
+  }
+
+  /* ---- how much firelight reaches each pixel ---- */
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++){
+    const i = y*W + x;
+    let lit = Math.max(0, 1 - Math.hypot(x - CX, (y - (H - 6))*1.2) / 62);
+    lit = lit*lit*1.5;
+    if (mask[i]) lit = Math.min(1.9, lit*1.8 + .3);
+    bgLit[i] = lit;
+  }
+}
+
+/* ================= logs ================= */
+const BARK = [
+  ['#7a5030','#6a4426','#5e3c20'],
+  ['#5a3a1e','#4e301a','#62401f'],
+  ['#462c16','#3e2614','#4e301a'],
+  ['#36220f','#2e1c10','#3a2414'],
+  ['#22150b','#1c1109','#2a1a0e']
+].map(r => r.map(hex));
+const RIM = hex('#4a2e16'), GRAIN = [hex('#c9a062'), hex('#b48a4e'), hex('#8a6038')];
+let logSeed = 1;
+function makeLog(){
+  const R = rngF(logSeed++ * 977), L = TEXW, Hh = 5;
+  const col = [], crack = [];
+  const cracks = new Set(); for (let i = 0; i < 3; i++) cracks.add(4 + ((R()*(L-7))|0));
+  for (let r = 0; r < Hh; r++){
+    let run = 0, cur = null;
+    for (let c = 0; c < L; c++){
+      if (run <= 0){ cur = BARK[r][(R()*3)|0]; run = 2 + ((R()*4)|0); }
+      run--;
+      let cc = cur;
+      if (cracks.has(c) && r >= 1 && r <= 3) cc = mix(cc, [0,0,0], .35);        // bark fissure
+      // cut end on the left: rim + light end grain with a ring
+      if (c === 0) cc = (r === 0 || r === Hh-1) ? null : RIM;
+      else if (c === 1) cc = (r === 0 || r === Hh-1) ? RIM : (r === 2 ? GRAIN[2] : GRAIN[0]);
+      else if (c === 2) cc = (r === 0 || r === Hh-1) ? cc : (r === 2 ? GRAIN[1] : GRAIN[0]);
+      // rounded right end
+      if (c === L-1 && (r === 0 || r === Hh-1)) cc = null;
+      col.push(cc); crack.push(R());
+    }
+  }
+  return { L, TL: L, Hh, col, crack, fuel: fuelPerLog(), max: fuelPerLog(), lit:false, everLit:false, heat:0, eff:0,
+           igniteAt:null, wet:0, flying:true, ft:0, x:0, y:0, tx:0, ty:0, vy:0, slot:0, sx:0, sy:0, bounce:0 };
+}
+function emberCol(seed, tq){
+  const h = hash(seed*91.7, tq);
+  return h < .18 ? C.dkember : h < .55 ? C.red : h < .85 ? C.orange : C.yellow;
+}
+function drawLog(l, x0, y0){
+  const ch = !l.everLit ? 0 : isFinite(l.max) ? Math.min(1, (1 - l.fuel/l.max)*1.5 + .15) : Math.min(.55, .15 + (l.burnT || 0)/400);
+  const wet = Math.min(1, l.wet/4) * .45;
+  const tq = Math.floor(now*5);
+  for (let r = 0; r < l.Hh; r++) for (let c = 0; c < l.L; c++){
+    const i = r*l.TL + (c < l.L - 1 ? c : l.TL - 1), base = l.col[i]; if (!base) continue;
+    const k = l.crack[i];
+    let out;
+    if (l.lit && c > 0 && k < .06 + ch*.36) out = emberCol(k*1000 + i, tq + ((k*7)|0));
+    else {
+      out = mix(base, [base[0]*.3+12, base[1]*.3+10, base[2]*.3+9], ch);
+      if (wet) out = mix(out, [24,30,42], wet);
+    }
+    px(x0 + c, y0 + r, out);
+  }
+}
+const slotPos = i => ({ x: CX + SLOTS[i].dx, y: SLOTS[i].y });
+function reassignSlots(){ logs.forEach((l,i) => { l.slot = i; l.L = SLOTS[i].L; const p = slotPos(i); l.tx = p.x; l.ty = p.y; }); }
+
+/* ================= state ================= */
+let logs = [], parts = [], match = null, papers = [], mallow = null;
+let now = 0, light = 0, flick = 1, flickT = 0, flickTarget = 1;
+let embers = 0, ash = 0, quench = 0, steamT = 0, smokeT = 0, waterAt = null;
+let fireAcc = 0, roarAcc = 0, timeScale = 1, wasLit = false, sumHeat = 0;
+let keys = {};
+
+/* ================= audio ================= */
+let AC = null, master, nbuf, roarGain, hissGain;
+const VOL = { low:.35, med:.7, high:1 };
+function applyVolume(){ if (master) master.gain.setTargetAtTime(S.sound === 'off' ? 0 : (VOL[S.volume] || .7), AC.currentTime, .05); }
+function audio(){
+  if (!AC){
+    try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){ return null; }
+    master = AC.createGain(); master.gain.value = S.sound === 'off' ? 0 : (VOL[S.volume] || .7); master.connect(AC.destination);
+    const sr = AC.sampleRate, len = sr*2;
+    nbuf = AC.createBuffer(1, len, sr); const d = nbuf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random()*2 - 1;
+    const bb = AC.createBuffer(1, len, sr), d2 = bb.getChannelData(0); let last = 0;
+    for (let i = 0; i < len; i++){ const w = Math.random()*2 - 1; last = (last + 0.02*w)/1.02; d2[i] = last*3.5; }
+    const roar = AC.createBufferSource(); roar.buffer = bb; roar.loop = true;
+    const lp = AC.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 520;
+    roarGain = AC.createGain(); roarGain.gain.value = 0;
+    roar.connect(lp).connect(roarGain).connect(master); roar.start();
+    const hs = AC.createBufferSource(); hs.buffer = nbuf; hs.loop = true;
+    const bp = AC.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 2600; bp.Q.value = 0.8;
+    hissGain = AC.createGain(); hissGain.gain.value = 0;
+    hs.connect(bp).connect(hissGain).connect(master); hs.start();
+  }
+  if (AC.state === 'suspended') AC.resume();
+  return AC;
+}
+function noise(o){
+  if (!AC) return;
+  const t0 = AC.currentTime + (o.t || 0), dur = o.dur;
+  const s = AC.createBufferSource(); s.buffer = nbuf; s.loop = true;
+  const f = AC.createBiquadFilter(); f.type = o.type || 'bandpass';
+  f.frequency.setValueAtTime(o.f || 1000, t0);
+  if (o.f2) f.frequency.exponentialRampToValueAtTime(o.f2, t0 + dur);
+  f.Q.value = o.Q || 1;
+  const g = AC.createGain();
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(Math.max(0.0002, o.g || 0.5), t0 + (o.a || 0.005));
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  s.connect(f).connect(g).connect(master);
+  s.start(t0, Math.random()*1.5); s.stop(t0 + dur + 0.05);
+}
+function tone(o){
+  if (!AC) return;
+  const t0 = AC.currentTime + (o.t || 0);
+  const osc = AC.createOscillator(); osc.type = o.type || 'sine';
+  osc.frequency.setValueAtTime(o.f, t0);
+  if (o.f2) osc.frequency.exponentialRampToValueAtTime(o.f2, t0 + o.dur);
+  const g = AC.createGain();
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(o.g || 0.3, t0 + (o.a || 0.004));
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + o.dur);
+  osc.connect(g).connect(master); osc.start(t0); osc.stop(t0 + o.dur + 0.05);
+}
+// a hollow wooden knock: a tiny noise burst ringing through a few resonant "wood" modes
+function knock(o){
+  if (!AC) return;
+  const t0 = AC.currentTime + (o.t || 0), p = o.f || 1, g = o.g || .6;
+  const src = AC.createBufferSource(); src.buffer = nbuf;
+  const env = AC.createGain();
+  env.gain.setValueAtTime(0.0001, t0);
+  env.gain.exponentialRampToValueAtTime(1, t0 + .002);
+  env.gain.exponentialRampToValueAtTime(0.0001, t0 + .03);
+  src.connect(env);
+  const modes = [[150,9,1],[330,11,.7],[610,13,.45],[1020,15,.25],[1650,18,.12]];
+  for (const [f,Q,a] of modes){
+    const bp = AC.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = f*p*(.97 + Math.random()*.06); bp.Q.value = Q;
+    const mg = AC.createGain(); mg.gain.value = a*g*Q*.55;
+    env.connect(bp).connect(mg).connect(master);
+  }
+  src.start(t0, Math.random()*1.5); src.stop(t0 + .5);
+  tone({t:o.t, f:85*p, f2:48*p, dur:.14, g:g*.45});
+}
+const sTick  = () => { noise({type:'highpass', f:3800, dur:.012, a:.001, g:.12}); tone({type:'triangle', f:1300+Math.random()*200, dur:.018, g:.025}); };
+const sEnter = () => { noise({type:'bandpass', f:1300, Q:1.2, dur:.035, a:.001, g:.25}); tone({type:'triangle', f:520, dur:.05, g:.05}); };
+const sError = () => { tone({type:'square', f:180, dur:.12, g:.05}); tone({type:'square', f:135, dur:.15, g:.05, t:.11}); };
+const sToss  = () => noise({type:'bandpass', f:250, f2:700, Q:.9, dur:.5, a:.18, g:.09});
+const sLogLand = onLogs => {
+  const p = (onLogs ? 1.25 : 1) * (.93 + Math.random()*.14);
+  knock({f:p, g:.75});
+  knock({t:.075 + Math.random()*.02, f:p*1.12, g:.32});
+  knock({t:.15 + Math.random()*.03, f:p*1.3, g:.14});
+  noise({type:'lowpass', f:900, dur:.06, a:.002, g:.12});
+};
+const sStrike = () => {
+  for (let i = 0; i < 11; i++) noise({t:i*.011 + Math.random()*.004, type:'highpass', f:2200+Math.random()*2500, dur:.009, a:.001, g:.15+Math.random()*.3});
+  noise({t:.15, type:'bandpass', f:900, f2:2800, Q:.7, dur:.55, a:.02, g:.45});
+  noise({t:.15, type:'lowpass', f:200, f2:700, dur:.35, a:.03, g:.32});
+  if (hissGain) hissGain.gain.setTargetAtTime(0.03, AC.currentTime + .3, .2);
+};
+const matchHissOff = () => { if (hissGain) hissGain.gain.setTargetAtTime(0, AC.currentTime, .08); };
+const sIgnite = () => { noise({type:'lowpass', f:120, f2:1400, dur:1.6, a:.4, g:.5}); noise({type:'bandpass', f:500, f2:1200, Q:.6, dur:1.2, a:.3, g:.2}); };
+// fire crackle: little clusters of dry clicks, with the odd louder snap
+const sPop = k => {
+  if (!AC) return;
+  const n = 1 + ((Math.random()*4)|0);
+  for (let i = 0; i < n; i++) noise({t:i*(.008+Math.random()*.02), type:'highpass', f:1500+Math.random()*3500, dur:.003+Math.random()*.008, a:.0007, g:(.08+Math.random()*.3)*k});
+  if (Math.random() < .12){ noise({type:'bandpass', f:2200+Math.random()*1500, Q:3, dur:.03, a:.001, g:.35*k}); knock({f:5 + Math.random()*2, g:.06*k}); }
+};
+const sSplash = t => {
+  noise({t, type:'lowpass', f:1800, dur:.09, a:.003, g:.75});
+  noise({t, type:'bandpass', f:700, f2:1900, Q:.6, dur:.65, a:.02, g:.5});
+  noise({t:t+.08, type:'bandpass', f:400, f2:250, Q:.8, dur:.5, a:.05, g:.25});
+  for (let i = 0; i < 10; i++){ const f = 900+Math.random()*1200; tone({t:t+.1+Math.random()*.7, f, f2:f*1.9, dur:.05, g:.035}); }
+};
+const sHiss = () => {
+  noise({type:'highpass', f:2800, dur:3.6, a:.05, g:.45});
+  noise({type:'bandpass', f:5500, Q:.7, dur:2.4, a:.1, g:.25});
+  noise({type:'lowpass', f:260, dur:.9, g:.4});
+  for (let i = 0; i < 45; i++){ const t = Math.pow(Math.random(), 1.8)*2.6; noise({t, type:'highpass', f:3000+Math.random()*3000, dur:.004+Math.random()*.006, a:.001, g:.08+Math.random()*.2}); }
+};
+const sSizzle = () => { noise({type:'highpass', f:3500, dur:.5, a:.01, g:.25}); for (let i = 0; i < 8; i++) noise({t:Math.random()*.4, type:'highpass', f:4000, dur:.005, a:.001, g:.2}); };
+const sCrinkle = (g = 1) => { for (let i = 0; i < 18; i++) noise({t:Math.random()*.32, type:'highpass', f:2500+Math.random()*4000, dur:.004+Math.random()*.01, a:.001, g:(.05+Math.random()*.16)*g}); };
+const sPaperFlare = (g = 1) => { noise({type:'bandpass', f:1100, f2:3600, Q:.6, dur:1.1, a:.06, g:.42*g}); noise({type:'lowpass', f:200, f2:900, dur:.6, a:.05, g:.25*g}); sCrinkle(.6*g); };
+const sChomp = () => { for (let i = 0; i < 3; i++){ noise({t:i*.16, type:'lowpass', f:900, dur:.07, a:.005, g:.35}); noise({t:i*.16+.01, type:'bandpass', f:2200, Q:1, dur:.04, a:.002, g:.12}); } };
+const sPuff = () => noise({type:'lowpass', f:600, dur:.25, a:.03, g:.12});
+const sSweep = () => { for (let k = 0; k < 2; k++) noise({t:k*.32, type:'bandpass', f:3000, f2:1100, Q:.5, dur:.3, a:.08, g:.22}); };
+
+/* ================= text UI ================= */
+const typedEl = document.getElementById('typed'), lineEl = document.getElementById('line'), msgEl = document.getElementById('msg');
+let typed = '', msgTimer = null, firstCmd = true;
+function say(text, secs = 4.5, force = false){
+  if (S.hints === 'off' && !force) return;
+  msgEl.textContent = text; msgEl.classList.add('show');
+  clearTimeout(msgTimer);
+  if (secs < 9000) msgTimer = setTimeout(() => msgEl.classList.remove('show'), secs*1000);
+}
+const hideMsg = () => { clearTimeout(msgTimer); msgEl.classList.remove('show'); };
+let flashing = false;
+const renderTyped = () => { typedEl.textContent = typed; updateLineVis(); };
+function updateLineVis(){
+  const barMode = touchOn() && S.touchStyle === 'bar';
+  const hide = barMode ? !typed : (S.prompt === 'typing' && !typed && !flashing && !(touchOn() && S.touchStyle === 'list'));
+  lineEl.classList.toggle('hidden', hide);
+}
+const fuelMinutes = () => Math.max(0, Math.round(logs.reduce((s,l) => s + l.fuel, 0) / timeScale / 60));
+const fuelText = () => isFinite(fuelMinutes()) ? `${fuelMinutes()} MIN` : 'ENDLESS';
+function intro(){
+  if (!firstCmd || S.hints === 'off') return;
+  if (touchOn()) say(S.touchStyle === 'list' ? 'TAP  >_  FOR COMMANDS' : 'TAP AN ICON TO START', 99999);
+  else say((document.hasFocus() ? '' : 'CLICK, THEN ') + 'TYPE  LOG  AND PRESS ENTER', 99999);
+}
+
+function toggleFS(){
+  const d = document, el = d.documentElement;
+  try {
+    if (!(d.fullscreenElement || d.webkitFullscreenElement)){
+      const p = (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+      if (p && p.catch) p.catch(() => say(touchOn() ? 'FULL SCREEN IS NOT AVAILABLE ON THIS DEVICE' : 'PRESS F11 FOR FULL SCREEN', 4.5, true));
+    } else (d.exitFullscreen || d.webkitExitFullscreen).call(d);
+  } catch(e){ say(touchOn() ? 'FULL SCREEN IS NOT AVAILABLE ON THIS DEVICE' : 'PRESS F11 FOR FULL SCREEN', 4.5, true); }
+}
+
+/* ================= settings overlay ================= */
+const settingsEl = document.getElementById('settings');
+const menuOpen = () => settingsEl.classList.contains('open');
+function syncSettings(){
+  settingsEl.querySelectorAll('.row[data-key]').forEach(row => {
+    const k = row.dataset.key;
+    row.querySelectorAll('.opt').forEach(b => b.classList.toggle('on', b.dataset.val === String(S[k])));
+  });
+}
+function setSetting(k, v){
+  S[k] = v; saveS(); syncSettings();
+  if (k === 'theme') buildTheme();
+  if (k === 'sound' || k === 'volume'){ audio(); applyVolume(); }
+  if (k === 'minutes'){
+    // switching to or from ENDLESS changes the logs already on the fire
+    for (const l of logs){
+      if (v === 'inf'){ l.fuel = Infinity; l.max = Infinity; }
+      else if (!isFinite(l.max)){ l.fuel = l.max = fuelPerLog(); }
+    }
+  }
+  if (k === 'hints' && v === 'off') hideMsg();
+  if (k === 'prompt') updateLineVis();
+  if (k === 'touch' || k === 'touchStyle') applyTouch();
+}
+function openMenu(){ syncSettings(); settingsEl.classList.add('open'); keys = {}; }
+function closeMenu(){ settingsEl.classList.remove('open'); }
+settingsEl.addEventListener('click', e => {
+  const b = e.target.closest('.opt'); if (!b) return;
+  const row = b.closest('.row[data-key]');
+  if (row){ setSetting(row.dataset.key, b.dataset.val); sTick(); }
+});
+document.getElementById('menuBtn').addEventListener('click', e => { e.stopPropagation(); audio(); openMenu(); });
+document.getElementById('closeBtn').addEventListener('click', closeMenu);
+document.getElementById('fsBtn').addEventListener('click', toggleFS);
+
+/* ================= commands ================= */
+function addLog(){
+  if (logs.length >= MAXLOGS){ say('THE FIRE IS FULL. 4 LOGS MAX'); return true; }
+  const l = makeLog(); l.slot = logs.length; l.L = SLOTS[l.slot].L;
+  const p = slotPos(l.slot); l.tx = p.x; l.ty = p.y;
+  l.sx = -l.L - 2; l.sy = B - 16;
+  logs.push(l); sToss();
+  const n = logs.length, m = fuelMinutes();
+  if (logs.some(x => x.lit)) say(isFinite(m) ? `LOG ${n} OF 4.  ABOUT ${m} MIN OF FIRE LEFT` : `LOG ${n} OF 4.  ENDLESS FIRE`);
+  else say(`LOG ${n} OF 4.  ${fuelText()} OF FUEL.  ` + (n < MAXLOGS ? 'ADD MORE OR TYPE  MATCH' : 'NOW TYPE  MATCH'));
+  return true;
+}
+function strikeMatch(){
+  if (match){ say('ONE MATCH AT A TIME'); return true; }
+  if (mallow){ say('PUT THE MARSHMALLOW AWAY FIRST.  TYPE  EAT  OR  DROP', 4.5, true); return true; }
+  match = { p: 0, th: .35, age: 0, rise: 0, lit: false, done: false };
+  sStrike();
+  say(logs.length ? 'PRESS DOWN TO TIP THE MATCH INTO THE FIRE' : 'NO LOGS YET... TYPE  LOG  FIRST');
+  return true;
+}
+/* ---- paper ---- */
+const PAPER_SHAPE = ['.###.', '#####', '#####', '.###.'];
+const PAPER_COLS = [[238,234,222],[222,218,204],[200,196,184]];
+function pileTopAt(x){
+  let t = B + 2;
+  for (const l of logs) if (!l.flying && x >= l.tx && x < l.tx + l.L) t = Math.min(t, l.ty);
+  return t;
+}
+function paperRest(p){ let t = B + 2; for (let c = 0; c < 5; c++) t = Math.min(t, pileTopAt(p.tx + c)); return t - 3; }
+function addPaper(){
+  if (papers.length >= 3){ say('THAT IS ENOUGH PAPER'); return true; }
+  const pix = [];
+  PAPER_SHAPE.forEach((row, r) => [...row].forEach((ch, c) => {
+    if (ch === '#') pix.push({ c, r, k: Math.random(), col: Math.random() < .22 ? PAPER_COLS[2] : PAPER_COLS[(Math.random()*2)|0] });
+  }));
+  const p = { pix, flying:true, ft:0, sx:-7, sy:B-20, tx: CX + Math.round(rand(-8,3)), x:-7, y:B-20, lit:false, burn:0, flare:0, igniteAt:null, spread:false };
+  p.ty = paperRest(p);
+  papers.push(p); sCrinkle();
+  say(logs.some(l => l.lit) ? 'IN IT GOES' : 'PAPER IS ON.  TYPE  MATCH  TO LIGHT IT');
+  return true;
+}
+function fireBurning(){ return logs.some(l => l.lit) || papers.some(p => p.lit); }
+function ignitePaper(p){
+  if (p.lit) return;
+  p.lit = true; p.igniteAt = null; sPaperFlare();
+}
+function igniteLog(hit){
+  if (hit.lit || hit.wet > 0) return;
+  const first = !logs.some(o => o.lit);
+  hit.lit = true; hit.everLit = true; hit.heat = Math.max(hit.heat, .1);
+  if (first){ sIgnite(); say('THE FIRE IS LIT'); }
+  let k = 0;
+  for (const o of logs) if (!o.lit && o.igniteAt === null && !o.flying){ o.igniteAt = now + .8 + k*.9 + Math.random()*.5; k++; }
+}
+
+/* ---- marshmallow ---- */
+function addMallow(){
+  if (mallow && !mallow.retract){ say('ONE MARSHMALLOW AT A TIME', 4.5, true); return true; }
+  if (match){ say('PUT THE MATCH DOWN FIRST.  TYPE  DROP', 4.5, true); return true; }
+  mallow = { p:0, rise:0, cook:0, onFire:false, burnUp:0, gone:false, retract:0, goneAt:null, k: Array.from({length:42}, () => Math.random()) };
+  sToss();
+  say(fireBurning() ? 'HOLD IT OVER THE FLAMES WITH DOWN / UP' : 'LIGHT THE FIRE FIRST, THEN LOWER IT WITH DOWN');
+  return true;
+}
+function eatMallow(){
+  if (!mallow || mallow.retract){ say('NOTHING TO EAT.  TRY  MARSHMALLOW', 4.5, true); return true; }
+  if (mallow.gone){ say('IT BURNED UP... TRY ANOTHER', 4.5, true); mallow.retract = .001; return true; }
+  const c = mallow.cook;
+  const verdict = mallow.onFire ? 'HOT HOT HOT!  FLAMING AND CRUNCHY' :
+    c < .18 ? 'STILL RAW... SQUISHY' : c < .4 ? 'LIGHTLY TOASTED' : c < .68 ? 'PERFECT GOLDEN BROWN!' :
+    c < .85 ? 'WELL DONE.  A LITTLE CRISPY' : 'BURNT TO A CRISP!';
+  say(verdict, 5, true); sChomp();
+  mallow.eaten = true; mallow.retract = .001;
+  return true;
+}
+function dropHeld(){
+  if (match){ smokePuff(CX, 30); matchHissOff(); match = null; say('YOU SHOOK OUT THE MATCH'); return true; }
+  if (mallow && !mallow.retract){ mallow.retract = .001; say('STICK PUT AWAY'); return true; }
+  say('NOTHING TO DROP', 4.5, true); return true;
+}
+
+function throwWater(){
+  if (waterAt !== null) return true;
+  const sx = W + 2, sy = H - 8, g = 110;
+  for (let i = 0; i < 70; i++){
+    const T = rand(.45,.6), tx = CX + rand(-16,16), ty = rand(B-9, B+1);
+    parts.push({k:'water', x:sx+rand(-2,2), y:sy+rand(-2,2), vx:(tx-sx)/T, vy:(ty-sy)/T - .5*g*T, g, ty,
+      life:T+.5, max:T+.5, delay:rand(0,.15), col: [[90,160,224],[140,196,240],[61,127,184]][(Math.random()*3)|0]});
+  }
+  sToss(); sSplash(.5);
+  waterAt = now + .58;
+  return true;
+}
+function extinguish(){
+  const hot = logs.some(l => l.lit) || embers > .15 || sumHeat > .1;
+  for (const l of logs){ l.lit = false; l.heat = 0; l.eff = 0; l.igniteAt = null; l.wet = 15; }
+  embers = 0; quench = 1.5;
+  for (const p of papers) if (!p.flying){ for (let i = 0; i < 4; i++) parts.push({k:'smoke', x:p.x+rand(0,5), y:p.y, vx:rand(-2,2), vy:rand(-8,-3), life:rand(.8,1.6), max:1.6, size:1}); }
+  papers = papers.filter(p => p.flying);
+  if (mallow && mallow.onFire && !mallow.gone){ mallow.onFire = false; mallow.cook = Math.min(mallow.cook, .99); }
+  if (hot){ sHiss(); steamT = 2.6; smokeT = 7; say('PSSSHHHHH...  THE FIRE IS OUT'); }
+  else say(logs.length ? 'SPLASH!  THE LOGS ARE SOAKED' : 'SPLASH!');
+}
+function sweep(){
+  if (logs.some(l => l.lit) || sumHeat > .1){ say('PUT THE FIRE OUT FIRST (TYPE  WATER)'); return true; }
+  if (!logs.length && ash < .01){ say('NOTHING TO SWEEP'); return true; }
+  for (let i = 0; i < 24; i++) parts.push({k:'dust', x:CX+rand(-16,16), y:rand(B-8,B+1), vx:rand(-8,8), vy:rand(-10,-2), life:rand(.6,1.4), max:1.4});
+  logs = []; papers = []; ash = 0; embers = 0; sSweep(); say('ALL CLEAN');
+  return true;
+}
+function timeLeft(){
+  const m = fuelMinutes();
+  if (!logs.length) say('NO LOGS ON THE FIRE', 4.5, true);
+  else if (!isFinite(m)) say('ENDLESS FIRE.  IT BURNS UNTIL YOU PUT IT OUT', 4.5, true);
+  else if (logs.some(l => l.lit)) say(`ABOUT ${m} MIN OF FIRE LEFT`, 4.5, true);
+  else say(`${m} MIN OF FUEL READY TO BURN`, 4.5, true);
+  return true;
+}
+function themeCmd(arg){
+  const order = ['black','brick','stone','christmas'];
+  if (arg === 'xmas') arg = 'christmas';
+  const next = order.includes(arg) ? arg : (arg === 'none' ? 'black' : order[(order.indexOf(S.theme) + 1) % order.length]);
+  setSetting('theme', next); say('THEME: ' + next.toUpperCase());
+  return true;
+}
+function run(raw){
+  const parts_ = raw.trim().toLowerCase().split(/\s+/), w = parts_[0];
+  if (!w) return null;
+  switch (w){
+    case 'log': case 'logs': case 'wood': return addLog();
+    case 'match': case 'light': case 'strike': return strikeMatch();
+    case 'water': case 'douse': case 'splash': case 'extinguish': return throwWater();
+    case 'sweep': case 'clean': return sweep();
+    case 'paper': case 'newspaper': case 'papers': return addPaper();
+    case 'marshmallow': case 'marshmallows': case 'mallow': case 'smores': case "s'mores": return addMallow();
+    case 'eat': case 'yum': return eatMallow();
+    case 'drop': case 'away': return dropHeld();
+    case 'time': case 'status': return timeLeft();
+    case 'theme': return themeCmd(parts_[1]);
+    case 'black': case 'brick': case 'stone': case 'christmas': case 'xmas': return themeCmd(w);
+    case 'help': case '?': case 'menu': case 'settings': openMenu(); return true;
+    case 'fullscreen': case 'full': case 'fs': toggleFS(); return true;
+  }
+  say('TRY  LOG,  MATCH,  WATER  OR  MENU', 4.5, true);
+  return false;
+}
+function submit(text){
+  const snap = text !== undefined ? text : typed, ok = run(snap);
+  if (ok === null) return;
+  if (ok && firstCmd){ firstCmd = false; hideMsg(); }
+  typed = '';
+  lineEl.classList.remove('ok','bad'); void lineEl.offsetWidth;
+  lineEl.classList.add(ok ? 'ok' : 'bad');
+  ok ? sEnter() : sError();
+  typedEl.textContent = snap; flashing = true; updateLineVis();
+  setTimeout(() => { flashing = false; lineEl.classList.remove('ok','bad'); renderTyped(); }, ok ? 260 : 500);
+}
+
+/* ================= input ================= */
+let idleTimer = null;
+function wake(){
+  document.body.classList.remove('idle');
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(() => { if (!menuOpen()) document.body.classList.add('idle'); }, 2500);
+}
+addEventListener('keydown', e => {
+  audio();
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const k = e.key;
+  if (menuOpen()){ if (k === 'Escape'){ e.preventDefault(); closeMenu(); } return; }
+  if (k.startsWith('Arrow')){
+    keys[k] = true; e.preventDefault();
+    if (!e.repeat && (k === 'ArrowDown' || k === 'ArrowUp')){          // a single tap moves a few pixels
+      const d = k === 'ArrowDown' ? 1 : -1;
+      if (match) match.p = clamp(match.p + d*3/(H - 26), 0, 1);
+      else if (mallow && !mallow.retract) mallow.p = Math.max(0, mallow.p + d*3/(H - 24));
+    }
+    return;
+  }
+  if (k === 'Enter'){ e.preventDefault(); submit(); return; }
+  if (k === 'Backspace'){ e.preventDefault(); if (typed){ typed = typed.slice(0,-1); renderTyped(); sTick(); } return; }
+  if (k === 'Escape'){ typed = ''; renderTyped(); return; }
+  if (k.length === 1 && /[a-z0-9 ?]/i.test(k)){
+    e.preventDefault();
+    if (typed.length < 16){ typed += k; renderTyped(); sTick(); }
+  }
+});
+addEventListener('keyup', e => { if (e.key.startsWith('Arrow')) keys[e.key] = false; });
+addEventListener('blur', () => { keys = {}; });
+addEventListener('focus', intro);
+addEventListener('mousemove', wake);
+addEventListener('mousedown', () => { audio(); window.focus(); wake(); setTimeout(intro, 50); });
+cvs.addEventListener('dblclick', () => { if (!touchOn()) toggleFS(); });
+
+/* ================= touch controls ================= */
+const coarse = window.matchMedia ? matchMedia('(pointer: coarse)') : null;
+function touchOn(){ return S.touch === 'on' || (S.touch === 'auto' && !!(coarse && coarse.matches)); }
+function applyTouch(){
+  const on = touchOn();
+  document.body.classList.toggle('touch', on);
+  document.body.classList.toggle('touch-bar', on && S.touchStyle === 'bar');
+  document.body.classList.toggle('touch-list', on && S.touchStyle === 'list');
+  if (!on || S.touchStyle !== 'list') cmdListEl.classList.remove('open');
+  updateLineVis();
+  if (on) showBar();
+  placeCanvas();
+}
+if (coarse && coarse.addEventListener) coarse.addEventListener('change', applyTouch);
+
+// tiny pixel icons, drawn from text maps
+const ICONPAL = { k:[40,24,12], b:[96,62,32], B:[122,82,44], t:[201,160,98], r:[138,96,56], s:[226,190,124], S:[184,146,88],
+  R:[192,36,36], o:[240,160,64], y:[246,210,74], Y:[249,232,79], w:[244,240,230], g:[200,196,184], G:[160,156,146],
+  u:[90,160,224], U:[140,196,240], d:[61,127,184], m:[150,108,64], c:[255,207,122], C:[180,130,60], x:[110,104,98] };
+const ICONS = {
+  log: ["            ","            ","            ","  BBBBBBBBB ","ttBBBbBBBBbk","trtbbbbbbbbk","ttbbbbbkbbbk"," tkbkkbkkkk ","  kkkkkkkk  ","            ","            ","            "],
+  match: ["     o      ","    oyo     ","    oYyo    ","    oYYo    ","     yo     ","     RR     ","     RR     ","     sS     ","     sS     ","     sS     ","     sS     ","     sS     "],
+  paper: ["            ","            ","    wwww    ","  wwgwwwww  "," wwwwwwgwww "," wgwwwwwwgw "," wwwwgwwwww ","  wwwwwwgw  ","   Gwwwww   ","    GGGG    ","            ","            "],
+  marshmallow: ["            ","   wwwww    ","  wwwwwwg   ","  wwwwwwg   ","  wwwwwwg   ","  wwwwwwg   ","   gggggg   ","     mm     ","     mm     ","      mm    ","      mm    ","       mm   "],
+  water: ["            ","     U      ","     Uu     ","    UUuu    ","    Uuuu    ","   UUuuuu   ","   Uuuuuud  ","   uuuuuud  ","   uuuuudd  ","    uuudd   ","     ddd    ","            "],
+  sweep: ["        m   ","       m    ","      m     ","     m      ","    m       ","   CCC      ","  cCcCc     "," cCcCcCc    "," CcCcCcC    ","cCcCcCcC    ","            ","            "],
+  up: ["            ","     cc     ","    cccc    ","   cccccc   ","  cccccccc  "," cccccccccc ","    cccc    ","    cccc    ","    cccc    ","    cccc    ","    CCCC    ","            "],
+  down: ["            ","    cccc    ","    cccc    ","    cccc    ","    cccc    "," cccccccccc ","  cccccccc  ","   cccccc   ","    cccc    ","     cc     ","     CC     ","            "],
+  eat: ["            ","  wwww      ","  wwwww  w  ","  wwwwww wg ","  wwwwwwwwg ","  wwwwwwwwg ","  wwwwwwwwg ","   ggggggg  ","     mm     ","     mm     ","      mm    ","       mm   "],
+  drop: ["            "," cc      cc ","  cc    cc  ","   cc  cc   ","    cccc    ","     cc     ","    cccc    ","   cc  cc   ","  cc    cc  "," cc      cc ","            ","            "],
+  more: ["            ","            ","            ","            ","            "," cc  cc  cc "," cc  cc  cc ","            ","            ","            ","            ","            "]
+};
+function iconCanvas(map){
+  const c = document.createElement('canvas'); c.width = 12; c.height = 12;
+  const g = c.getContext('2d');
+  map.forEach((row, y) => [...row].forEach((ch, x) => { const col = ICONPAL[ch]; if (col){ g.fillStyle = `rgb(${col})`; g.fillRect(x, y, 1, 1); } }));
+  return c;
+}
+const barEl = document.getElementById('bar'), cmdListEl = document.getElementById('cmdList');
+// two groups: things to put on the fire on the left, everything else on the right, so the fire stays clear
+[[['log','LOG'],['match','MATCH'],['paper','PAPER'],['marshmallow','MALLOW']], [['water','WATER'],['sweep','SWEEP'],['more','MORE']]].forEach(group => {
+  const g = document.createElement('div'); g.className = 'grp';
+  group.forEach(([cmd, label]) => {
+    const b = document.createElement('button'); b.className = 'tb'; b.type = 'button'; b.dataset.cmd = cmd;
+    b.appendChild(iconCanvas(ICONS[cmd])); const sp = document.createElement('span'); sp.textContent = label; b.appendChild(sp);
+    g.appendChild(b);
+  });
+  barEl.appendChild(g);
+});
+['LOG','MATCH','PAPER','MARSHMALLOW','EAT','DROP','WATER','SWEEP','TIME','THEME','MENU'].forEach(w => {
+  const b = document.createElement('button'); b.type = 'button'; b.textContent = w; b.dataset.cmd = w.toLowerCase();
+  cmdListEl.appendChild(b);
+});
+function tapCommand(cmd){
+  audio();
+  if (cmd === 'more'){ openMenu(); return; }
+  submit(cmd);
+}
+barEl.addEventListener('click', e => { const b = e.target.closest('.tb'); if (!b) return; e.stopPropagation(); tapCommand(b.dataset.cmd); showBar(); });
+cmdListEl.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; e.stopPropagation(); cmdListEl.classList.remove('open'); tapCommand(b.dataset.cmd); });
+lineEl.addEventListener('click', e => {
+  if (!(touchOn() && S.touchStyle === 'list')) return;
+  e.stopPropagation(); audio(); cmdListEl.classList.toggle('open');
+});
+document.addEventListener('pointerdown', e => {
+  if (!touchOn()) return;
+  if (cmdListEl.classList.contains('open') && !e.target.closest('#cmdList') && !e.target.closest('#line')) cmdListEl.classList.remove('open');
+  showBar();
+});
+let barTimer = null;
+function showBar(){
+  barEl.classList.remove('faded'); clearTimeout(barTimer);
+  barTimer = setTimeout(() => barEl.classList.add('faded'), 5000);
+}
+// hold panel: same look as the icon bar
+const heldEl = document.getElementById('held');
+[['up','UP',{hold:'ArrowUp'}],['down','DOWN',{hold:'ArrowDown'}],['eat','EAT',{cmd:'eat', id:'eatBtn'}],['drop','DROP',{cmd:'drop'}]].forEach(([icon, label, o]) => {
+  const b = document.createElement('button'); b.className = 'tb hbtn'; b.type = 'button';
+  if (o.hold) b.dataset.hold = o.hold; if (o.cmd) b.dataset.cmd = o.cmd; if (o.id) b.id = o.id;
+  b.appendChild(iconCanvas(ICONS[icon])); const sp = document.createElement('span'); sp.textContent = label; b.appendChild(sp);
+  heldEl.appendChild(b);
+});
+// hold buttons for raising / lowering the match or marshmallow
+document.querySelectorAll('#held [data-hold]').forEach(b => {
+  const k = b.dataset.hold;
+  const down = e => {
+    e.preventDefault(); audio(); keys[k] = true; b.classList.add('pressed');
+    const d = k === 'ArrowDown' ? 1 : -1;
+    if (match) match.p = clamp(match.p + d*3/(H - 26), 0, 1);
+    else if (mallow && !mallow.retract) mallow.p = Math.max(0, mallow.p + d*3/(H - 24));
+  };
+  const up = () => { keys[k] = false; b.classList.remove('pressed'); };
+  b.addEventListener('pointerdown', down);
+  ['pointerup','pointercancel','pointerleave'].forEach(ev => b.addEventListener(ev, up));
+});
+document.querySelectorAll('#held [data-cmd]').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); tapCommand(b.dataset.cmd); }));
+// drag the match or marshmallow up and down with a finger (or mouse)
+let drag = null;
+cvs.addEventListener('pointerdown', e => {
+  if (!(match || (mallow && !mallow.retract))) return;
+  drag = { y: e.clientY }; try { cvs.setPointerCapture(e.pointerId); } catch(_){}
+});
+cvs.addEventListener('pointermove', e => {
+  if (!drag) return;
+  const dy = (e.clientY - drag.y) / SCALE; drag.y = e.clientY;
+  if (match) match.p = clamp(match.p + dy/(H - 26), 0, 1);
+  else if (mallow && !mallow.retract) mallow.p = Math.max(0, mallow.p + dy/(H - 24));
+});
+['pointerup','pointercancel'].forEach(ev => cvs.addEventListener(ev, () => { drag = null; }));
+
+/* ================= simulation ================= */
+let fireCenter = FW/2;
+const surf = new Int16Array(FW), litCol = new Uint8Array(FW);
+function fireStep(){
+  if (quench > 0){
+    for (let i = 0; i < fbuf.length; i++) fbuf[i] = fbuf[i] > 2 ? fbuf[i] - 2 : 0;
+  } else {
+    surf.fill(-1); litCol.fill(0);
+    let minX = 1e9, maxX = -1e9, heat = 0, n = 0;
+    for (const l of logs){
+      if (l.flying) continue;
+      const lx = Math.round(l.x), ly = Math.round(l.y);
+      for (let x = lx; x < lx + l.L; x++){
+        const b = x - FX; if (b < 0 || b >= FW) continue;
+        if (surf[b] < 0 || ly < surf[b]) surf[b] = ly;
+        if (l.lit) litCol[b] = 1;
+      }
+      if (l.lit){ minX = Math.min(minX, lx + 1); maxX = Math.max(maxX, lx + l.L - 1); heat += l.eff; n++; }
+    }
+    if (n){
+      const center = (minX + maxX)/2, hw = (maxX - minX)/2 + 1, strength = Math.min(1, heat/n);
+      fireCenter = center - FX;
+      for (let b = 0; b < FW; b++){
+        if (surf[b] < 0 || !litCol[b]) continue;
+        const x = b + FX, u = (x + .5 - center)/hw, env = 1 - u*u;
+        if (env <= 0) continue;
+        const nz = .5 + .5*Math.sin(x*.7 + now*2.3 + Math.sin(x*.23 - now*1.5)*2.4);
+        const v = (18 * strength * Math.pow(env, .5) * (.45 + .55*nz) * (.7 + .3*Math.random())) | 0;
+        const r = surf[b] + 1; if (r < 0 || r >= FH) continue;
+        const idx = r*FW + b; if (v > fbuf[idx]) fbuf[idx] = v;
+        if (r + 1 < FH && v > fbuf[idx+FW]) fbuf[idx+FW] = v;
+      }
+    }
+    for (const p of papers){
+      if (!p.lit || p.flying || p.flare <= 0) continue;
+      if (!n) fireCenter = p.x + 2.5 - FX;
+      for (let c = 0; c < 5; c++){
+        const b = Math.round(p.x) + c - FX, r = Math.round(p.y); if (b < 0 || b >= FW || r < 0 || r >= FH) continue;
+        const env = 1 - Math.pow((c - 2)/3, 2);
+        const v = (18 * p.flare * env * (.75 + .25*Math.random())) | 0, idx = r*FW + b;
+        if (v > fbuf[idx]) fbuf[idx] = v;
+      }
+    }
+  }
+  const dec = quench > 0 ? 3 : 1.9 - .26*Math.min(4, sumHeat);
+  for (let y = 1; y < FH; y++){
+    for (let x = 0; x < FW; x++){
+      const i = y*FW + x, v = fbuf[i];
+      if (v === 0){ fbuf[i-FW] = 0; continue; }
+      const r = Math.random(), toward = x < fireCenter ? 1 : -1;
+      let dx = x + (r < .24 ? toward : r < .33 ? -toward : 0);
+      if (dx < 0) dx = 0; else if (dx >= FW) dx = FW - 1;
+      const nv = v - Math.floor(Math.random()*2*dec + .5);
+      fbuf[(y-1)*FW + dx] = nv > 0 ? nv : 0;
+    }
+  }
+}
+const FY0 = 0;
+
+// the match is held centered over the fire; lowering it moves the head straight down
+// while the hand tips it further over, so it reads like dipping it into the pile
+function matchGeom(){
+  match.th = .3 + match.p*.55;
+  const hx = CX + 1, hy = 24 + match.p*(H - 26) + (1 - easeOut(match.rise))*34;
+  const pvx = hx + ML*Math.sin(match.th), pvy = hy + ML*Math.cos(match.th);
+  return { pvx, pvy, hx, hy };
+}
+const easeOut = t => 1 - (1-t)*(1-t);
+const MSL = 46;
+function mallowGeom(){
+  const th = .25 + mallow.p*.45;
+  const hx = CX + 1, hy = 20 + mallow.p*(H - 24) + (1 - easeOut(mallow.rise))*40 + (mallow.retract ? mallow.retract*mallow.retract*46 : 0);
+  return { hx, hy, th, pvx: hx + MSL*Math.sin(th), pvy: hy + MSL*Math.cos(th) };
+}
+
+function update(dt){
+  // logs: toss (level) & settle
+  for (const l of logs){
+    if (l.flying){
+      l.ft += dt / .75;
+      if (l.ft >= 1){
+        l.flying = false; l.x = l.tx; l.y = l.ty; l.vy = 0; l.bounce = .18; sLogLand(l.slot > 0);
+        for (let i = 0; i < 6; i++) parts.push({k:'dust', x:l.x+rand(0,l.L), y:l.y+3, vx:rand(-8,8), vy:rand(-10,-2), life:rand(.4,.9), max:.9});
+        if (logs.some(o => o.lit)) l.igniteAt = now + 2.5;
+      }
+    } else {
+      l.x += (l.tx - l.x) * Math.min(1, dt*6);
+      if (l.y < l.ty){ l.vy += 120*dt; l.y = Math.min(l.ty, l.y + l.vy*dt); if (l.y === l.ty){ l.vy = 0; knock({f:1.2, g:.35}); } }
+      else { l.y = l.ty; l.vy = 0; }
+      if (l.bounce > 0) l.bounce -= dt;
+    }
+    if (l.wet > 0) l.wet = Math.max(0, l.wet - dt);
+  }
+  // fire spreading between logs
+  for (const l of logs){
+    if (l.igniteAt === null || l.flying || now < l.igniteAt) continue;
+    if (!logs.some(o => o.lit)){ l.igniteAt = null; continue; }
+    if (l.wet > 0){ l.igniteAt = now + l.wet + 1; continue; }
+    l.lit = true; l.everLit = true; l.heat = Math.max(l.heat, .05); l.igniteAt = null;
+  }
+  // burning
+  const lit = logs.filter(l => l.lit && !l.flying);
+  sumHeat = 0;
+  for (const l of lit){
+    l.heat = Math.min(1, l.heat + dt*.22);
+    l.eff = l.heat * Math.min(1, l.fuel/(40*timeScale) + .15);
+    sumHeat += l.eff;
+    l.burnT = (l.burnT || 0) + dt;
+    l.fuel -= dt * timeScale / lit.length;
+  }
+  let removed = false;
+  for (let i = logs.length - 1; i >= 0; i--){
+    const l = logs[i];
+    if (l.fuel <= 0){
+      logs.splice(i,1); removed = true;
+      ash = Math.min(1, ash + .25); embers = Math.min(1, embers + .5);
+      for (let k = 0; k < 10; k++) parts.push({k:'spark', x:l.x+rand(0,l.L), y:l.y, vx:rand(-4,4), vy:rand(-14,-5), life:rand(.6,1.6), max:1.6});
+      sPop(1); sPop(.8);
+    }
+  }
+  if (removed) reassignSlots();
+  const nowLit = logs.some(l => l.lit);
+  if (wasLit && !nowLit && quench <= 0) say('THE FIRE HAS BURNED DOWN TO EMBERS');
+  wasLit = nowLit;
+  if (nowLit) embers = Math.min(1, embers + dt*.08); else embers = Math.max(0, embers - dt/45);
+
+  // paper: land on the pile, catch, flare, char, float away as ash
+  for (let i = papers.length - 1; i >= 0; i--){
+    const p = papers[i];
+    if (p.flying){
+      p.ft += dt / .7; p.ty = paperRest(p);
+      const t = Math.min(1, p.ft);
+      p.x = p.sx + (p.tx - p.sx)*t; p.y = p.sy + (p.ty - p.sy)*t - 20*t*(1-t);
+      if (p.ft >= 1){
+        p.flying = false; p.x = p.tx; p.y = p.ty; sCrinkle(.5);
+        if (fireBurning()) p.igniteAt = now + .4;
+      }
+      continue;
+    }
+    const want = paperRest(p);
+    p.y = p.y < want ? Math.min(want, p.y + 40*dt) : want;
+    if (p.igniteAt !== null && now >= p.igniteAt) ignitePaper(p);
+    if (!p.lit && !p.igniteAt && logs.some(l => l.lit)) p.igniteAt = now + .4;
+    if (p.lit){
+      p.burn += dt / 4.5;
+      p.flare = p.burn < .12 ? p.burn/.12 : Math.max(0, 1 - (p.burn - .12)/.75);
+      sumHeat += p.flare * 1.3;
+      if (p.burn > .25 && !p.spread){
+        p.spread = true;
+        let under = null;
+        for (const l of logs) if (!l.flying && p.x + 2 >= l.x && p.x + 2 < l.x + l.L && (!under || l.y < under.y)) under = l;
+        if (!under && logs.length) under = logs.find(l => !l.flying);
+        if (under) igniteLog(under);
+      }
+      if (Math.random() < 6*dt*p.flare) sPop(.6);
+      if (p.burn >= 1){
+        for (let k = 0; k < 9; k++) parts.push({k:'flake', x:p.x+rand(0,5), y:p.y+rand(0,3), vx:rand(-3,3), vy:rand(-12,-5), life:rand(1.8,3.4), max:3.4, ph:rand(0,6), col: Math.random() < .5 ? [40,36,34] : [110,104,98]});
+        papers.splice(i,1);
+      }
+    }
+  }
+
+  // marshmallow on a stick
+  if (mallow){
+    mallow.rise = Math.min(1, mallow.rise + dt/.4);
+    if (mallow.retract){
+      mallow.retract += dt/.5;
+      if (mallow.retract >= 1) mallow = null;
+    } else {
+      const sp = 22 / (H - 24);
+      if (keys.ArrowDown) mallow.p += sp*dt;
+      if (keys.ArrowUp) mallow.p -= sp*dt;
+      // don't let it go into the logs
+      let top = B + 2; for (let x = CX - 2; x <= CX + 3; x++) top = Math.min(top, pileTopAt(x));
+      const pMax = clamp((top - 2 - 20) / (H - 24), 0, 1);
+      mallow.p = clamp(mallow.p, 0, pMax);
+      const g = mallowGeom();
+      // how hot is it where the marshmallow is?
+      let sum = 0, mx = 0, n = 0;
+      for (let y = Math.round(g.hy) - 6; y <= Math.round(g.hy) + 3; y++) for (let x = Math.round(g.hx) - 3; x <= Math.round(g.hx) + 2; x++){
+        const b = x - FX; if (b < 0 || b >= FW || y < 0 || y >= FH) continue;
+        const v = fbuf[y*FW + b]; sum += v; mx = Math.max(mx, v); n++;
+      }
+      let heat = n ? (sum/n*.6 + mx*.4) / 16 : 0;
+      const gap = top - g.hy;
+      if (logs.some(l => l.lit)) heat = Math.max(heat, Math.min(1, sumHeat/2.5) * Math.max(0, 1 - gap/26) * .75);
+      heat = clamp(heat, 0, 1);
+      mallow.heat = heat;
+      if (!mallow.onFire && !mallow.gone){
+        mallow.cook += dt * .11 * Math.pow(heat, 1.2);
+        if (mallow.cook >= 1){ mallow.onFire = true; mallow.cook = 1; sPaperFlare(.5); say('YOUR MARSHMALLOW CAUGHT FIRE!'); }
+      } else if (mallow.onFire && !mallow.gone){
+        mallow.burnUp += dt / 3;
+        if (Math.random() < 4*dt) sPop(.4);
+        if (mallow.burnUp >= 1){
+          mallow.gone = true; mallow.onFire = false; mallow.goneAt = now;
+          smokePuff(g.hx, g.hy - 2); sPuff(); say('IT BURNED UP');
+        }
+      }
+      if (mallow.gone && now - mallow.goneAt > 1.2) mallow.retract = .001;
+    }
+  }
+
+  // match: held at the bottom, tipped toward the fire
+  if (match){
+    match.age += dt;
+    match.rise = Math.min(1, match.rise + dt/.35);
+    if (!match.lit && match.age > .22){
+      match.lit = true;
+      const g = matchGeom();
+      for (let i = 0; i < 6; i++) parts.push({k:'spark', front:true, x:g.hx, y:g.hy-1, vx:rand(-10,10), vy:rand(-14,-2), life:rand(.2,.5), max:.5});
+    }
+    const sp = 22 / (H - 26); // about 22 screen pixels per second while held
+    if (keys.ArrowDown) match.p += sp*dt;
+    if (keys.ArrowUp) match.p -= sp*dt;
+    match.p = clamp(match.p, 0, 1);
+    const g = matchGeom();
+    let hit = null, hitPaper = null;
+    for (const p of papers){
+      if (p.flying) continue;
+      if (g.hx >= p.x - 1 && g.hx <= p.x + 5 && g.hy >= p.y - 2 && g.hy <= p.y + 4) hitPaper = p;
+    }
+    for (const l of logs){
+      if (l.flying) continue;
+      if (g.hx >= l.x - 1 && g.hx <= l.x + l.L && g.hy >= l.y - 2 && g.hy <= l.y + l.Hh + 1){ if (!hit || l.y < hit.y) hit = l; }
+    }
+    if (hitPaper && match.lit && match.rise >= 1){
+      ignitePaper(hitPaper);
+      if (!logs.some(o => o.lit)) say('THE PAPER CATCHES');
+      for (let i = 0; i < 8; i++) parts.push({k:'spark', x:g.hx, y:g.hy, vx:rand(-8,8), vy:rand(-16,-5), life:rand(.5,1.1), max:1.1});
+      match = null; matchHissOff();
+    } else if (hit && match.lit && match.rise >= 1){
+      if (hit.wet > 0){ sSizzle(); say('TOO WET!  GIVE THE LOGS A FEW SECONDS TO DRY'); smokePuff(g.hx, g.hy); }
+      else {
+        igniteLog(hit);
+        for (let i = 0; i < 10; i++) parts.push({k:'spark', x:g.hx, y:g.hy, vx:rand(-8,8), vy:rand(-16,-5), life:rand(.5,1.1), max:1.1});
+      }
+      match = null; matchHissOff();
+    } else if (match.p >= 1 && !logs.length && !match.warned){
+      match.warned = true; say('NOTHING TO BURN YET.  TYPE  LOG');
+    } else if (match.age >= MATCH_LIFE){
+      smokePuff(g.hx, g.hy - 2); sPuff(); matchHissOff();
+      say('THE MATCH BURNED OUT'); match = null;
+    }
+  }
+
+  // water / steam / smoke
+  if (waterAt !== null && now >= waterAt){ waterAt = null; extinguish(); }
+  if (quench > 0) quench -= dt;
+  if (steamT > 0){
+    steamT -= dt;
+    if (Math.random() < 30*dt) parts.push({k:'steam', x:CX+rand(-14,14), y:rand(B-10,B-2), vx:rand(-3,3), vy:rand(-14,-6), life:rand(1.6,3.2), max:3.2, size:Math.random() < .5 ? 1 : 2});
+  }
+  if (smokeT > 0){
+    smokeT -= dt;
+    if (Math.random() < 6*dt*(smokeT/7)) parts.push({k:'smoke', x:CX+rand(-10,10), y:rand(B-8,B-3), vx:rand(-1.5,1.5), vy:rand(-8,-4), life:rand(2,3.5), max:3.5, size:1});
+  }
+
+  // sparks floating over the flames & crackle
+  if (lit.length && Math.random() < sumHeat*3*dt){
+    const l = lit[(Math.random()*lit.length)|0];
+    parts.push({k:'spark', x:CX + rand(-7,7), y:Math.min(...lit.map(o => o.y)) - rand(5, 8 + sumHeat*3), vx:rand(-2,2), vy:rand(-11,-4), life:rand(.8,2.2), max:2.2});
+  }
+  if (AC && Math.random() < (sumHeat*3.5 + embers*.4)*dt) sPop(Math.min(1, .3 + sumHeat/2.5));
+
+  // particles
+  for (let i = parts.length - 1; i >= 0; i--){
+    const p = parts[i];
+    if (p.delay > 0){ p.delay -= dt; continue; }
+    p.life -= dt; p.x += p.vx*dt; p.y += p.vy*dt;
+    switch (p.k){
+      case 'spark': p.vx += rand(-25,25)*dt; p.vx *= .97; break;
+      case 'water': p.vy += p.g*dt;
+        if (p.vy > 0 && p.y >= p.ty){ p.life = 0; if (Math.random() < .3) parts.push({k:'drop', x:p.x, y:p.y, vx:rand(-14,14), vy:rand(-22,-6), life:rand(.2,.45), max:.45, col:p.col}); }
+        break;
+      case 'drop': p.vy += 110*dt; break;
+      case 'dust': p.vy += 14*dt; p.vx *= .97; break;
+      case 'steam': case 'smoke': p.vx += rand(-4,4)*dt; p.vy *= (1 - .3*dt); break;
+    }
+    if (p.life <= 0) parts.splice(i,1);
+  }
+
+  // chunky fire runs at 12 frames per second, like the reference
+  fireAcc += dt;
+  while (fireAcc >= 1/12){ fireAcc -= 1/12; fireStep(); }
+
+  // glow
+  const target = clamp(sumHeat/2.2, 0, 1)*.92 + embers*.12;
+  light += (target - light) * Math.min(1, dt*2.5);
+  flickT -= dt;
+  if (flickT <= 0){ flickT = rand(.08,.16); flickTarget = 1 + rand(-.1,.1)*Math.min(1, sumHeat); }
+  flick += (flickTarget - flick) * Math.min(1, dt*10);
+
+  roarAcc += dt;
+  if (AC && roarAcc > .15){ roarAcc = 0; roarGain.gain.setTargetAtTime((.3*Math.min(1, sumHeat/2.5) + embers*.02) * (.75 + Math.random()*.5), AC.currentTime, .25); }
+}
+function smokePuff(x,y){ for (let i = 0; i < 5; i++) parts.push({k:'smoke', x:x+rand(-1,1), y:y-rand(0,3), vx:rand(-2,2), vy:rand(-8,-3), life:rand(.8,1.6), max:1.6, size:1}); }
+
+/* ================= render ================= */
+const coalR = Array.from({length: 40*3}, () => Math.random());
+const coalR2 = Array.from({length: 40*3}, () => Math.random());
+
+function drawBackground(){
+  if (S.theme === 'black'){
+    for (let i = 0; i < D.length; i += 4){ D[i] = 0; D[i+1] = 0; D[i+2] = 0; D[i+3] = 255; }
+    return;
+  }
+  const Lt = light*flick, amb = .52, gain = .95*Lt;
+  let mhx = -999, mhy = -999;
+  if (match && match.lit){ const g = matchGeom(); mhx = g.hx; mhy = g.hy - 2; }
+  for (let y = 0, i = 0; y < H; y++) for (let x = 0; x < W; x++, i++){
+    let k = amb + bgAmb[i] + gain*bgLit[i];
+    if (mhx > -999){ const d = Math.hypot(x - mhx, y - mhy); if (d < 12) k += .5*(1 - d/12); }
+    const o = i*4;
+    D[o] = bgBase[i*3]*k; D[o+1] = bgBase[i*3+1]*k; D[o+2] = bgBase[i*3+2]*k; D[o+3] = 255;
+  }
+  // twinkling Christmas lights glow on their own
+  for (const L of themeLights){
+    const v = Math.sin(now*L.sp + L.ph);
+    px(L.x, L.y, v > .85 ? [255,255,255] : v > -.55 ? [255,240,196] : [130,118,92]);
+  }
+  // candle flames
+  const tq = Math.floor(now*7);
+  for (const f of themeFlames){
+    const j = hash(f.x, tq);
+    px(f.x + (j < .2 ? -1 : j > .85 ? 1 : 0), f.y - 1, j < .5 ? C.orange : C.red);
+    px(f.x, f.y, C.yellow); px(f.x + 1, f.y, j < .6 ? C.orange : C.yellow);
+    px(f.x, f.y + 1, C.bright);
+  }
+}
+function drawCoals(){
+  const glow = Math.max(embers, Math.min(1, sumHeat/2)), tq = Math.floor(now*4);
+  if (glow < .02 && ash < .01) return;
+  for (let x = CX-14; x <= CX+14; x++){
+    const u = (x - CX)/14;
+    for (let r = 0; r < 3; r++){
+      const y = B + 1 - r;          // rows B+1, B, B-1
+      const j = (x - CX + 16) + r*40, a = coalR[j], b = coalR2[j];
+      const ashH = ash*2.2*(1 - u*u);
+      const isAsh = r < ashH && b < .85;
+      if (r === 2 && !isAsh) continue;
+      if (r === 1 && !isAsh && b > .5) continue;
+      if (glow > .02 && r === 0 && a < glow*.4) px(x, y, emberCol(j, tq + ((a*5)|0)));
+      else if (isAsh) px(x, y, a < .5 ? [74,68,64] : [94,88,82]);
+      else if (glow > .02 && r === 0) px(x, y, [36,22,12]);
+    }
+  }
+}
+// a clean 2-pixel-wide line: one pixel per step along the long axis, so the staircase is even
+function thickLine(x0, y0, x1, y1, colFn){
+  x0 = Math.round(x0); y0 = Math.round(y0); x1 = Math.round(x1); y1 = Math.round(y1);
+  const dx = x1 - x0, dy = y1 - y0, steps = Math.max(Math.abs(dx), Math.abs(dy)) || 1, steep = Math.abs(dy) >= Math.abs(dx);
+  for (let i = 0; i <= steps; i++){
+    const f = i / steps, x = Math.round(x0 + dx*f), y = Math.round(y0 + dy*f), [a, b] = colFn(f);
+    px(x, y, a);
+    if (steep) px(x + 1, y, b); else px(x, y + 1, b);
+  }
+}
+function drawMatch(){
+  const g = matchGeom();
+  const frac = match.age / MATCH_LIFE, charLen = 2 + frac*12;
+  const sx = Math.sin(match.th), cy = Math.cos(match.th);
+  // stick: a clean 2-pixel line from the hand up to the head, charred near the head
+  thickLine(g.pvx, g.pvy, g.hx, g.hy + 1, f => (match.lit && (1 - f)*ML < charLen) ? [[52,32,20],[36,22,14]] : [[226,190,124],[184,146,88]]);
+  // head
+  const head = match.lit ? (frac < .1 ? [150,40,30] : [60,26,18]) : [192,36,36];
+  px(g.hx, g.hy, head); px(g.hx + 1, g.hy, head); px(g.hx, g.hy - 1, head); px(g.hx + 1, g.hy - 1, head);
+  if (!match.lit) return;
+  // flame always points up
+  const flare = match.age < 1 ? 2 : 0, tq = Math.floor(now*10);
+  const rows = 5 + flare, hx = Math.round(g.hx), hy = Math.round(g.hy);
+  for (let i = 0; i < rows; i++){
+    const f = i / rows;
+    const w = f < .2 ? 1 : f < .6 ? (flare ? 2 : 1) : f < .85 ? 1 : 0;
+    const jit = i >= rows - 2 ? Math.round(hash(i, tq)*2 - 1) : 0;
+    for (let dx = -w; dx <= w + 1; dx++){
+      const edge = dx === -w || dx === w + 1;
+      const col = i >= rows - 1 ? C.red : edge ? C.orange : (f < .5 ? C.bright : C.yellow);
+      if (i === rows - 1 && dx !== 0) continue;
+      px(hx + dx + jit, hy - 1 - i, col);
+    }
+  }
+}
+function drawPaper(p){
+  const x0 = Math.round(p.x), y0 = Math.round(p.y), tq = Math.floor(now*6);
+  for (const q of p.pix){
+    let col = q.col;
+    if (p.lit){
+      const thr = p.burn*1.3;
+      if (p.burn > .65 && q.k < (p.burn - .65)*3) continue;              // burned away
+      if (q.k < thr - .14) col = [32,27,25];
+      else if (q.k < thr) col = emberCol(q.k*500, tq);
+      else col = mix(col, [170,120,60], Math.min(.5, p.burn));
+    }
+    px(x0 + q.c, y0 + q.r, col);
+  }
+}
+const COOK = [[0,[246,242,232]],[.25,[238,222,186]],[.45,[224,182,110]],[.6,[198,138,62]],[.75,[128,78,38]],[.88,[58,40,28]],[1,[30,24,22]]];
+function cookColor(c){
+  c = clamp(c, 0, 1);
+  let i = 0; while (i < COOK.length - 2 && COOK[i+1][0] < c) i++;
+  const [a, ca] = COOK[i], [b, cb] = COOK[i+1];
+  return mix(ca, cb, (c - a)/(b - a));
+}
+function drawSmallFlame(hx, hy, rows, wide){
+  const tq = Math.floor(now*10);
+  for (let i = 0; i < rows; i++){
+    const f = i / rows;
+    const w = f < .25 ? wide : f < .6 ? Math.max(1, wide - 1) : f < .85 ? 1 : 0;
+    const jit = i >= rows - 2 ? Math.round(hash(i + hx, tq)*2 - 1) : 0;
+    for (let dx = -w; dx <= w + 1; dx++){
+      const edge = dx === -w || dx === w + 1;
+      if (i === rows - 1 && dx !== 0) continue;
+      px(hx + dx + jit, hy - 1 - i, i >= rows - 1 ? C.red : edge ? C.orange : (f < .5 ? C.bright : C.yellow));
+    }
+  }
+}
+const MW = 6, MH = 7;
+function drawMallow(){
+  const g = mallowGeom();
+  // stick: clean 2-pixel line ending in the bottom of the marshmallow
+  thickLine(g.pvx, g.pvy, g.hx, g.hy, f => (f > .9 && mallow.cook > .85) ? [[52,34,22],[38,24,16]] : [[150,108,64],[112,78,44]]);
+  if (mallow.gone || mallow.eaten) return;
+  const hx = Math.round(g.hx), hy = Math.round(g.hy);
+  const x0 = hx - 3, y0 = hy - MH + 1;
+  const vis = Math.max(0, Math.ceil(MH*(1 - mallow.burnUp)));     // burns away from the top down
+  for (let r = MH - vis; r < MH; r++) for (let c = 0; c < MW; c++){
+    if ((r === 0 || r === MH-1) && (c === 0 || c === MW-1)) continue;       // rounded corners
+    const k = mallow.k[(r*MW + c) % mallow.k.length];
+    // edges and bottom (nearest the fire) toast a little ahead of the middle
+    const edge = (c === 0 || c === MW-1 ? .05 : 0) + (r >= MH-2 ? .06 : 0);
+    let col = cookColor(mallow.cook + edge + (k - .5)*.05);
+    const shade = (c === 0 ? 1.05 : c === 1 ? 1.02 : c === MW-2 ? .93 : c === MW-1 ? .85 : 1) * (r === 0 ? 1.03 : r === MH-1 ? .9 : 1);
+    col = col.map(v => Math.min(255, v*shade));
+    if (mallow.onFire && k < .3) col = emberCol(k*300 + r*MW + c, Math.floor(now*6));
+    px(x0 + c, y0 + r, col);
+  }
+  if (mallow.onFire) drawSmallFlame(hx - 1, y0 + (MH - vis), 5 + Math.round(3*(1 - mallow.burnUp)), 2);
+}
+function drawParticle(p){
+  const f = Math.max(0, p.life / p.max);
+  const x = p.x, y = p.y;
+  switch (p.k){
+    case 'spark':
+      if (!p.front && !inMask(x,y)) return;
+      if (f < .25 && hash(p.x, Math.floor(now*8)) < .5) return;   // blink out
+      px(x, y, f > .7 ? C.orange : C.red); break;
+    case 'water': px(x, y, p.col); break;
+    case 'drop': px(x, y, p.col); break;
+    case 'dust': px(x, y, [120,104,88], f*.8); break;
+    case 'steam': { const s = p.size + (f < .5 ? 1 : 0); for (let a = 0; a < s; a++) for (let b = 0; b < s; b++) px(x+a, y+b, [196,196,204], .45*f); break; }
+    case 'smoke': px(x, y, [90,84,88], .5*f); break;
+    case 'flake': if (!inMask(x,y)) return; px(x + Math.round(Math.sin(now*3 + p.ph)), y, p.col, Math.min(1, f*1.5)); break;
+  }
+}
+function render(){
+  drawBackground();
+  drawCoals();
+  // fire (behind the logs so the logs stay readable)
+  for (let y = 0; y < FH; y++) for (let x = 0; x < FW; x++){
+    const v = fbuf[y*FW + x]; if (!v) continue;
+    const gx = FX + x, gy = y + FY0;
+    if (!inMask(gx, gy)) continue;
+    px(gx, gy, FIRECOL(v));
+  }
+  const pile = logs.filter(l => !l.flying).sort((a,b) => SLOTS[a.slot].z - SLOTS[b.slot].z);
+  for (const l of pile) drawLog(l, Math.round(l.x), Math.round(l.y) - (l.bounce > .09 ? 1 : 0));
+  for (const p of papers) drawPaper(p);
+  for (const p of parts) if (p.k === 'spark' && !(p.delay > 0)) drawParticle(p);
+  // flying logs: tossed level, in an arc
+  for (const l of logs){
+    if (!l.flying) continue;
+    const t = l.ft, x = l.sx + (l.tx - l.sx)*t, y = l.sy + (l.ty - l.sy)*t - 22*t*(1-t);
+    drawLog(l, Math.round(x), Math.round(y));
+  }
+  for (const p of parts) if (p.k !== 'spark' && !(p.delay > 0)) drawParticle(p);
+  if (match) drawMatch();
+  if (mallow) drawMallow();
+  ctx.putImageData(img, 0, 0);
+}
+
+/* ================= sizing & loop ================= */
+function resize(){
+  const a = innerWidth / innerHeight;
+  const ideal = Math.round(H * a);
+  W = Math.max(64, ideal);
+  CX = W >> 1; FX = CX - (FW >> 1);
+  cvs.width = W; cvs.height = H;
+  img = ctx.createImageData(W, H); D = img.data;
+  const s = W === ideal ? Math.max(innerWidth / W, innerHeight / H) : Math.min(innerWidth / W, innerHeight / H);
+  SCALE = s;
+  cvs.style.width = Math.round(W*s) + 'px'; cvs.style.height = Math.round(H*s) + 'px';
+  contained = W !== ideal;
+  placeCanvas();
+  fbuf.fill(0);
+  buildTheme();
+  reassignSlots();
+  for (const l of logs) if (!l.flying){ l.x = l.tx; l.y = l.ty; }
+}
+addEventListener('resize', resize);
+resize();
+syncSettings();
+applyTouch();
+renderTyped();
+intro();
+
+let last = performance.now()/1000, lastHolding = null, lastMallow = null;
+function frame(ts){
+  const t = ts/1000, dt = Math.min(.05, Math.max(0, t - last)); last = t; now += dt;
+  update(dt); render();
+  const holding = !!match || !!(mallow && !mallow.retract);
+  if (holding !== lastHolding){ lastHolding = holding; document.body.classList.toggle('holding', holding); }
+  const mh = !!(mallow && !mallow.retract);
+  if (mh !== lastMallow){ lastMallow = mh; document.body.classList.toggle('mallow-held', mh); }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+})();
+</script>
+<script src="../shared/analytics.js" defer></script>
+</body>
+</html>
